@@ -1,0 +1,28 @@
+<div class="form-alta" style="background-color: #002b5c;"> 
+  <mat-dialog-content>
+    <h1 style="color: #ffffff;">FORMULARIO DE CLIENTE</h1>
+    <form [formGroup]="form">
+      
+      <div class="form-row">
+        <div class="form__group field full-width">
+          <input type="input" class="form__field" placeholder="Titulo" name="titulo" id='titulo' required formControlName="titulo"/>
+          <label for="titulo" class="form__label">Titulo</label>
+          <div class="error" *ngIf="form.controls?.['titulo']?.invalid && (form.controls?.['titulo']?.dirty || form.controls?.['titulo']?.touched)">
+            <div *ngIf="form.controls?.['titulo']?.errors?.['titulo']">El titulo es requerido</div>
+          </div>
+        </div>
+      
+        <div class="form__group field full-width">
+          <textarea class="form__field textarea-field" placeholder="Descripción" name="descripcion" id='descripcion' required formControlName="descripcion" rows="4"></textarea>
+          <label for="descripcion" class="form__label">Descripción</label>
+        </div>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="closeDialog()">Cancelar</button>
+    <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
+  </mat-dialog-actions>
+</div>

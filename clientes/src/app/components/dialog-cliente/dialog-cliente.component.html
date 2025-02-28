@@ -1,0 +1,80 @@
+<div class="form-alta" style="background-color: #002b5c;" *ngIf="menu == 1"> 
+  <mat-dialog-content>
+    <h1 style="color: #ffffff;">FORMULARIO DE CLIENTE</h1>
+    <form [formGroup]="form">
+
+      <div class="form-row">
+        <div class="form__group field">
+          <input type="input" class="form__field" placeholder="Nombre" name="nombre" id='nombre' required formControlName="nombre"/>
+          <label for="nombre" class="form__label">Nombre</label>
+        </div>
+        <div class="form__group field">
+          <input type="input" class="form__field" placeholder="Apellido" name="apellido" id='apellido' required formControlName="apellido"/>
+          <label for="apellido" class="form__label">Apellido</label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form__group field">
+          <input type="input" class="form__field" placeholder="DNI" name="dni" id='dni' required formControlName="dni"/>
+          <label for="dni" class="form__label">DNI</label>
+        </div>
+        <div class="form__group field">
+          <input type="date" class="form__field" placeholder="Fecha de nacimiento" name="fecha_nacimiento" id='fecha_nacimiento' required formControlName="fechaNacimiento"/>
+          <label for="fecha_nacimiento" class="form__label">Fecha de nacimiento</label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form__group field">
+          <input type="input" class="form__field" placeholder="Direccion" name="direccion" id='direccion' required formControlName="direccion"/>
+          <label for="direccion" class="form__label">Direccion</label>
+        </div>
+        <div class="form__group field">
+          <input type="input" class="form__field" placeholder="Telefono" name="telefono" id='telefono' required formControlName="telefono"/>
+          <label for="telefono" class="form__label">Telefono</label>
+        </div>
+      </div>
+     
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="closeDialog()">Cancelar</button>
+    <button mat-button color="primary" (click)="cambiarMenu(2)">Siguiente</button>
+  </mat-dialog-actions>
+</div>
+
+
+
+<!--   ///////////////////////////////////////     -->
+
+<!-- FORMULARIO DE EXPEDIENTES -->
+<div class="form-alta" style="background-color: #002b5c;" *ngIf="menu == 2"> 
+  <mat-dialog-content>
+    <h1 style="color: #ffffff;">FORMULARIO DE CLIENTE</h1>
+    <form [formGroup]="form"> 
+
+      <div class="form-row">
+      
+        <div class="form__group field">
+          <mat-label>Expedientes</mat-label>
+          <mat-selection-list formControlName="expedientes">
+            <mat-list-option *ngFor="let expediente of listaExpedientes" [value]="expediente.id" checkboxPosition="before">
+              {{ expediente.titulo }}
+            </mat-list-option>
+          </mat-selection-list>
+        </div>
+        
+        
+      </div>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="cambiarMenu(1)">Atras</button>
+    <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
+  </mat-dialog-actions>
+</div>

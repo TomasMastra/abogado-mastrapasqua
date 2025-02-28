@@ -1,0 +1,33 @@
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: 'home',
+    loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
+  },
+  {
+    path: '',
+    redirectTo: 'lista-clientes',
+    pathMatch: 'full',
+  },
+  {
+    path: 'error',
+    loadComponent: () => import('./pages/error/error.page').then( m => m.ErrorPage)
+  },
+  {
+    path: 'splash-screen',
+    loadComponent: () => import('./pages/splash-screen/splash-screen.page').then( m => m.SplashScreenPage)
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.page').then( m => m.LoginPage)
+  },
+  {
+    path: 'lista-clientes',
+    loadComponent: () => import('./pages/lista-clientes/lista-clientes.page').then( m => m.ListaClientesPage)
+  },
+  {
+    path: 'lista-expedientes',
+    loadComponent: () => import('./pages/lista-expedientes/lista-expedientes.page').then( m => m.ListaExpedientesPage)
+  }
+];
