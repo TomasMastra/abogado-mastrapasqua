@@ -76,38 +76,12 @@ sql.connect(dbConfig)
               return res.status(500).send('Error al obtener clientes');
             }
           });
-          /*
-          app.post('/clientes/agregar', async (req, res) => {
-            const { nombre, apellido, dni, telefono, direccion, fecha_nacimiento, email } = req.body;
-            
-            try {
-              // Asumiendo que estás usando SQL Server para insertar el cliente
-              const result = await pool.request()
-                .input('nombre', sql.NVarChar, nombre)
-                .input('apellido', sql.NVarChar, apellido)
-                .input('dni', sql.Int, dni)
-                .input('telefono', sql.NVarChar, telefono)
-                .input('direccion', sql.NVarChar, direccion)
-                .input('fecha_nacimiento', sql.DateTime, fecha_nacimiento)
-                .input('email', sql.NVarChar, email)
-                .query(`INSERT INTO clientes (nombre, apellido, dni, telefono, direccion, fecha_nacimiento, email)
-                        VALUES (@nombre, @apellido, @dni, @telefono, @direccion, @fecha_nacimiento, @email)`);
-          
-              res.status(201).json({ message: 'Cliente agregado exitosamente' });
-            } catch (err) {
-              console.error('Error al agregar cliente:', err.message); // Imprime el mensaje de error específico
-              console.error('Error details:', err); // Imprime el objeto completo de error
-              return res.status(500).send('Error al agregar cliente. Error al agregar cliente:', err.message, 'Error details:', err);
-            }
-            
-          });*/
 
 
           app.post('/clientes/agregar', async (req, res) => {
             try {
               const { nombre, apellido, dni, telefono, direccion, fecha_nacimiento, email } = req.body;
           
-              // Validación de datos
               if (!nombre || !apellido || !dni || !email) {
                 return res.status(400).json({
                   error: 'Faltan campos obligatorios',
@@ -115,7 +89,6 @@ sql.connect(dbConfig)
                 });
               }
           
-              // Realizamos la consulta con OUTPUT para obtener el id
               const result = await pool.request()
                 .input('nombre', sql.NVarChar, nombre)
                 .input('apellido', sql.NVarChar, apellido)
@@ -184,6 +157,96 @@ sql.connect(dbConfig)
                 res.status(500).json({ mensaje: 'Error al actualizar cliente' });
             }
         });
+///////////////////////////////////
+      app.get('/expedientes/clientesPorExpediente/:id_expediente', async (req, res) => {
+        const { id_expediente } = req.params;
+        try {
+            const result = await pool.request()
+                .input('id_expediente', sql.Int, id_expediente)
+                .query(`
+                    SELECT c.*
+                    FROM clientes c
+                    JOIN clientes_expedientes ce ON c.id = ce.id_cliente
+                    WHERE ce.id_expediente = @id_expediente
+                `);
+
+            res.json(result.recordset);
+        } catch (error) {
+            res.status(500).json({ error: 'Error al obtener clientes del expediente' });
+        }
+      });
+
+
+
+
+
+      app.post('/expedientes/agregar', async (req, res) => {
+        try {
+          const { titulo, descripcion} = req.body;
+      
+          if (!titulo) {
+            return res.status(400).json({
+              error: 'Faltan campos obligatorios',
+              camposRequeridos: ['nombre', 'apellido', 'dni', 'email']
+            });
+          }
+      
+          const result = await pool.request()
+          .input('titulo', sql.NVarChar, titulo)
+          .input('descripcion', sql.NVarChar, descripcion)
+          .query(`
+            INSERT INTO expedientes (titulo, descripcion, fecha_creacion)
+            OUTPUT INSERTED.id  
+            VALUES (@titulo, @descripcion, GETDATE())  -- Utiliza GETDATE() para la fecha actual
+          `);
+      
+          // El id del cliente insertado estará en result.recordset[0].id
+          res.status(201).json({
+            message: 'Expediente agregado exitosamente',
+            id: result.recordset[0].id
+          });
+      
+        } catch (err) {
+          console.error('Error al agregar expediente:', err.message);
+          console.error('Error details:', err);
+          res.status(500).json({
+            error: 'Error al agregar expediente',
+            message: err.message
+          });
+        }
+      });
+
+      /*MODIFICAR EXPEDIENTE */
+      app.put('/expedientes/modificar/:id', async (req, res) => {
+        const { id } = req.params;
+        const nuevosDatos = req.body; // Aquí están los datos del expediente
+        
+        console.log('ID del expediente a modificar:', id);
+        console.log('Nuevos datos recibidos:', nuevosDatos); 
+      
+        try {
+          const resultado = await pool.request()
+            .input('id', sql.Int, id)  // Debes asegurar que el ID esté en la consulta
+            .input('titulo', sql.NVarChar, nuevosDatos.titulo) // Cambié esto a sql.NVarChar si el título es texto
+            .input('descripcion', sql.NVarChar, nuevosDatos.descripcion)
+            .query(`
+              UPDATE expedientes
+              SET titulo = @titulo,
+                  descripcion = @descripcion
+              WHERE id = @id
+            `);
+      
+          if (resultado.rowsAffected[0] > 0) {
+            res.status(200).json({ mensaje: 'Expediente actualizado correctamente' });
+          } else {
+            res.status(404).json({ mensaje: 'Expediente no encontrado' });
+          }
+        } catch (error) {
+          console.error('Error al actualizar expediente:', error);
+          res.status(500).json({ mensaje: 'Error al actualizar expediente' });
+        }
+      });
+      
         
           
              // Iniciar el servidor

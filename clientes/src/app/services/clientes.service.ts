@@ -64,17 +64,17 @@ addCliente(cliente: ClienteModel): Observable<any> {
 
         
   
-actualizarCliente(id: string, cliente: ClienteModel): Observable<ClienteModel> {
+  actualizarCliente(id: string, cliente: ClienteModel): Observable<ClienteModel> {
 
 
-const url = `${this.apiUrl}/modificar/${id}`;
+  const url = `${this.apiUrl}/modificar/${id}`;
 
-  //const url = `${this.apiUrl}/modificar/${id}`;
- /// console.log('URL de búsqueda:', url);
- // console.log('Datos enviados:', cliente);
+    //const url = `${this.apiUrl}/modificar/${id}`;
+  /// console.log('URL de búsqueda:', url);
+  // console.log('Datos enviados:', cliente);
 
-  return this.http.put<ClienteModel>(url, cliente);
-}
+    return this.http.put<ClienteModel>(url, cliente);
+  }
 
   
 

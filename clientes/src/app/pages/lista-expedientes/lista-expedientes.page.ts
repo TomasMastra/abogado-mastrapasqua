@@ -11,6 +11,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
+import { Subscription, Observable  } from 'rxjs';
 
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -46,6 +47,7 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
 
   busqueda: string = "";
   private destroy$ = new Subject<void>(); // Subject para gestionar la destrucción
+  getClientes$!: Subscription;
 
   constructor(
     private expedienteService: ExpedientesService,
@@ -67,7 +69,6 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
           this.expedientes = expedientes;
           this.expedientesOriginales = [...expedientes];
           this.hayExpedientes = this.expedientes.length > 0;
-          //alert(this.expedientes.length);
         },
         (error) => {
           console.error('Error al obtener expedientes:', error);
@@ -80,14 +81,61 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
     this.destroy$.complete(); // Completa el subject
   }
 
-  abrirModificar(expediente: ExpedienteModel){
-    // Abre el diálogo para modificar el expediente
+  obtenerExpedientes() {
+    this.getClientes$ = this.expedienteService.getExpedientes().subscribe(
+      (expedientes) => {
+        this.expedientes = expedientes;
+        this.expedientesOriginales = [...expedientes]; 
+        this.hayExpedientes = this.expedientes.length > 0;
+      },
+      (error) => {
+        console.error('Error al obtener expedientes:', error);
+      }
+    );
   }
+      abrirModificar(expediente: ExpedienteModel) {
+        const dialogRef = this.dialog.open(DialogExpedienteModificarComponent, {
+          width: '500px',
+          data: expediente
+        });
+      
+        dialogRef.afterClosed().subscribe((expedienteModificado: ExpedienteModel) => {
+          if (expedienteModificado) {
+            this.expedienteService.actualizarExpediente(expedienteModificado.id, expedienteModificado).subscribe(response => {
+              console.log('Expediente actualizado:', response);
+            }, error => {
+              console.error('Error al actualizar expediente:', error);
+            });      
+            //this.clientes = this.clientes.map(c => c.id === clienteModificado.id ? clienteModificado : c);
+  
+            alert(expedienteModificado.titulo);
+            if(this.busqueda == ''){
+              this.obtenerExpedientes();
+            }else {
+              //this.expedienteService.search(this.busqueda);
+            }
+            
+      
+          }
+        });
+      }
 
-  abrirDialog() {
-    // Abre un diálogo para crear o añadir un nuevo expediente
-  }
-
+      abrirDialog(): void { 
+        const dialogRef = this.dialog.open(DialogExpedienteComponent, {
+          width: '500px', 
+        });
+      
+        dialogRef.afterClosed().subscribe((expediente: ExpedienteModel) => {
+          if (expediente) {
+            this.expedienteService.addExpediente(expediente).subscribe(response => {
+              console.log('Expediente agregado:', response);
+              this.expedientes.push(expediente);
+            }, error => {
+              console.error('Error al agregar cliente:', error);
+            });
+          }
+        });
+      }
   goTo(path: string){
     this.router.navigate([path]); // Navega a la ruta deseada
   }

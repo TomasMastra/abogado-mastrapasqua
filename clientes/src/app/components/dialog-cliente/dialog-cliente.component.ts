@@ -62,10 +62,10 @@ export class DialogClienteComponent {
       //email: new FormControl('', [Validators.required, Validators.email]),
       nombre: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
       apellido: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
-      dni: new FormControl('', [Validators.required, Validators.minLength(7), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
-      telefono: new FormControl('', [Validators.required, Validators.minLength(6), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
+      dni: new FormControl('', [Validators.minLength(7), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
+      telefono: new FormControl('', [ Validators.minLength(6), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
       fechaNacimiento: new FormControl('', [Validators.required]),
-      direccion: new FormControl('', [Validators.required]),
+      direccion: new FormControl(''),
 
     });
 
@@ -111,9 +111,9 @@ export class DialogClienteComponent {
       nombre: this.form.value.nombre ?? null,
       apellido: this.form.value.apellido ?? null,
       fecha_nacimiento: this.form.value.fechaNacimiento ?? '',
-      direccion: this.form.value.direccion ?? '',
-      dni: this.form.value.dni ? Number(this.form.value.dni) : null,
-      telefono: this.form.value.telefono ?? '',
+      direccion: this.form.value.direccion && this.form.value.direccion.trim() !== '' ? this.form.value.direccion : '1',
+      dni: this.form.value.dni && this.form.value.dni.trim() !== '' ? Number(this.form.value.dni) : 1,
+      telefono: this.form.value.telefono && this.form.value.telefono.trim() !== '' ? this.form.value.telefono : '1',
       email: this.form.value.nombre,
       id: '0',
       fecha_creacion: 'ejemplo',

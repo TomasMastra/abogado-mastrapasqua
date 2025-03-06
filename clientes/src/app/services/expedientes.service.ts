@@ -1,8 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, forkJoin  } from 'rxjs';
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
 import { ExpedienteModel } from '../models/expediente/expediente.component';
+import { map } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -14,27 +16,50 @@ export class ExpedientesService {
 
   constructor(private http: HttpClient) {}
 
-  // Método para obtener los clientes desde el servidor y emitir los datos
-  getExpedientes() {
-    this.http.get<ExpedienteModel[]>(this.apiUrl).subscribe(
-      (expedientes) => {
-        this.expedientesSubject.next(expedientes); // Actualiza los datos emitidos por el BehaviorSubject
-      },
-      (error) => {
-        console.error('Error al obtener expedientes:', error);
-      }
-    );
-    return this.clientes$;  // Devuelve el observable para que el componente se suscriba
+    getExpedientes() {
+      this.http.get<ExpedienteModel[]>(this.apiUrl).subscribe(
+        (expedientes) => {
+          expedientes.forEach((expediente) => {
+            this.getClientesPorExpediente(expediente.id).subscribe((clientes) => {
+              expediente.clientes = [];
+              expediente.clientes = clientes; 
+            });
+          });
+    
+          this.expedientesSubject.next(expedientes);
+        },
+        (error) => {
+          console.error('Error al obtener expedientes:', error);
+        }
+      );
+    
+      return this.clientes$;
+    }
+
+
+
+
+  getClientesPorExpediente(id_expediente: string) {
+    const url = `${this.apiUrl}/clientesPorExpediente/${id_expediente}`;
+    console.log('URL llamada:', url);  
+    return this.http.get<ClienteModel[]>(url);
   }
-
-
-  
-
+    
   getClientePorId(id: string) {
     return this.http.get<ClienteModel>(`${this.apiUrl}/${id}`);
   }
 
-  agregarCliente(cliente: ClienteModel) {
-    return this.http.post(this.apiUrl, cliente); 
+  addExpediente(expediente: ExpedienteModel): Observable<any> {
+    const url = `${this.apiUrl}/agregar`;
+    console.log('URL de búsqueda:', url);
+    console.log('Datos enviados:', expediente);
+    return this.http.post(`${this.apiUrl}/agregar`, expediente);
   }
+
+
+  actualizarExpediente(id: string, expediente: ExpedienteModel): Observable<ExpedienteModel> {
+    const url = `${this.apiUrl}/modificar/${id}`;   
+      return this.http.put<ExpedienteModel>(url, expediente);
+    }
+
 }
