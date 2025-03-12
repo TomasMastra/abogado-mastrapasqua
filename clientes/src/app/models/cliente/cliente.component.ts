@@ -1,3 +1,4 @@
+import { ExpedienteModel } from '../expediente/expediente.component';
 
 export interface ClienteModel {
 id: string,
@@ -9,4 +10,5 @@ direccion: string | null,
 fecha_nacimiento: string | null,
 fecha_creacion: string,
 email: string,
+expedientes: any[] | null;
 }

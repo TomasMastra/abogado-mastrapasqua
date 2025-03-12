@@ -8,13 +8,29 @@ import { MatInputModule } from '@angular/material/input';
 import { ClientesService } from 'src/app/services/clientes.service';
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { IonCheckbox, IonItemSliding } from "@ionic/angular/standalone";
+
+
+
+import { MatListModule } from '@angular/material/list';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { takeUntil } from 'rxjs/operators';
+
+
+import { Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
+
+import { ExpedienteModel } from 'src/app/models/expediente/expediente.component';
+import { ExpedientesService } from 'src/app/services/expedientes.service';
+
+import { IonLabel, IonItem } from "@ionic/angular/standalone";
 
 @Component({
   selector: 'app-dialog-cliente-modificar',
   templateUrl: './dialog-cliente-modificar.component.html',
   styleUrls: ['./dialog-cliente-modificar.component.scss'],
   standalone: true,
-  imports: [
+  imports: [IonItemSliding, IonCheckbox, 
     CommonModule, 
     FormsModule,
     MatButtonModule, 
@@ -27,6 +43,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 export class DialogClienteModificarComponent {
 
   protected form: FormGroup;
+  menu: number = 1;
 
   constructor(
     private clienteService: ClientesService,
@@ -59,6 +76,7 @@ export class DialogClienteModificarComponent {
         telefono: this.form.value.telefono ?? '',
         fecha_creacion: this.data?.fecha_creacion ?? 'ejemplo', // Conservar fecha original si existe
         email: this.form.value.nombre,
+        expedientes: null
       };
 
       this.dialogRef.close(cliente);
@@ -90,4 +108,5 @@ export class DialogClienteModificarComponent {
 
     }
   }
+
 }

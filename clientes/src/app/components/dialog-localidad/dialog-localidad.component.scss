@@ -178,3 +178,10 @@ body {
     overflow-y: auto;  /* Permite el scroll vertical */
   }
   
+
+  mat-form-field {
+    --mat-form-field-container-color: #7fffd4;
+    --mat-form-field-label-text-color: #00796b;
+    --mat-form-field-focused-label-color: #00796b;
+  }
+  

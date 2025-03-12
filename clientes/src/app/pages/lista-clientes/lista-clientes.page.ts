@@ -7,6 +7,9 @@ import { firstValueFrom } from 'rxjs';  // Necesario para usar firstValueFrom
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonImg, IonCard, IonCardContent, IonText, IonItem, IonItemOption, IonItemOptions, IonLabel, IonItemSliding, IonList, IonIcon, IonButton, IonButtons, IonInput } from '@ionic/angular/standalone';
 import { ClientesService } from 'src/app/services/clientes.service';
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
+
+import { ClientesExpedientesService } from 'src/app/services/clientes-expedientes.service';
+
 import { Subscription, Observable  } from 'rxjs';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -23,6 +26,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
 
 
 import { MatDialog } from '@angular/material/dialog';
@@ -41,7 +45,8 @@ import { DialogClienteModificarComponent } from '../../components/dialog-cliente
     IonButtons, IonButton, IonIcon, IonList, IonItemSliding, IonLabel, IonItemOptions, IonItemOption, 
     IonItem, IonCardContent, IonCard, IonImg, IonContent, IonHeader, IonTitle, IonToolbar, IonText,
     MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
-    MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule, MatPaginatorModule
+    MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule, MatPaginatorModule,
+    MatMenuModule, MatButtonModule, MatIconModule
 
  
   ]
@@ -49,6 +54,7 @@ import { DialogClienteModificarComponent } from '../../components/dialog-cliente
 export class ListaClientesPage implements OnInit {
 
   private clienteService: ClientesService;
+private cliExpServ: ClientesExpedientesService;
 
   clientes: ClienteModel[] = [];
   clientesOriginales: ClienteModel[] = []; 
@@ -72,8 +78,10 @@ export class ListaClientesPage implements OnInit {
 
 
   constructor(clientesService: ClientesService, private dialog: MatDialog,
-    private router: Router) {
+    private router: Router, cliExpServ: ClientesExpedientesService) {
     this.clienteService = clientesService;
+    this.cliExpServ = cliExpServ;
+
   }
 
 /*
@@ -135,16 +143,41 @@ export class ListaClientesPage implements OnInit {
         
       }
 
-      abrirDialog(): void { 
+      abrirDialog(): void {
         const dialogRef = this.dialog.open(DialogClienteComponent, {
-          width: '500px', 
+          width: '500px',
         });
       
         dialogRef.afterClosed().subscribe((cliente: ClienteModel) => {
           if (cliente) {
+            // Primero, agregar el cliente a la base de datos
             this.clienteService.addCliente(cliente).subscribe(response => {
+              // El cliente agregado tendrá ahora el ID asignado
+              cliente.id = response.id; // Asignamos el ID devuelto desde la base de datos
+      
               console.log('Cliente agregado:', response);
               this.clientes.push(cliente);
+      
+              // Si la búsqueda está vacía, obtener todos los clientes
+              if (this.busqueda == '') {
+                this.obtenerClientes();
+              } else {
+                this.clienteService.searchClientes(this.busqueda);
+              }
+      
+              // Ahora, agregar la relación cliente-expediente
+              if (cliente.expedientes != null && cliente.expedientes.length > 0) {
+                cliente.expedientes.forEach((expediente: any) => {
+                  if (cliente.id) {  // Solo agregar la relación si el cliente tiene un ID válido
+                    this.cliExpServ.addClienteExpediente(cliente.id, expediente.id).subscribe(response => {
+                      console.log('Relación cliente-expediente agregada:', response);
+                    }, error => {
+                      console.error('Error al agregar relación cliente-expediente:', error);
+                    });
+                  }
+                });
+              }
+      
             }, error => {
               console.error('Error al agregar cliente:', error);
             });
@@ -152,10 +185,14 @@ export class ListaClientesPage implements OnInit {
         });
       }
       
+      
 
       goTo(path: string) {
-        this.router.navigate([path]);
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate([path]); // Esto forzará la recarga del componente
+        });
       }
+      
 
       obtenerClientes() {
         this.getClientes$ = this.clienteService.getClientes().subscribe(
@@ -169,7 +206,7 @@ export class ListaClientesPage implements OnInit {
           }
         );
       }
-      
+     /* 
       abrirModificar(cliente: ClienteModel) {
         const dialogRef = this.dialog.open(DialogClienteModificarComponent, {
           width: '500px',
@@ -185,7 +222,6 @@ export class ListaClientesPage implements OnInit {
             });      
             //this.clientes = this.clientes.map(c => c.id === clienteModificado.id ? clienteModificado : c);
   
-            alert(clienteModificado.nombre);
             if(this.busqueda == ''){
               this.obtenerClientes();
             }else {
@@ -200,7 +236,37 @@ export class ListaClientesPage implements OnInit {
       
           }
         });
-      }
+      }*/
+
+        abrirModificar(cliente: ClienteModel) {
+          const dialogRef = this.dialog.open(DialogClienteModificarComponent, {
+            width: '500px',
+            data: cliente
+          });
+        
+          dialogRef.afterClosed().subscribe((clienteModificado: ClienteModel) => {
+            if (clienteModificado) {
+              this.clienteService.actualizarCliente(clienteModificado.id, clienteModificado).subscribe(response => {
+                console.log('Cliente actualizado:', response);
+        
+                // Actualiza solo el cliente en la lista sin recargar todo
+                this.clientes = this.clientes.map(c => 
+                  c.id === clienteModificado.id ? clienteModificado : c
+                );
+        
+              }, error => {
+                console.error('Error al actualizar cliente:', error);
+              });
+        
+              if (this.busqueda == '') {
+                this.obtenerClientes();
+              } else {
+                this.clienteService.searchClientes(this.busqueda);
+              }
+            }
+          });
+        }
+        
       
       
 
@@ -219,15 +285,6 @@ export class ListaClientesPage implements OnInit {
             },
             
           );
-        
-
-        //getExpedientesBusqueda
-
-     /*   this.clienteService.searchClientes('a').subscribe(clientes => {
-          console.log(clientes);  // Mostrar los resultados de la búsqueda
-        });*/
-        
-
       }
 
       cambiarPagina(event: PageEvent) {
@@ -244,11 +301,7 @@ export class ListaClientesPage implements OnInit {
       }
 
 
-      ejecutarConsulta() {
-        // Llamada al backend para ejecutar la consulta
 
-        this.clienteService.ejecutarConsulta();
-      }
 
 
 }

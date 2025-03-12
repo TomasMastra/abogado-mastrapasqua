@@ -255,14 +255,14 @@ mat-toolbar {
     background-color: blue;
     
   }
-
-
+  
+  
   /////
   /// 
   /// 
   /// 
   
-
+  
   .titulo-expediente {
     font-size: 1.4rem;
     font-weight: bold;
@@ -301,47 +301,55 @@ mat-toolbar {
       transform: translateX(0);
     }
   }
-
+  
   .cliente-item {
     background-color: #ff0000; /* Color de fondo deseado */
   }
   
-
+  
   /* Asegúrate de que esta clase sea lo más específica posible */
-ion-item.cliente {
+  ion-item.cliente {
   background-color: #f0f0f0 !important; /* Usar !important para forzar el estilo */
-}
-
-ion-item.cliente h1 {
+  }
+  
+  ion-item.cliente h1 {
   color: #ffffff; /* Asegurarse de que el color del texto no cambie */
-}
-
-ion-item.cliente h6 {
+  }
+  
+  ion-item.cliente h6 {
   color: #666;
-}
-
-.lista-clientes {
+  }
+  
+  .lista-clientes {
   --background: #002b5c;
   background-color: var(--background);
-}
-
-.cliente {
+  }
+  
+  .cliente {
   --ion-item-background: #002b5c;
   margin-bottom: 8px;
   
-}
-
-
-.lista-clientes {
+  }
+  
+  
+  .lista-clientes {
   //max-height: 400px; /* Ajusta la altura máxima según lo necesites */
   overflow-y: auto; /* Permite la barra de desplazamiento vertical cuando sea necesario */
-}
-
-
-.lista-clientes-container {
+  }
+  
+  
+  .lista-clientes-container {
   max-height: 400px; /* Ajusta la altura máxima según lo necesites */
   overflow-y: auto;  /* Permite la barra de desplazamiento vertical cuando sea necesario */
-}
-
-
-
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { ClienteModel } from 'src/app/models/cliente/cliente.component';
+import { LocalidadModel } from 'src/app/models/localidad/localidad.component';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -9,7 +9,7 @@ import { catchError, tap } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root'
 })
-export class ClientesService {
+export class LocalidadesService {
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -18,38 +18,47 @@ export class ClientesService {
     })
   };
 
-  private apiUrl = 'http://localhost:3000/clientes';  
-  private clientesSubject = new BehaviorSubject<ClienteModel[]>([]); // Emite un arreglo vacío inicialmente
-  clientes$ = this.clientesSubject.asObservable();  // Expone el observable de clientes
+  private apiUrl = 'http://localhost:3000/localidades';  
+  private localidadesSubject = new BehaviorSubject<LocalidadModel[]>([]); 
+  localidades$ = this.localidadesSubject.asObservable();  
 
   constructor(private http: HttpClient) {}
 
-  // Método para obtener los clientes desde el servidor y emitir los datos
-  getClientes() {
-    this.http.get<ClienteModel[]>(this.apiUrl).subscribe(
-      (clientes) => {
-        this.clientesSubject.next(clientes); // Actualiza los datos emitidos por el BehaviorSubject
+  getLocalidades() {
+    this.http.get<LocalidadModel[]>(this.apiUrl).subscribe(
+      (localidad) => {
+        this.localidadesSubject.next(localidad); 
       },
       (error) => {
-        console.error('Error al obtener clientes:', error);
+        console.error('Error al obtener localidades:', error);
       }
     );
-    return this.clientes$;  // Devuelve el observable para que el componente se suscriba
+    return this.localidades$;  
   }
 
-  // Método para obtener un cliente por su ID
+  getPartidos() {
+    this.http.get<any[]>('http://localhost:3000/partidos').subscribe(
+      (partido) => {
+        this.localidadesSubject.next(partido); 
+      },
+      (error) => {
+        console.error('Error al obtener partidos:', error);
+      }
+    );
+    return this.localidades$;  
+  }
+
+  // NO ESTA EN EL SERVER
   getClientePorId(id: string) {
-    return this.http.get<ClienteModel>(`${this.apiUrl}/${id}`);
+    return this.http.get<LocalidadModel>(`${this.apiUrl}/${id}`);
   }
 
-  addCliente(cliente: ClienteModel): Observable<any> {
+  addLocalidad(localidad: LocalidadModel): Observable<any> {
     const url = `${this.apiUrl}/agregar`;
-    //console.log('URL de búsqueda:', url);
-    //console.log('Datos enviados:', cliente);
-        return this.http.post(`${this.apiUrl}/agregar`, cliente);
+    return this.http.post(`${this.apiUrl}/agregar`, localidad);
   }
       
-  
+  /*
   actualizarCliente(id: string, cliente: ClienteModel): Observable<ClienteModel> {
   const url = `${this.apiUrl}/modificar/${id}`;
     return this.http.put<ClienteModel>(url, cliente);
@@ -58,8 +67,6 @@ export class ClientesService {
   searchClientes(texto: string): Observable<ClienteModel[]> {
     const textoLower = texto.toLowerCase();
     const url = `${this.apiUrl}/buscar?texto=${textoLower}`;
-  
-    //console.log('URL de búsqueda:', url);
   
     return this.http.get<ClienteModel[]>(url).pipe(
       tap(response => {
@@ -72,7 +79,7 @@ export class ClientesService {
     );
   }
 
-
+*/
 
   
 }

@@ -1,21 +1,60 @@
-<div class="form-alta" style="background-color: #002b5c;"> 
+<!-- <div class="form-alta" style="background-color: #002b5c;"> 
   <mat-dialog-content>
-    <h1 style="color: #ffffff;">FORMULARIO DE CLIENTE</h1>
+    <h1 style="color: #ffffff;">FORMULARIO DE EXPEDIENTE</h1>
     <form [formGroup]="form">
       
       <div class="form-row">
+
         <div class="form__group field full-width">
-          <input type="input" class="form__field" placeholder="Titulo" name="titulo" id='titulo' required formControlName="titulo"/>
-          <label for="titulo" class="form__label">Titulo</label>
-          <div class="error" *ngIf="form.controls?.['titulo']?.invalid && (form.controls?.['titulo']?.dirty || form.controls?.['titulo']?.touched)">
-            <div *ngIf="form.controls?.['titulo']?.errors?.['titulo']">El titulo es requerido</div>
+          <input type="number" 
+                 class="form__field" 
+                 placeholder="Numero" 
+                 name="numero" 
+                 id="numero" 
+                 required 
+                 formControlName="numero"
+                 min="0"
+                 max="999999"/>
+          <label for="numero" class="form__label">Numero</label>
+          
+          <div class="error" *ngIf="form.controls?.['numero']?.invalid && (form.controls?.['numero']?.dirty || form.controls?.['numero']?.touched)">
+            <div *ngIf="form.controls?.['numero']?.errors?.['required']" style="color: red;">El número es requerido</div>
+            <div *ngIf="form.controls?.['numero']?.errors?.['min']" style="color: red;">El número debe ser mayor a 0</div>
+            <div *ngIf="form.controls?.['numero']?.errors?.['max']" style="color: red;">El número debe ser menor a 999999</div>
           </div>
         </div>
-      
+        
+
         <div class="form__group field full-width">
-          <textarea class="form__field textarea-field" placeholder="Descripción" name="descripcion" id='descripcion' required formControlName="descripcion" rows="4"></textarea>
-          <label for="descripcion" class="form__label">Descripción</label>
+          <input type="input" class="form__field" placeholder="Año" name="anio" id="anio" required formControlName="anio"/>
+          <label for="titulo" class="form__label">Año</label>
+          <div class="error" *ngIf="form.controls?.['anio']?.invalid && (form.controls?.['anio']?.dirty || form.controls?.['anio']?.touched)">
+            <div *ngIf="form.controls?.['anio']?.errors?.['required']" style="color: red;">El año es requerido</div>
+          </div>
         </div>
+
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: white">Demandados</mat-label>
+          <mat-select style="color: white" formControlName="demandado" [(ngModel)]="demandadoElegido">
+            <mat-option *ngFor="let demandado of demandados" [value]="demandado">
+              {{ demandado.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label style="color: white">Juzgados</mat-label>
+        <mat-select style="color: white" formControlName="juzgado" [(ngModel)]="juzgadoElegido">
+          <mat-option *ngFor="let juzgado of juzgados" [value]="juzgado">
+            {{ juzgado.nombre }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+
       </div>
 
     </form>
@@ -25,4 +64,121 @@
     <button mat-button (click)="closeDialog()">Cancelar</button>
     <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
   </mat-dialog-actions>
+</div> -->
+
+
+<div class="form-alta" style="background-color: #002b5c;"> 
+  <mat-dialog-content>
+    <h1 style="color: #ffffff;">FORMULARIO DE EXPEDIENTE</h1>
+    <form [formGroup]="form">
+      
+      <div class="form-row">
+   <!--     <div class="form__group field full-width">
+          <input type="input" class="form__field" placeholder="Titulo" name="titulo" id="titulo" required formControlName="titulo"/>
+          <label for="titulo" class="form__label">Titulo</label>
+          <div class="error" *ngIf="form.controls?.['titulo']?.invalid && (form.controls?.['titulo']?.dirty || form.controls?.['titulo']?.touched)">
+            <div *ngIf="form.controls?.['titulo']?.errors?.['required']" style="color: red;">El titulo es requerido</div>
+          </div>
+        </div> -->
+
+        <div class="form__group field full-width">
+          <input type="number" 
+                 class="form__field" 
+                 placeholder="Numero" 
+                 name="numero" 
+                 id="numero" 
+                 required 
+                 formControlName="numero"
+                 min="0"
+                 max="999999"/>
+          <label for="numero" class="form__label">Numero</label>
+          
+          <div class="error" *ngIf="form.controls?.['numero']?.invalid && (form.controls?.['numero']?.dirty || form.controls?.['numero']?.touched)">
+            <div *ngIf="form.controls?.['numero']?.errors?.['required']" style="color: red;">El número es requerido</div>
+            <div *ngIf="form.controls?.['numero']?.errors?.['min']" style="color: red;">El número debe ser mayor a 0</div>
+            <div *ngIf="form.controls?.['numero']?.errors?.['max']" style="color: red;">El número debe ser menor a 999999</div>
+          </div>
+        </div>
+        
+
+        <div class="form__group field full-width">
+          <input type="input" class="form__field" placeholder="Año" name="anio" id="anio" required formControlName="anio"/>
+          <label for="titulo" class="form__label">Año</label>
+          <div class="error" *ngIf="form.controls?.['anio']?.invalid && (form.controls?.['anio']?.dirty || form.controls?.['anio']?.touched)">
+            <div *ngIf="form.controls?.['anio']?.errors?.['required']" style="color: red;">El año es requerido</div>
+          </div>
+        </div>
+
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: white">Demandados</mat-label>
+          <mat-select style="color: white" formControlName="demandado" [(ngModel)]="demandadoElegido">
+            <mat-option *ngFor="let demandado of demandados" [value]="demandado">
+              {{ demandado.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label style="color: white">Juzgados</mat-label>
+        <mat-select style="color: white" formControlName="juzgado" [(ngModel)]="juzgadoElegido">
+          <mat-option *ngFor="let juzgado of juzgados" [value]="juzgado">
+            {{ juzgado.nombre }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- VER 
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Seleccionar Cliente</mat-label>
+        <mat-select formControlName="cliente" [(ngModel)]="clienteSeleccionado">
+          <mat-option *ngFor="let cliente of clientes" [value]="cliente">
+            {{ cliente.nombre }} {{ cliente.apellido }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field> -->
+
+      <!-- 
+      <mat-form-field>
+        <mat-label>Cliente</mat-label>
+        <mat-select [(ngModel)]="clienteSeleccionado" name="cliente" required (selectionChange)="seleccionarCliente($event.value)">
+          <mat-option *ngFor="let cliente of clientes" [value]="cliente">{{ cliente.nombre }} {{ cliente.apellido }}</mat-option>
+        </mat-select>
+      </mat-form-field> -->
+      
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label style="color: white">Clientes</mat-label>
+        <mat-select style="color: white" formControlName="cliente" [(ngModel)]="clienteSeleccionado" (selectionChange)="seleccionarCliente($event.value)">
+          <mat-option *ngFor="let cliente of clientes" [value]="cliente">{{ cliente.nombre }} {{ cliente.apellido }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      
+     <!--  <button mat-button (click)="agregarCliente()">Agregar Cliente</button> -->
+      
+<!-- Contenedor con scroll -->
+<div *ngIf="clientesAgregados.length > 0" style="max-height: 200px; overflow-y: auto; border: 1px solid #ffffff; padding: 10px; margin-top: 10px;">
+  <h3>Clientes Agregados</h3>
+  
+  <mat-card *ngFor="let cliente of clientesAgregados" style="margin-bottom: 5px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+    <span>{{ cliente.nombre }} {{ cliente.apellido }}</span>
+    <button mat-icon-button color="warn" (click)="eliminarCliente(cliente)">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </mat-card>
 </div>
+      
+
+      </div>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="closeDialog()" style="color:#ffffff">Cancelar</button>
+    <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
+  </mat-dialog-actions>
+</div>
+

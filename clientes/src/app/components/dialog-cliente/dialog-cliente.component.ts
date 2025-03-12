@@ -7,10 +7,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { takeUntil } from 'rxjs/operators';
 
 import { ClientesService } from 'src/app/services/clientes.service';
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
 import { Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 
 import { ExpedienteModel } from 'src/app/models/expediente/expediente.component';
 import { ExpedientesService } from 'src/app/services/expedientes.service';
@@ -38,19 +40,17 @@ import { IonLabel, IonItem } from "@ionic/angular/standalone";
 })
 export class DialogClienteComponent {
 
- /* form = new FormGroup({
-    nombre: new FormControl(''),
-    apellido: new FormControl(''),
-    fechaNacimiento: new FormControl(''),
-    direccion: new FormControl(''),
-    dni: new FormControl(''),
-    telefono: new FormControl(''),
-  });*/
   menu: number = 1;
+
   protected form: FormGroup;
   listaExpedientes: ExpedienteModel[] = [];
   getExpedientes$!: Subscription;
+  expedientesSeleccionados: any[] = [];
   hayExpedientes: boolean = true;
+
+  private destroy$ = new Subject<void>(); 
+
+
   constructor(
     private clienteService: ClientesService,
     private expedienteService: ExpedientesService,
@@ -58,16 +58,15 @@ export class DialogClienteComponent {
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
 
-    this.form = new FormGroup ({
-      //email: new FormControl('', [Validators.required, Validators.email]),
-      nombre: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
-      apellido: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
+    this.form = new FormGroup({
+      nombre: new FormControl('', [Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),  // Sin 'Validators.required'
+      apellido: new FormControl('', [Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),  // Sin 'Validators.required'
       dni: new FormControl('', [Validators.minLength(7), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
-      telefono: new FormControl('', [ Validators.minLength(6), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
-      fechaNacimiento: new FormControl('', [Validators.required]),
-      direccion: new FormControl(''),
-
+      telefono: new FormControl('', [Validators.minLength(6), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
+      fechaNacimiento: new FormControl(''),  // No tiene validadores
+      direccion: new FormControl('')  // No tiene validadores
     });
+    
 
     if (data) {
       this.form.setValue({
@@ -83,40 +82,48 @@ export class DialogClienteComponent {
 
     }
 
-    this.obtenerExpedientes();
+    this.cargarExpedientes();
   }
 
-  obtenerExpedientes(){
+  ngOnInit() {
+    this.cargarExpedientes(); // Cargar expedientes al iniciar
 
-    this.getExpedientes$ = this.expedienteService.getExpedientes().subscribe(
-      (expedientes) => {
-        //this.listaExpedientes = expedientes;            //DESCOMENTAR
-        this.hayExpedientes = this.listaExpedientes.length > 0;
-      },
-      (error) => {
-        console.error('Error al obtener ex`pedientes:', error);
-      }
-    );
+
   }
 
+  cargarExpedientes() {
+    this.expedienteService.getExpedientes()
+      .pipe(takeUntil(this.destroy$)) // Cancela la suscripción cuando destroy$ emita
+      .subscribe(
+        (expedientes) => {
+          this.listaExpedientes = expedientes;
+          //this.expedientesOriginales = [...expedientes];
+          this.hayExpedientes = this.listaExpedientes.length > 0;
+        },
+        (error) => {
+          console.error('Error al obtener expedientes:', error);
+        }
+      );
+  }
   closeDialog(): void {
     this.dialogRef.close();
   }
 
   acceptDialog(): void {
-
     if(this.form.valid){
  
     const cliente: ClienteModel = {
       nombre: this.form.value.nombre ?? null,
       apellido: this.form.value.apellido ?? null,
-      fecha_nacimiento: this.form.value.fechaNacimiento ?? '',
+      fecha_nacimiento: '1990-01-01 00:00:00.000',
       direccion: this.form.value.direccion && this.form.value.direccion.trim() !== '' ? this.form.value.direccion : '1',
       dni: this.form.value.dni && this.form.value.dni.trim() !== '' ? Number(this.form.value.dni) : 1,
       telefono: this.form.value.telefono && this.form.value.telefono.trim() !== '' ? this.form.value.telefono : '1',
       email: this.form.value.nombre,
       id: '0',
       fecha_creacion: 'ejemplo',
+      expedientes: this.expedientesSeleccionados
+      //expedientes: null
 
     };
 
@@ -154,5 +161,22 @@ export class DialogClienteComponent {
 
   cambiarMenu(menu: number){
     this.menu = menu;
+  }
+
+isSelected(expediente: any): boolean {
+    return this.expedientesSeleccionados.includes(expediente);
+  }
+
+  // Alterna la selección de un expediente
+  toggleSelection(expediente: any): void {
+    const index = this.expedientesSeleccionados.indexOf(expediente);
+    if (index === -1) {
+      // Si no está seleccionado, lo agregamos
+      this.expedientesSeleccionados.push(expediente);
+    } else {
+      // Si está seleccionado, lo eliminamos
+      this.expedientesSeleccionados.splice(index, 1);
+    }
+    console.log(this.expedientesSeleccionados);  // Muestra la lista de expedientes seleccionados
   }
 }

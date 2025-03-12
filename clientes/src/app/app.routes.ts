@@ -29,5 +29,13 @@ export const routes: Routes = [
   {
     path: 'lista-expedientes',
     loadComponent: () => import('./pages/lista-expedientes/lista-expedientes.page').then( m => m.ListaExpedientesPage)
+  },
+  {
+    path: 'localidades',
+    loadComponent: () => import('./pages/localidades/localidades.page').then( m => m.LocalidadesPage)
+  },
+  {
+    path: 'juzgados',
+    loadComponent: () => import('./pages/juzgados/juzgados.page').then( m => m.JuzgadosPage)
   }
 ];

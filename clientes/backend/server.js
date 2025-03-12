@@ -41,12 +41,12 @@ sql.connect(dbConfig)
         // Ruta para obtener clientes
         app.get("/clientes", (req, res) => {
             pool.request()
-                .query("SELECT * FROM clientes")  // Consulta SQL para los clientes
+                .query("SELECT * FROM clientes")  
                 .then(result => {
-                    res.json(result.recordset);  // Devuelve los resultados
+                    res.json(result.recordset);
                 })
                 .catch(err => {
-                    res.status(500).send(err);  // En caso de error, devuelve 500
+                    res.status(500).send(err);
                 });
         });
 
@@ -63,14 +63,14 @@ sql.connect(dbConfig)
 
         // Ruta para buscar clientes
         app.get('/clientes/buscar', async (req, res) => {
-            const texto = req.query.texto;  // Obtener el parámetro 'texto' de la URL
+            const texto = req.query.texto; 
             
             try {
               const result = await pool.request()
                 .input('texto', sql.NVarChar, `%${texto}%`)
                 .query("SELECT * FROM clientes WHERE nombre LIKE @texto OR apellido LIKE @texto");
           
-              res.json(result.recordset);  // Retornar los clientes encontrados
+              res.json(result.recordset);
             } catch (err) {
               console.error('Error al ejecutar la consulta:', err);
               return res.status(500).send('Error al obtener clientes');
@@ -119,13 +119,13 @@ sql.connect(dbConfig)
             }
           });
 
-          /* MODIFICAR */
+          /* Ruta para modificar cliente*/
           app.put('/clientes/modificar/:id', async (req, res) => {
             const { id } = req.params;
-            const nuevosDatos = req.body; // Aquí están los datos del cliente
+            const nuevosDatos = req.body;
             
             console.log('ID del cliente a modificar:', id);
-            console.log('Nuevos datos recibidos:', nuevosDatos); // 🔹 CORRECCIÓN AQUÍ
+            console.log('Nuevos datos recibidos:', nuevosDatos);
         
             try {
                 const resultado = await pool.request()
@@ -157,7 +157,8 @@ sql.connect(dbConfig)
                 res.status(500).json({ mensaje: 'Error al actualizar cliente' });
             }
         });
-///////////////////////////////////
+
+        /*   */
       app.get('/expedientes/clientesPorExpediente/:id_expediente', async (req, res) => {
         const { id_expediente } = req.params;
         try {
@@ -176,65 +177,111 @@ sql.connect(dbConfig)
         }
       });
 
-
-
-
-
-      app.post('/expedientes/agregar', async (req, res) => {
-        try {
-          const { titulo, descripcion} = req.body;
-      
-          if (!titulo) {
-            return res.status(400).json({
-              error: 'Faltan campos obligatorios',
-              camposRequeridos: ['nombre', 'apellido', 'dni', 'email']
-            });
+    app.post('/expedientes/agregar', async (req, res) => {
+      try {
+          const { titulo, descripcion, demandado_id, juzgado_id, numero, anio, clientes } = req.body;
+  
+          if (!numero || !anio || !demandado_id || !juzgado_id || !Array.isArray(clientes)) {
+              return res.status(400).json({
+                  error: 'Faltan campos obligatorios',
+                  camposRequeridos: ['numero', 'anio', 'demandado', 'juzgado', 'clientes']
+              });
           }
-      
+  
           const result = await pool.request()
-          .input('titulo', sql.NVarChar, titulo)
-          .input('descripcion', sql.NVarChar, descripcion)
-          .query(`
-            INSERT INTO expedientes (titulo, descripcion, fecha_creacion)
-            OUTPUT INSERTED.id  
-            VALUES (@titulo, @descripcion, GETDATE())  -- Utiliza GETDATE() para la fecha actual
-          `);
-      
-          // El id del cliente insertado estará en result.recordset[0].id
+              .input('titulo', sql.NVarChar, titulo)
+              .input('descripcion', sql.NVarChar, descripcion)
+              .input('numero', sql.Int, numero)
+              .input('anio', sql.Int, anio)
+              .input('demandado_id', sql.Int, demandado_id)
+              .input('juzgado_id', sql.Int, juzgado_id)
+              .query(`
+                  INSERT INTO expedientes (titulo, descripcion, numero, anio, demandado_id, juzgado_id, fecha_creacion)
+                  OUTPUT INSERTED.id
+                  VALUES (@titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id, GETDATE())
+              `);
+  
+          // Verificar que se insertó el expediente correctamente
+          if (!result.recordset || result.recordset.length === 0) {
+              return res.status(400).json({ error: 'No se pudo generar el expediente' });
+          }
+  
+          const expedienteId = result.recordset[0].id;
+  
+          // Insertar los clientes asociados al expediente
+          for (const cliente of clientes) {
+              await pool.request()
+                  .input('id_cliente', sql.Int, cliente.id)
+                  .input('id_expediente', sql.Int, expedienteId)
+                  .query(`
+                      INSERT INTO clientes_expedientes (id_cliente, id_expediente)
+                      VALUES (@id_cliente, @id_expediente)
+                  `);
+          }
+
+  
           res.status(201).json({
-            message: 'Expediente agregado exitosamente',
-            id: result.recordset[0].id
+              message: 'Expediente y clientes agregados correctamente',
+              expedienteId
           });
-      
-        } catch (err) {
+  
+      } catch (err) {
           console.error('Error al agregar expediente:', err.message);
-          console.error('Error details:', err);
           res.status(500).json({
-            error: 'Error al agregar expediente',
-            message: err.message
+              error: 'Error al agregar expediente',
+              message: err.message
           });
-        }
-      });
+      }
+  });
+  
+    
+      
+      
+      
 
       /*MODIFICAR EXPEDIENTE */
       app.put('/expedientes/modificar/:id', async (req, res) => {
         const { id } = req.params;
-        const nuevosDatos = req.body; // Aquí están los datos del expediente
+        const nuevosDatos = req.body; 
         
         console.log('ID del expediente a modificar:', id);
         console.log('Nuevos datos recibidos:', nuevosDatos); 
-      
+        
+
+        
         try {
           const resultado = await pool.request()
-            .input('id', sql.Int, id)  // Debes asegurar que el ID esté en la consulta
-            .input('titulo', sql.NVarChar, nuevosDatos.titulo) // Cambié esto a sql.NVarChar si el título es texto
+            .input('id', sql.Int, id)
+            .input('titulo', sql.NVarChar, nuevosDatos.titulo) 
             .input('descripcion', sql.NVarChar, nuevosDatos.descripcion)
+            .input('numero', sql.Int, nuevosDatos.numero)
+            .input('anio', sql.Int, nuevosDatos.anio)            
+            .input('juzgado_id', sql.Int, nuevosDatos.juzgado_id)  
+            .input('demandado_id', sql.Int, nuevosDatos.demandado_id)
             .query(`
               UPDATE expedientes
-              SET titulo = @titulo,
-                  descripcion = @descripcion
+              SET 
+                titulo = @titulo,
+                descripcion = @descripcion,
+                numero = @numero,
+                anio = @anio,
+                juzgado_id = @juzgado_id,
+                demandado_id = @demandado_id
               WHERE id = @id
             `);
+
+            const expedienteId = resultado.recordset[0].id;
+  
+            /*
+            for (const cliente of clientes) {
+                await pool.request()
+                    .input('id_cliente', sql.Int, cliente.id)
+                    .input('id_expediente', sql.Int, expedienteId)
+                    .query(`
+                        INSERT INTO clientes_expedientes (id_cliente, id_expediente)
+                        VALUES (@id_cliente, @id_expediente)
+                    `);
+            }*/
       
           if (resultado.rowsAffected[0] > 0) {
             res.status(200).json({ mensaje: 'Expediente actualizado correctamente' });
@@ -246,13 +293,280 @@ sql.connect(dbConfig)
           res.status(500).json({ mensaje: 'Error al actualizar expediente' });
         }
       });
+
+
+      app.delete('/expedientes/:id_expediente', async (req, res) => {
+        const { id_expediente } = req.params; // Obtenemos el id_expediente desde los parámetros de la URL
       
+        try {
+          // Verificar que el id_expediente es válido
+          if (!id_expediente) {
+            return res.status(400).json({ error: 'El ID del expediente es obligatorio' });
+          }
+      
+          // Eliminar todos los clientes asociados al expediente
+          const result = await pool.request()
+            .input('id_expediente', sql.Int, id_expediente)
+            .query(`
+              DELETE FROM clientes_expedientes
+              WHERE id_expediente = @id_expediente
+            `);
+      
+          // Verificar si se eliminó algún registro
+          if (result.rowsAffected[0] > 0) {
+            res.status(200).json({ message: 'Clientes eliminados correctamente del expediente' });
+          } else {
+            res.status(404).json({ message: 'No se encontraron clientes para eliminar en este expediente' });
+          }
+        } catch (err) {
+          console.error('Error al eliminar clientes del expediente:', err.message);
+          res.status(500).json({
+            error: 'Error al eliminar clientes del expediente',
+            message: err.message
+          });
+        }
+      });
+      
+      
+      
+      
+      /*  BUSCAR EXPEDIENTES */
+      app.get('/expedientes/buscar', async (req, res) => {
+        const texto = req.query.texto;  // Obtener el parámetro 'texto' de la URL
         
+        try {
+          const result = await pool.request()
+            .input('texto', sql.NVarChar, `%${texto}%`)
+            .query("SELECT * FROM expedientes WHERE titulo LIKE @texto");
+      
+          res.json(result.recordset);  // Retornar los clientes encontrados
+        } catch (err) {
+          console.error('Error al ejecutar la consulta:', err);
+          return res.status(500).send('Error al obtener expedientes');
+        }
+      });
+
+
+/* agrega cliente-expediente */
+app.post('/clientes-expedientes/agregar', async (req, res) => {
+  try {
+    const { cliente, expediente } = req.body;
+
+    if (!cliente || !expediente) {
+      return res.status(400).json({
+        error: 'Faltan campos obligatorios',
+        camposRequeridos: ['cliente', 'expediente']
+      });
+    }
+
+    const result = await pool.request()
+      .input('id_cliente', sql.Int, cliente)
+      .input('id_expediente', sql.Int, expediente)
+      .query(`
+        INSERT INTO clientes_expedientes (id_cliente, id_expediente)
+        VALUES (@id_cliente, @id_expediente)
+      `);
+
+    res.status(201).json({
+      message: 'Relación cliente-expediente agregada exitosamente'
+    });
+
+  } catch (err) {
+    console.error('Error al agregar relación cliente-expediente:', err.message);
+    res.status(500).json({
+      error: 'Error al agregar relación clientes-expedientes',
+      message: err.message
+    });
+  }
+});
+
+/* agregar loclaidades */
+app.post('/localidades/agregar', async (req, res) => {
+  try {
+    const { localidad, partido, provincia} = req.body;
+
+    if (!localidad || !partido || !provincia) {
+      return res.status(400).json({
+        error: 'Faltan campos obligatorios',
+        camposRequeridos: ['localidad', 'partido', 'provincia']
+      });
+    }
+
+    const result = await pool.request()
+      .input('localidad', sql.NVarChar, localidad)
+      .input('partido', sql.NVarChar, partido)
+      .input('provincia', sql.NVarChar, provincia)
+      .query(`
+        INSERT INTO localidades (localidad, partido, provincia)
+        OUTPUT INSERTED.id  
+        VALUES (@localidad, @partido, @provincia)
+      `);
+
+    // El id del cliente insertado estará en result.recordset[0].id
+    res.status(201).json({
+      message: 'Localidad agregada exitosamente',
+      id: result.recordset[0].id
+    });
+
+  } catch (err) {
+    console.error('Error al agregar localidad:', err.message);
+    console.error('Error details:', err);
+    res.status(500).json({
+      error: 'Error al agregar localidad',
+      message: err.message
+    });
+  }
+});
+
+
+app.get("/localidades", (req, res) => {
+  pool.request()
+      .query("SELECT * FROM localidades ORDER BY localidad")  
+      .then(result => {
+          res.json(result.recordset);  
+      })
+      .catch(err => {
+          res.status(500).send(err);  
+      });
+});
+
+app.post('/juzgados/agregar', async (req, res) => {
+  try {
+    const { localidad_id, direccion, nombre} = req.body;
+
+    if (!localidad_id) {
+      return res.status(400).json({
+        error: 'Faltan campos obligatorios',
+        camposRequeridos: ['localidad']
+      });
+    }
+
+    const result = await pool.request()
+    .input('localidad_id', sql.Int, Number(localidad_id))
+    .input('nombre', sql.NVarChar, nombre) // Se declara la variable @nombre
+    .input('direccion', sql.NVarChar, direccion) // Se declara la variable @nombre
+
+    .query(`
+        INSERT INTO juzgados (nombre, direccion, localidad_id)
+        OUTPUT INSERTED.id  
+        VALUES (@nombre, @direccion, @localidad_id)
+      `);
+
+    // El id del cliente insertado estará en result.recordset[0].id
+    res.status(201).json({
+      message: 'Juzgado agregado exitosamente',
+      id: result.recordset[0].id
+    });
+
+  } catch (err) {
+    console.error('Error al agregar juzgado:', err.message);
+    console.error('Error details:', err);
+    res.status(500).json({
+      error: 'Error al agregar juzgado',
+      message: err.message
+    });
+  }
+});
+
+
+app.get("/juzgados", (req, res) => {
+  pool.request()
+      .query("SELECT * FROM juzgados")  
+      .then(result => {
+          res.json(result.recordset);  
+      })
+      .catch(err => {
+          res.status(500).send(err);  
+      });
+});
+
+app.get("/partidos", (req, res) => {
+  pool.request()
+      .query("SELECT * FROM partido ORDER BY nombre")  
+      .then(result => {
+          res.json(result.recordset);  
+      })
+      .catch(err => {
+          res.status(500).send(err);  
+      });
+});
+
+app.get("/demandados", (req, res) => {
+  pool.request()
+      .query("SELECT * FROM demandados")  
+      .then(result => {
+          res.json(result.recordset);  
+      })
+      .catch(err => {
+          res.status(500).send(err);  
+      });
+});
+
+app.get("/demandados/:id", async (req, res) => {
+  try {
+    const expedienteId = req.params.id;
+
+    // Validar que el id sea un número
+    if (isNaN(expedienteId)) {
+      return res.status(400).json({ error: "El ID proporcionado no es válido" });
+    }
+
+    const result = await pool.request()
+        .input("id", sql.Int, parseInt(expedienteId)) // Asegurarse de que el ID sea un número entero
+        .query("SELECT * FROM demandados WHERE id = @id");
+
+    if (result.recordset.length === 0) {
+        return res.status(404).json({ error: "Demandado no encontrado" });
+    }
+
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error("Error al obtener demandado:", err);
+    res.status(500).send(err);
+  }
+});
+
+
+
+app.post('/expedientes/agregarExpedienteClientes', async (req, res) => {
+  try {
+    console.error('Datos recibidos:', req.body);  
+
+    const { cliente, expediente } = req.body; 
+
+    if (!cliente || !expediente) {
+      return res.status(400).json({
+        error: 'Faltan campos obligatorios',
+        camposRequeridos: ['cliente', 'expediente']
+      });
+    }
+
+    // Lógica para agregar la relación entre cliente y expediente
+    const result = await pool.request()
+      .input('id_cliente', sql.Int, cliente)
+      .input('id_expediente', sql.Int, expediente)
+      .query(`
+        INSERT INTO clientes_expedientes (id_cliente, id_expediente)
+        VALUES (@id_cliente, @id_expediente)
+      `);
+
+    res.status(201).json({
+      message: 'Relación cliente-expediente agregada exitosamente'
+    });
+  } catch (err) {
+    console.error('Error al agregar relación cliente-expediente:', err.message);
+    res.status(500).json({
+      error: 'Error al agregar relación clientes-expedientes',
+      message: err.message
+    });
+  }
+});
+
           
              // Iniciar el servidor
-             app.listen(3000, () => {
-              console.log("Servidor corriendo en http://localhost:3000");
-          });     
+      app.listen(3000, () => {
+      console.log("Servidor corriendo en http://localhost:3000");
+      });     
 
     })
     .catch(err => {

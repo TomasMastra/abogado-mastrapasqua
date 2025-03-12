@@ -4,7 +4,7 @@
   <button mat-icon-button (click)="sidenav.toggle()">
     <mat-icon style="color: #ffffff">menu</mat-icon>
   </button>
-  <span style="color: #ffffff">Clientes</span>
+  <span style="color: #ffffff">Expedientes</span>
 </mat-toolbar>
 
 <mat-sidenav-container class="sidenav-container" style="background-color: #1976d2">
@@ -29,6 +29,26 @@
         <span style="color: #ffffff">Expedientes</span>
       </button>
 
+      <button mat-button class="menu-button" [matMenuTriggerFor]="generalMenu">
+        <mat-icon style="color: #ffffff">apps</mat-icon>
+        <span style="color: #ffffff">General</span>
+      </button>
+
+      <mat-menu #generalMenu="matMenu">
+        <button mat-menu-item (click)="goTo('/juzgados')">
+          <mat-icon>gavel</mat-icon>
+          <span>Juzgados</span>
+        </button>
+        <button mat-menu-item (click)="goTo('/localidades')">
+          <mat-icon>location_on</mat-icon>
+          <span>Localidades</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>help</mat-icon>
+          <span>Otro</span>
+        </button>
+      </mat-menu>
+
       <mat-divider></mat-divider>
 
       <button mat-button class="menu-button">
@@ -46,7 +66,7 @@
       <ion-list  class="lista-clientes">
         <div class="toolbar">
           <ion-input 
-          placeholder="Buscar por titulo" 
+          placeholder="Buscar por numero, actora o demandado" 
           class="input-busqueda"
           [(ngModel)]="busqueda"
           (ngModelChange)="buscar()">
@@ -65,13 +85,17 @@
         <ion-item-sliding *ngFor="let expediente of expedientes" class="cliente">
           <ion-item class="cliente" *ngIf="hayExpedientes && expedientes.length > 0">
             <ion-label>
-              <h1>{{ expediente.titulo }} </h1>
-              
-              <!-- Usamos otro *ngFor para mostrar los clientes -->
-              <h6 *ngFor="let cliente of expediente.clientes; let i = index">
-                {{ cliente.nombre || 'Sin clientes' }}
-              </h6>
+              <h2 *ngIf="expediente.clientes.length === 1">
+                {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} contra {{ expediente.demandadoModel.nombre }}
+              </h2>
+              <h2 *ngIf="expediente.clientes.length > 1">
+                {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} y otros contra {{ expediente.demandadoModel.nombre }}
+              </h2>
+              <h2 *ngIf="expediente.clientes.length === 0">
+                {{ expediente.numero }}/{{ expediente.anio }}
+              </h2>
             </ion-label>
+            
         
             <button mat-button class="list-button">
               <mat-icon style="color: #ffffff">delete</mat-icon>
@@ -83,15 +107,13 @@
           </ion-item>
         </ion-item-sliding>
         
-<!-- -
-        <ion-item *ngIf="!hayClientes && expedientes.length <= 0" class="cliente" >
+        <ion-item *ngIf="!hayExpedientes && expedientes.length <= 0" class="cliente" >
           <ion-label text-center>{{ texto }}</ion-label>
-        </ion-item> -->
+        </ion-item>
       </div>
       </ion-list>
       
-      
-      <!-- -->
+
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>
