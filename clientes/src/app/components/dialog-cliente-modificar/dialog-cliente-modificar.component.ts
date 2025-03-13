@@ -76,7 +76,8 @@ export class DialogClienteModificarComponent {
         telefono: this.form.value.telefono ?? '',
         fecha_creacion: this.data?.fecha_creacion ?? 'ejemplo', // Conservar fecha original si existe
         email: this.form.value.nombre,
-        expedientes: null
+        expedientes: null,
+        estado: this.data.estado, //VER
       };
 
       this.dialogRef.close(cliente);

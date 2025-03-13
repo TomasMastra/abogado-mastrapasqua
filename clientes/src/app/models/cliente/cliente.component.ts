@@ -11,4 +11,5 @@ fecha_nacimiento: string | null,
 fecha_creacion: string,
 email: string,
 expedientes: any[] | null;
+estado: string;
 }

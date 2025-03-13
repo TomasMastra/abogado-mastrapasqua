@@ -41,8 +41,8 @@ sql.connect(dbConfig)
         // Ruta para obtener clientes
         app.get("/clientes", (req, res) => {
             pool.request()
-                .query("SELECT * FROM clientes")  
-                .then(result => {
+            .query("SELECT * FROM clientes WHERE estado = 'en gestión'")  
+            .then(result => {
                     res.json(result.recordset);
                 })
                 .catch(err => {
@@ -68,7 +68,7 @@ sql.connect(dbConfig)
             try {
               const result = await pool.request()
                 .input('texto', sql.NVarChar, `%${texto}%`)
-                .query("SELECT * FROM clientes WHERE nombre LIKE @texto OR apellido LIKE @texto");
+                .query("SELECT * FROM clientes WHERE estado = 'en gestión' AND (nombre LIKE @texto OR apellido LIKE @texto)")
           
               res.json(result.recordset);
             } catch (err) {

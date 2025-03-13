@@ -122,8 +122,10 @@ export class DialogClienteComponent {
       email: this.form.value.nombre,
       id: '0',
       fecha_creacion: 'ejemplo',
-      expedientes: this.expedientesSeleccionados
+      expedientes: this.expedientesSeleccionados,
+      estado: this.data.estado,
       //expedientes: null
+
 
     };
 

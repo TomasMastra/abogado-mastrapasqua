@@ -166,7 +166,7 @@ export class DialogExpedienteModificarComponent   {
           demandado_id: this.demandadoElegido?.id ?? null,    
           numero: this.form.value.numero,
           anio: this.form.value.anio,
-          demandadoModel: { id: '', nombre: '' } 
+          demandadoModel: this.demandadoElegido,
  
         };
     
