@@ -33,6 +33,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { DialogClienteComponent } from '../../components/dialog-cliente/dialog-cliente.component'; 
 import { DialogClienteModificarComponent } from '../../components/dialog-cliente-modificar/dialog-cliente-modificar.component'; 
 
+import Swal from 'sweetalert2'
+
 // src\app\components\dialog-cliente\dialog-cliente.component.ts
 @Component({
   selector: 'app-lista-clientes',
@@ -266,9 +268,6 @@ private cliExpServ: ClientesExpedientesService;
             }
           });
         }
-        
-      
-      
 
 
       async buscar() {
@@ -287,6 +286,7 @@ private cliExpServ: ClientesExpedientesService;
           );
       }
 
+
       cambiarPagina(event: PageEvent) {
         const inicio = event.pageIndex * event.pageSize;
         const fin = inicio + event.pageSize;
@@ -300,8 +300,79 @@ private cliExpServ: ClientesExpedientesService;
         this.clientesPaginados = this.clientes.slice(inicio, fin);
       }
 
+      // HACER SERVICIO PROPIO
+      eliminarCliente(cliente: ClienteModel) {
+        Swal.fire({
+          toast: true,
 
+          title: "¿Estás seguro?",
+          text: "No podrás revertir esto.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "No, cancelar",
+          reverseButtons: true
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Cambiar estado a 'eliminado'
+            cliente.estado = 'eliminado';
+      
+            // Verificar si el cliente tiene un ID válido
+            if (!cliente.id) {
+              Swal.fire({
+                toast: true,
 
+                icon: "error",
+                title: "Error",
+                text: "El cliente no tiene un ID válido."
+              });
+              return;
+            }
+      
+            // Actualizar el cliente en la base de datos
+            this.clienteService.actualizarCliente(cliente.id, cliente).subscribe(
+              (response) => {
+                console.log('Cliente actualizado:', response);
+                this.cargarClientes();
+                // Actualiza solo el cliente en la lista sin recargar todo
+               // this.clientes = this.clientes.map(c => (c.id === cliente.id ? cliente : c));
+      
+                // Mostrar notificación de éxito
+                Swal.fire({
+                  toast: true,
+                  position: "top-end",
+                  icon: "success",
+                  title: "Cliente eliminado correctamente.",
+                  showConfirmButton: false,
+                  timer: 3000
+                });
+              },
+              (error) => {
+                console.error('Error al actualizar cliente:', error);
+      
+                // Mostrar error en SweetAlert
+                Swal.fire({
+                  toast: true,
 
+                  icon: "error",
+                  title: "Error",
+                  text: "No se pudo eliminar el cliente."
+                });
+              }
+            );
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "error",
+              title: "Cancelaste la eliminación.",
+              showConfirmButton: false,
+              timer: 3000
+            });
+          }
+        });
+      }
+      
+      
 
 }

@@ -110,6 +110,7 @@ export class DialogLocalidadComponent {
       partido: this.form.value.partido.nombre ?? null,
       provincia: this.form.value.partido.provincia,
       id: '0',
+      estado: 'activo'
     };
 
     this.dialogRef.close(cliente);

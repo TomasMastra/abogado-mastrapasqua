@@ -43,9 +43,9 @@
           <mat-icon>location_on</mat-icon>
           <span>Localidades</span>
         </button>
-        <button mat-menu-item>
-          <mat-icon>help</mat-icon>
-          <span>Otro</span>
+        <button mat-menu-item (click)="goTo('/demandado')">
+          <mat-icon>gavel</mat-icon>
+          <span>Demandados</span>
         </button>
       </mat-menu>
 
@@ -92,12 +92,12 @@
                 {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} y otros contra {{ expediente.demandadoModel.nombre }}
               </h2>
               <h2 *ngIf="expediente.clientes.length === 0">
-                {{ expediente.numero }}/{{ expediente.anio }}
+                {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandadoModel.nombre }}
               </h2>
             </ion-label>
             
         
-            <button mat-button class="list-button">
+            <button mat-button class="list-button" (click)="eliminarExpediente(expediente)">
               <mat-icon style="color: #ffffff">delete</mat-icon>
             </button>
         

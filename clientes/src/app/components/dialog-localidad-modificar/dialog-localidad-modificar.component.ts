@@ -5,8 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { ClientesService } from 'src/app/services/clientes.service';
-import { ClienteModel } from 'src/app/models/cliente/cliente.component';
+import { MatSelectModule } from '@angular/material/select';
+
+import { LocalidadesService } from 'src/app/services/localidades.service';
+import { LocalidadModel } from 'src/app/models/localidad/localidad.component';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonCheckbox, IonItemSliding } from "@ionic/angular/standalone";
 
@@ -26,9 +28,9 @@ import { ExpedientesService } from 'src/app/services/expedientes.service';
 import { IonLabel, IonItem } from "@ionic/angular/standalone";
 
 @Component({
-  selector: 'app-dialog-cliente-modificar',
-  templateUrl: './dialog-cliente-modificar.component.html',
-  styleUrls: ['./dialog-cliente-modificar.component.scss'],
+  selector: 'app-dialog-localidad-modificar',
+  templateUrl: './dialog-localidad-modificar.component.html',
+  styleUrls: ['./dialog-localidad-modificar.component.scss'],
   standalone: true,
   imports: [IonItemSliding, IonCheckbox, 
     CommonModule, 
@@ -37,24 +39,45 @@ import { IonLabel, IonItem } from "@ionic/angular/standalone";
     MatDialogModule, 
     MatFormFieldModule, 
     MatInputModule, 
-    ReactiveFormsModule
+    ReactiveFormsModule, MatSelectModule
   ]
 })
-export class DialogClienteModificarComponent {
+export class DialogLocalidadModificarComponent {
 
   protected form: FormGroup;
   menu: number = 1;
+  partidos: any[] = [];
+  private destroy$ = new Subject<void>(); 
+
 
   constructor(
-    private clienteService: ClientesService,
-    public dialogRef: MatDialogRef<DialogClienteModificarComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ClienteModel
+    private localidadService: LocalidadesService,
+    public dialogRef: MatDialogRef<DialogLocalidadModificarComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: LocalidadModel
   ) {
     this.form = new FormGroup({
-      nombre: new FormControl(data?.nombre ?? '', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
-      direccion: new FormControl(data?.direccion ?? '')
+      localidad: new FormControl(data?.localidad ?? '', [Validators.required]),
+      partido: new FormControl(data?.partido ?? '', [Validators.required]),
     });
   }
+
+  ngOnInit() {
+    this.cargarPartidos();
+  }
+
+  cargarPartidos() {
+    this.localidadService.getPartidos()
+      .pipe(takeUntil(this.destroy$)) 
+      .subscribe(
+        (partidos) => {
+          this.partidos = partidos;
+        },
+        (error) => {
+          console.error('Error al obtener partidos:', error);
+        }
+      );
+  }
+
 
   closeDialog(): void {
     this.dialogRef.close();
@@ -62,21 +85,16 @@ export class DialogClienteModificarComponent {
 
   acceptDialog(): void {
     if (this.form.valid) {
-      const cliente: ClienteModel = {
+      const localidad: LocalidadModel = {
         id: this.data?.id ?? '0',  // Si tiene un ID, lo conserva; si no, asignamos "0"
-        nombre: this.form.value.nombre ?? null,
-        apellido: this.form.value.apellido ?? null,
-        fecha_nacimiento: this.form.value.fechaNacimiento || '', // Aseguramos que nunca sea null
-        direccion: this.form.value.direccion ?? '',
-        dni: this.form.value.dni ? Number(this.form.value.dni) : null,
-        telefono: this.form.value.telefono ?? '',
-        fecha_creacion: this.data?.fecha_creacion ?? 'ejemplo', // Conservar fecha original si existe
-        email: this.form.value.nombre,
-        expedientes: null,
-        estado: this.data.estado, //VER
+        localidad: this.form.value.localidad ?? null,
+        partido: this.form.value.partido.nombre ?? null,
+        provincia: this.form.value.partido.provincia,
+        estado: this.data.estado ?? '',
+
       };
 
-      this.dialogRef.close(cliente);
+      this.dialogRef.close(localidad);
     } else {
       let mensaje = "Errores en los siguientes campos:\n";
 

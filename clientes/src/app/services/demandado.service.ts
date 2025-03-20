@@ -35,16 +35,20 @@ export class DemandadosService {
     }
 
 
+    actualizarDemandado(id: string, demandado: DemandadoModel): Observable<DemandadoModel> {
+    const url = `${this.apiUrl}/modificar/${id}`;
+      return this.http.put<DemandadoModel>(url, demandado);
+    }
    
 
-  /*
-  addExpediente(expediente: ExpedienteModel): Observable<any> {
+  
+  addDemandado(demandado: DemandadoModel): Observable<any> {
     const url = `${this.apiUrl}/agregar`;
     console.log('URL de búsqueda:', url);
-    console.log('Datos enviados:', expediente);
-    return this.http.post(`${this.apiUrl}/agregar`, expediente);
+    console.log('Datos enviados:', demandado);
+    return this.http.post(`${this.apiUrl}/agregar`, demandado);
   }
-*/
+
 /*
   actualizarExpediente(id: string, expediente: ExpedienteModel): Observable<ExpedienteModel> {
     const url = `${this.apiUrl}/modificar/${id}`;   

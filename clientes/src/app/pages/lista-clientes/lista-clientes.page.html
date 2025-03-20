@@ -43,9 +43,9 @@
             <mat-icon>location_on</mat-icon>
             <span>Localidades</span>
           </button>
-          <button mat-menu-item>
-            <mat-icon>help</mat-icon>
-            <span>Otro</span>
+          <button mat-menu-item (click)="goTo('/demandado')">
+            <mat-icon>gavel</mat-icon>
+            <span>Demandados</span>
           </button>
         </mat-menu>
   
@@ -91,7 +91,7 @@
         
 
 
-              <button mat-button class="list-button">
+              <button mat-button class="list-button" (click)="eliminarCliente(cliente)">
                 <mat-icon style="color: #ffffff">delete</mat-icon>
               </button>
 

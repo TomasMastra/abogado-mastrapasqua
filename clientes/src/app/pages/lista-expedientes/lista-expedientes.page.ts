@@ -31,6 +31,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DialogExpedienteComponent } from '../../components/dialog-expediente/dialog-expediente.component'; 
 import { DialogExpedienteModificarComponent } from '../../components/dialog-expediente-modificar/dialog-expediente-modificar.component'; 
 
+import Swal from 'sweetalert2'
 
 
 @Component({
@@ -240,6 +241,81 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
       obtenerDemandado(id: number){
         this.demandadoService.getDemandadoPorId(id);
       }
+
+      
+            // HACER SERVICIO PROPIO
+            eliminarExpediente(expediente: ExpedienteModel) {
+              Swal.fire({
+                toast: true,
+      
+                title: "¿Estás seguro?",
+                text: "No podrás revertir esto.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, eliminar",
+                cancelButtonText: "No, cancelar",
+                reverseButtons: true
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  // Cambiar estado a 'eliminado'
+                  expediente.estado = 'eliminado';
+            
+                  // Verificar si el cliente tiene un ID válido
+                  if (!expediente.id) {
+                    Swal.fire({
+                      toast: true,
+      
+                      icon: "error",
+                      title: "Error",
+                      text: "El expediente no tiene un ID válido."
+                    });
+                    return;
+                  }
+            
+                  // Actualizar el cliente en la base de datos
+                  this.expedienteService.actualizarExpediente(expediente.id, expediente).subscribe(
+                    (response) => {
+                      console.log('Expediente actualizado:', response);
+                      this.cargarExpedientes();
+                      // Actualiza solo el cliente en la lista sin recargar todo
+                     // this.clientes = this.clientes.map(c => (c.id === cliente.id ? cliente : c));
+            
+                      // Mostrar notificación de éxito
+                      Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "success",
+                        title: "Expediente eliminado correctamente.",
+                        showConfirmButton: false,
+                        timer: 3000
+                      });
+                    },
+                    (error) => {
+                      console.error('Error al actualizar expediente:', error);
+            
+                      // Mostrar error en SweetAlert
+                      Swal.fire({
+                        toast: true,
+      
+                        icon: "error",
+                        title: "Error",
+                        text: "No se pudo eliminar el expediente."
+                      });
+                    }
+                  );
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                  Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "error",
+                    title: "Cancelaste la eliminación.",
+                    showConfirmButton: false,
+                    timer: 3000
+                  });
+                }
+              });
+            }
+            
 
 
 }

@@ -50,12 +50,15 @@ export class JuzgadosService {
     const url = `${this.apiUrl}/agregar`;
     return this.http.post(`${this.apiUrl}/agregar`, juzgado);
   }
-      
-  /*
-  actualizarCliente(id: string, cliente: ClienteModel): Observable<ClienteModel> {
-  const url = `${this.apiUrl}/modificar/${id}`;
-    return this.http.put<ClienteModel>(url, cliente);
-  }
+
+
+    actualizarJuzgado(id: string, juzgado: JuzgadoModel): Observable<JuzgadoModel> {
+    const url = `${this.apiUrl}/modificar/${id}`;
+      return this.http.put<JuzgadoModel>(url, juzgado);
+    }
+
+
+      /*
 
   searchClientes(texto: string): Observable<ClienteModel[]> {
     const textoLower = texto.toLowerCase();
@@ -73,6 +76,11 @@ export class JuzgadosService {
   }
 
 */
+
+
+getExpedientesPorJuzgado(juzgadoId: string) {
+  return this.http.get<any[]>(`http://localhost:3000/expedientes/juzgados?id=${juzgadoId}`);
+}
 
   
 }

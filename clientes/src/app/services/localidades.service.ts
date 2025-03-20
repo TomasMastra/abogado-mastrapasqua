@@ -81,5 +81,9 @@ export class LocalidadesService {
 
 */
 
+    actualizarLocalidad(id: string, localidad: LocalidadModel): Observable<LocalidadModel> {
+    const url = `${this.apiUrl}/modificar/${id}`;
+      return this.http.put<LocalidadModel>(url, localidad);
+    }
   
 }

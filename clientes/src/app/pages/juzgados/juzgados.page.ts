@@ -7,7 +7,10 @@ import { firstValueFrom } from 'rxjs';  // Necesario para usar firstValueFrom
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonImg, IonCard, IonCardContent, IonText, IonItem, IonItemOption, IonItemOptions, IonLabel, IonItemSliding, IonList, IonIcon, IonButton, IonButtons, IonInput } from '@ionic/angular/standalone';
 import { JuzgadosService } from 'src/app/services/juzgados.service';
 import { JuzgadoModel } from 'src/app/models/juzgado/juzgado.component';
+import { MatDialogModule } from '@angular/material/dialog';
 
+import { ExpedientesService } from 'src/app/services/expedientes.service';
+import { ExpedienteModel } from 'src/app/models/expediente/expediente.component';
 
 import { Subscription, Observable  } from 'rxjs';
 import { Subject } from 'rxjs';
@@ -30,7 +33,9 @@ import { MatMenuModule } from '@angular/material/menu';
 
 import { MatDialog } from '@angular/material/dialog';
 import { DialogJuzgadoComponent } from '../../components/dialog-juzgado/dialog-juzgado.component'; 
-import { DialogClienteModificarComponent } from '../../components/dialog-cliente-modificar/dialog-cliente-modificar.component'; 
+import { DialogJuzgadoModificarComponent } from '../../components/dialog-juzgado-modificar/dialog-juzgado-modificar.component'; 
+
+import Swal from 'sweetalert2'
 
 // src\app\components\dialog-cliente\dialog-cliente.component.ts
 @Component({
@@ -45,7 +50,7 @@ import { DialogClienteModificarComponent } from '../../components/dialog-cliente
     IonItem, IonCardContent, IonCard, IonImg, IonContent, IonHeader, IonTitle, IonToolbar, IonText,
     MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
     MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule, MatPaginatorModule,
-    MatMenuModule, MatButtonModule, MatIconModule
+    MatMenuModule, MatButtonModule, MatIconModule, MatDialogModule
 
  
   ]
@@ -53,6 +58,7 @@ import { DialogClienteModificarComponent } from '../../components/dialog-cliente
 export class JuzgadosPage implements OnInit {
 
   private juzgadosService: JuzgadosService;
+  private expedientesService: ExpedientesService;
 
   juzgados: JuzgadoModel[] = [];
   juzgadosOriginales: JuzgadoModel[] = []; 
@@ -69,9 +75,11 @@ export class JuzgadosPage implements OnInit {
 
 
 
-  constructor(juzgadosService: JuzgadosService, private dialog: MatDialog,
+  constructor(juzgadosService: JuzgadosService, expedientesService: ExpedientesService, private dialog: MatDialog,
     private router: Router) {
     this.juzgadosService = juzgadosService;
+    this.expedientesService = expedientesService;
+
   }
 
 /*
@@ -187,4 +195,110 @@ export class JuzgadosPage implements OnInit {
       }
 
 
+
+      abrirModificar(juzgado: JuzgadoModel) {
+        const dialogRef = this.dialog.open(DialogJuzgadoModificarComponent, {
+          width: '500px',
+          data: juzgado
+        });
+            
+        dialogRef.afterClosed().subscribe((juzgadoModificado: JuzgadoModel) => {
+          if (juzgadoModificado) {
+                  // Si se ha modificado la localidad, actualizamos
+            this.juzgadosService.actualizarJuzgado(juzgadoModificado.id, juzgadoModificado).subscribe(response => {
+            console.log('Juzgado actualizado:', response);
+            
+                    // Actualiza solo la localidad modificada en la lista sin recargar todo
+              this.juzgados = this.juzgados.map(l => 
+                l.id === juzgadoModificado.id ? juzgadoModificado : l
+              );
+            }, error => {
+              console.error('Error al actualizar localidad:', error);
+            });
+            
+                  // Si la búsqueda está vacía, se obtiene la lista completa
+            if (this.busqueda == '') {
+              this.obtenerJuzgados();
+            } else {
+                    // Si hay búsqueda, puedes aplicar el filtro o llamada a servicio de búsqueda
+                    // this.localidadesService.searchLocalidades(this.busqueda);
+            }
+          } else {
+                  // Si el usuario cancela, no hacemos nada pero podemos hacer algo si se desea (como loguear o simplemente no hacer nada)
+            console.log('Modificación cancelada');
+            this.obtenerJuzgados();
+      
+          }
+        });
+      }
+
+
+        // HACER SERVICIO PROPIO
+        eliminarJuzgado(juzgado: JuzgadoModel) {
+          Swal.fire({
+            toast: true,
+            title: "¿Estás seguro?",
+            text: "No podrás revertir esto.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "No, cancelar",
+            reverseButtons: true
+          }).then((result) => {
+            if (result.isConfirmed) {
+        
+              this.juzgadosService.getExpedientesPorJuzgado(juzgado.id).subscribe(expedientes => {
+                if (expedientes.length > 0) {
+                  // Si hay expedientes en gestión, mostrar error y cancelar eliminación
+                  Swal.fire({
+                    toast: true,
+                    icon: "error",
+                    title: "No puedes eliminar este juzgado",
+                    text: "Tiene expedientes en gestión.",
+                    showConfirmButton: true
+                  });
+                  return;
+                }
+        
+                // Si no hay expedientes activos, proceder con la eliminación
+                juzgado.estado = 'eliminado';
+        
+                this.juzgadosService.actualizarJuzgado(juzgado.id, juzgado).subscribe(
+                  (response) => {
+                    console.log('Juzgado actualizado:', response);
+                    this.cargarJuzgados();
+        
+                    Swal.fire({
+                      toast: true,
+                      position: "top-end",
+                      icon: "success",
+                      title: "Juzgado eliminado correctamente.",
+                      showConfirmButton: false,
+                      timer: 3000
+                    });
+                  },
+                  (error) => {
+                    console.error('Error al actualizar juzgado:', error);
+                    Swal.fire({
+                      toast: true,
+                      icon: "error",
+                      title: "Error",
+                      text: "No se pudo eliminar el juzgado."
+                    });
+                  }
+                );
+              });
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: "Cancelaste la eliminación.",
+                showConfirmButton: false,
+                timer: 3000
+              });
+            }
+          });
+        }
+        
 }

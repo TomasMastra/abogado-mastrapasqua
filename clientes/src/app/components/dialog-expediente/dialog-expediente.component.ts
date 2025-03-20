@@ -165,7 +165,9 @@ export class DialogExpedienteComponent {
         demandado_id: this.demandadoElegido?.id ?? null,
         numero: this.form.value.numero,
         anio: this.form.value.anio,
-        demandadoModel: { id: '', nombre: '' } 
+        demandadoModel: { id: '', nombre: '', estado: '' } ,
+        estado: 'en gestión',
+
       };
       
 

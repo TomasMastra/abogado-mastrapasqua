@@ -11,6 +11,7 @@ export interface ExpedienteModel {
   demandado_id: number | null,
   numero: number,
   anio: number,
-  demandadoModel: DemandadoModel;
+  demandadoModel: DemandadoModel,
+  estado: string,
   }
   

@@ -37,5 +37,9 @@ export const routes: Routes = [
   {
     path: 'juzgados',
     loadComponent: () => import('./pages/juzgados/juzgados.page').then( m => m.JuzgadosPage)
+  },
+  {
+    path: 'demandado',
+    loadComponent: () => import('./pages/demandado/demandado.page').then( m => m.DemandadoPage)
   }
 ];

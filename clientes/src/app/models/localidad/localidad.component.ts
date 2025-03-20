@@ -3,5 +3,6 @@ export interface LocalidadModel {
   localidad: string | null,
   partido: string | null,
   provincia: string | null,
+  estado: string,
   }
   

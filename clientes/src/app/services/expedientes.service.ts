@@ -4,7 +4,7 @@ import { BehaviorSubject, forkJoin  } from 'rxjs';
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
 import { ExpedienteModel } from '../models/expediente/expediente.component';
 import { DemandadoModel } from '../models/demandado/demandado.component';
-
+import { HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -148,6 +148,14 @@ export class ExpedientesService {
             return throwError(error);  // Asegúrate de capturar y propagar el error correctamente
           })
         );
+      }
+      
+      getExpedientesPorDemandado(id: string) {
+        const params = new HttpParams()
+          .set("id", id)
+          .set("estado", "en gestión");
+      
+        return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/demandados`, { params });
       }
       
       

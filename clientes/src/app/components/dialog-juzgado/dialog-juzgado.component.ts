@@ -106,6 +106,7 @@ export class DialogJuzgadoComponent {
       nombre: this.form.value.nombre ?? null,
       direccion: this.form.value.direccion,
       id: '0',
+      estado: 'activo'
     };
 
     this.dialogRef.close(juzgado);

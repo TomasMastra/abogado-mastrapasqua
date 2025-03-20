@@ -167,6 +167,7 @@ export class DialogExpedienteModificarComponent   {
           numero: this.form.value.numero,
           anio: this.form.value.anio,
           demandadoModel: this.demandadoElegido,
+          estado: this.data?.estado
  
         };
     

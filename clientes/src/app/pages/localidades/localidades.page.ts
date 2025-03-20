@@ -30,7 +30,9 @@ import { MatMenuModule } from '@angular/material/menu';
 
 import { MatDialog } from '@angular/material/dialog';
 import { DialogLocalidadComponent } from '../../components/dialog-localidad/dialog-localidad.component'; 
-import { DialogClienteModificarComponent } from '../../components/dialog-cliente-modificar/dialog-cliente-modificar.component'; 
+import { DialogLocalidadModificarComponent } from '../../components/dialog-localidad-modificar/dialog-localidad-modificar.component'; 
+
+import Swal from 'sweetalert2'
 
 // src\app\components\dialog-cliente\dialog-cliente.component.ts
 @Component({
@@ -183,10 +185,119 @@ export class LocalidadesPage implements OnInit {
         );
       }
 
+      abrirModificar(localidad: LocalidadModel) {
+        const dialogRef = this.dialog.open(DialogLocalidadModificarComponent, {
+          width: '500px',
+          data: localidad
+        });
+      
+        dialogRef.afterClosed().subscribe((localidadModificado: LocalidadModel) => {
+          if (localidadModificado) {
+            // Si se ha modificado la localidad, actualizamos
+            this.localidadesService.actualizarLocalidad(localidadModificado.id, localidadModificado).subscribe(response => {
+              console.log('Localidad actualizada:', response);
+      
+              // Actualiza solo la localidad modificada en la lista sin recargar todo
+              this.localidades = this.localidades.map(l => 
+                l.id === localidadModificado.id ? localidadModificado : l
+              );
+            }, error => {
+              console.error('Error al actualizar localidad:', error);
+            });
+      
+            // Si la búsqueda está vacía, se obtiene la lista completa
+            if (this.busqueda == '') {
+              this.obtenerLocalidades();
+            } else {
+              // Si hay búsqueda, puedes aplicar el filtro o llamada a servicio de búsqueda
+              // this.localidadesService.searchLocalidades(this.busqueda);
+            }
+          } else {
+            // Si el usuario cancela, no hacemos nada pero podemos hacer algo si se desea (como loguear o simplemente no hacer nada)
+            console.log('Modificación cancelada');
+            this.obtenerLocalidades();
+
+          }
+        });
+      }
+      
 
       buscar(){
 
       }
 
+            eliminarLocalidad(localidad: LocalidadModel) {
+              Swal.fire({
+                toast: true,
+      
+                title: "¿Estás seguro?",
+                text: "No podrás revertir esto.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, eliminar",
+                cancelButtonText: "No, cancelar",
+                reverseButtons: true
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  // Cambiar estado a 'eliminado'
+                  localidad.estado = 'eliminado';
+            
+                  // Verificar si el cliente tiene un ID válido
+                  if (!localidad.id) {
+                    Swal.fire({
+                      toast: true,
+      
+                      icon: "error",
+                      title: "Error",
+                      text: "La localidad no tiene un ID válido."
+                    });
+                    return;
+                  }
+
+            
+                  // Actualizar el cliente en la base de datos
+                  this.localidadesService.actualizarLocalidad(localidad.id, localidad).subscribe(
+                    (response) => {
+                      console.log('Localidad actualizada:', response);
+                      this.cargarLocalidades();
+                      // Actualiza solo el cliente en la lista sin recargar todo
+                     // this.clientes = this.clientes.map(c => (c.id === cliente.id ? cliente : c));
+            
+                      // Mostrar notificación de éxito
+                      Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "success",
+                        title: "Localidad eliminada correctamente.",
+                        showConfirmButton: false,
+                        timer: 3000
+                      });
+                    },
+                    (error) => {
+                      console.error('Error al actualizar localidad:', error);
+            
+                      // Mostrar error en SweetAlert
+                      Swal.fire({
+                        toast: true,
+      
+                        icon: "error",
+                        title: "Error",
+                        text: "No se pudo eliminar la localidad."
+                      });
+                    }
+                  );
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                  Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "error",
+                    title: "Cancelaste la eliminación.",
+                    showConfirmButton: false,
+                    timer: 3000
+                  });
+                }
+              });
+            }
+            
 
 }
