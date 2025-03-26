@@ -109,7 +109,9 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
         abrirModificar(expediente: ExpedienteModel) {
           const dialogRef = this.dialog.open(DialogExpedienteModificarComponent, {
             width: '500px',
-            data: expediente
+            data: expediente,
+            disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+
           });
         
           dialogRef.afterClosed().subscribe((expedienteModificado: ExpedienteModel) => {
@@ -165,6 +167,8 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
           abrirDialog(): void {
             const dialogRef = this.dialog.open(DialogExpedienteComponent, {
               width: '500px',
+              disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+
             });
           
             dialogRef.afterClosed().subscribe((expediente: ExpedienteModel) => {

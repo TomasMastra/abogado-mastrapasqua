@@ -148,6 +148,8 @@ private cliExpServ: ClientesExpedientesService;
       abrirDialog(): void {
         const dialogRef = this.dialog.open(DialogClienteComponent, {
           width: '500px',
+          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+          data: { /* datos opcionales */ }
         });
       
         dialogRef.afterClosed().subscribe((cliente: ClienteModel) => {
@@ -243,7 +245,9 @@ private cliExpServ: ClientesExpedientesService;
         abrirModificar(cliente: ClienteModel) {
           const dialogRef = this.dialog.open(DialogClienteModificarComponent, {
             width: '500px',
-            data: cliente
+            data: cliente,
+            disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+
           });
         
           dialogRef.afterClosed().subscribe((clienteModificado: ClienteModel) => {
@@ -261,9 +265,9 @@ private cliExpServ: ClientesExpedientesService;
               });
         
               if (this.busqueda == '') {
-                this.obtenerClientes();
+                //this.obtenerClientes();
               } else {
-                this.clienteService.searchClientes(this.busqueda);
+                //this.clienteService.searchClientes(this.busqueda);
               }
             }
           });

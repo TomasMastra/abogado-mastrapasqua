@@ -137,6 +137,8 @@ export class LocalidadesPage implements OnInit {
       abrirDialog(): void {
         const dialogRef = this.dialog.open(DialogLocalidadComponent, {
           width: '500px',
+          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+
         });
       
         dialogRef.afterClosed().subscribe((localidad: LocalidadModel) => {
@@ -188,7 +190,9 @@ export class LocalidadesPage implements OnInit {
       abrirModificar(localidad: LocalidadModel) {
         const dialogRef = this.dialog.open(DialogLocalidadModificarComponent, {
           width: '500px',
-          data: localidad
+          data: localidad,
+          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+
         });
       
         dialogRef.afterClosed().subscribe((localidadModificado: LocalidadModel) => {

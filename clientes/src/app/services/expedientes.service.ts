@@ -158,6 +158,12 @@ export class ExpedientesService {
         return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/demandados`, { params });
       }
       
+      getClientePorNumeroYAnio(numero: string, anio: string) {
+        return this.http.get<ClienteModel[]>(`${this.apiUrl}/buscarPorNumeroyAnio`, {
+          params: { numero, anio }
+        });
+      }
+      
       
 
 }

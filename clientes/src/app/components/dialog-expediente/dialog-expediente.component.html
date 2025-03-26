@@ -1,16 +1,10 @@
-<div class="form-alta" style="background-color: #002b5c;"> 
+<div class="form-alta" style="background-color: #002b5c;" *ngIf="menu ==='1'"> 
   <mat-dialog-content>
     <h1 style="color: #ffffff;">FORMULARIO DE EXPEDIENTE</h1>
     <form [formGroup]="form">
       
       <div class="form-row">
-   <!--     <div class="form__group field full-width">
-          <input type="input" class="form__field" placeholder="Titulo" name="titulo" id="titulo" required formControlName="titulo"/>
-          <label for="titulo" class="form__label">Titulo</label>
-          <div class="error" *ngIf="form.controls?.['titulo']?.invalid && (form.controls?.['titulo']?.dirty || form.controls?.['titulo']?.touched)">
-            <div *ngIf="form.controls?.['titulo']?.errors?.['required']" style="color: red;">El titulo es requerido</div>
-          </div>
-        </div> -->
+
 
         <div class="form__group field full-width">
           <input type="number" 
@@ -61,24 +55,15 @@
         </mat-select>
       </mat-form-field>
 
-      <!-- VER 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Seleccionar Cliente</mat-label>
-        <mat-select formControlName="cliente" [(ngModel)]="clienteSeleccionado">
-          <mat-option *ngFor="let cliente of clientes" [value]="cliente">
-            {{ cliente.nombre }} {{ cliente.apellido }}
+        <mat-label style="color: white">Estado del expediente</mat-label>
+        <mat-select style="color: white" formControlName="estado" [(ngModel)]="estadoSeleccionado">
+          <mat-option *ngFor="let estado of estados" [value]="estado">
+            {{ estado }}
           </mat-option>
         </mat-select>
-      </mat-form-field> -->
-
-      <!-- 
-      <mat-form-field>
-        <mat-label>Cliente</mat-label>
-        <mat-select [(ngModel)]="clienteSeleccionado" name="cliente" required (selectionChange)="seleccionarCliente($event.value)">
-          <mat-option *ngFor="let cliente of clientes" [value]="cliente">{{ cliente.nombre }} {{ cliente.apellido }}</mat-option>
-        </mat-select>
-      </mat-form-field> -->
-      
+      </mat-form-field>
+    
       <mat-form-field appearance="outline" class="full-width">
         <mat-label style="color: white">Clientes</mat-label>
         <mat-select style="color: white" formControlName="cliente" [(ngModel)]="clienteSeleccionado" (selectionChange)="seleccionarCliente($event.value)">
@@ -87,9 +72,7 @@
       </mat-form-field>
       
       
-     <!--  <button mat-button (click)="agregarCliente()">Agregar Cliente</button> -->
-      
-<!-- Contenedor con scroll -->
+
 <div *ngIf="clientesAgregados.length > 0" style="max-height: 200px; overflow-y: auto; border: 1px solid #ffffff; padding: 10px; margin-top: 10px;">
   <h3>Clientes Agregados</h3>
   
@@ -112,3 +95,51 @@
     <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
   </mat-dialog-actions>
 </div>
+
+
+
+<!-- ----------------------------------------- -->
+
+<div class="form-alta" style="background-color: #002b5c;" *ngIf="menu === '2'"> 
+  <mat-dialog-content>
+    <h1 style="color: #ffffff;">FORMULARIO DE EXPEDIENTE</h1>
+    <form [formGroup]="form">
+      
+      <div class="form-row">
+
+        <div class="form-row">
+          <div class="form__group field">
+            <input type="input" class="form__field" placeholder="Honorario" name="honorario" id='honorario' formControlName="honorario"/>
+            <label for="honorario" class="form__label">Honorario</label>
+          </div>
+          <div class="form__group field">
+            <input type="date" class="form__field" placeholder="Fecha de inicio" name="fecha_inicio" id='fecha_inicio' formControlName="fecha_inicio"/>
+            <label for="fecha_inicio" class="form__label">Fecha de inicio</label>
+          </div>
+        </div>
+            
+        <div class="form__group field">
+          <input type="checkbox" id="apelable" formControlName="apelable"/>
+          <label for="apelable">¿El expediente fue apelado?</label>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: white">Jueces</mat-label>
+          <mat-select style="color: white" formControlName="juez" [(ngModel)]="juezSeleccionado">
+            <mat-option *ngFor="let juez of jueces" [value]="juez">
+              {{ juez.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+      </div>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="closeDialog()" style="color:#ffffff">Cancelar</button>
+    <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
+  </mat-dialog-actions>
+</div>
+

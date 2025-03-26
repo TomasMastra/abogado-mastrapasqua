@@ -20,6 +20,8 @@ import { ExpedientesService } from 'src/app/services/expedientes.service';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonLabel, IonItem } from "@ionic/angular/standalone";
 
+import Swal from 'sweetalert2';
+
 @Component({
   selector: 'app-dialog-cliente',
   templateUrl: './dialog-cliente.component.html',
@@ -86,6 +88,8 @@ export class DialogClienteComponent {
   }
 
   ngOnInit() {
+
+
     this.cargarExpedientes(); // Cargar expedientes al iniciar
 
 
@@ -123,7 +127,7 @@ export class DialogClienteComponent {
       id: '0',
       fecha_creacion: 'ejemplo',
       expedientes: this.expedientesSeleccionados,
-      estado: this.data.estado,
+      estado: 'en gestión',
       //expedientes: null
 
 

@@ -51,9 +51,28 @@ export class DialogClienteModificarComponent {
     @Inject(MAT_DIALOG_DATA) public data: ClienteModel
   ) {
     this.form = new FormGroup({
-      nombre: new FormControl(data?.nombre ?? '', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
-      direccion: new FormControl(data?.direccion ?? '')
+      nombre: new FormControl('', [Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),  // Sin 'Validators.required'
+      apellido: new FormControl('', [Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),  // Sin 'Validators.required'
+      dni: new FormControl('', [Validators.minLength(7), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
+      telefono: new FormControl('', [Validators.minLength(6), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
+      fechaNacimiento: new FormControl(''),  // No tiene validadores
+      direccion: new FormControl('')  // No tiene validadores
     });
+    
+
+    if (data) {
+      this.form.setValue({
+        nombre: data.nombre || '',
+        apellido: data.apellido || '',
+        fechaNacimiento: data.fecha_nacimiento || '',
+        direccion: data.direccion || '',
+        dni: data.dni || '',
+        telefono: data.telefono || '',
+      });
+
+
+
+    }
   }
 
   closeDialog(): void {
@@ -63,47 +82,36 @@ export class DialogClienteModificarComponent {
   acceptDialog(): void {
     if (this.form.valid) {
       const cliente: ClienteModel = {
-        id: this.data?.id ?? '0',  // Si tiene un ID, lo conserva; si no, asignamos "0"
-        nombre: this.form.value.nombre ?? null,
-        apellido: this.form.value.apellido ?? null,
-        fecha_nacimiento: this.form.value.fechaNacimiento || '', // Aseguramos que nunca sea null
-        direccion: this.form.value.direccion ?? '',
-        dni: this.form.value.dni ? Number(this.form.value.dni) : null,
-        telefono: this.form.value.telefono ?? '',
-        fecha_creacion: this.data?.fecha_creacion ?? 'ejemplo', // Conservar fecha original si existe
+        ...this.data, // Mantiene los valores previos en caso de que no se modifiquen
+        id: this.data?.id ?? '0',
+        nombre: this.form.value.nombre ?? this.data.nombre,
+        apellido: this.form.value.apellido ?? this.data.apellido,
+        fecha_nacimiento: this.form.value.fechaNacimiento || this.data.fecha_nacimiento || new Date().toISOString().split('T')[0],
+        direccion: this.form.value.direccion ?? this.data.direccion,
+        dni: this.form.value.dni ? Number(this.form.value.dni) : this.data.dni,
+        telefono: this.form.value.telefono ?? this.data.telefono,
+        fecha_creacion: this.data?.fecha_creacion ?? 'ejemplo', 
         email: this.form.value.nombre,
-        expedientes: null,
-        estado: this.data.estado, //VER
+        expedientes: this.data?.expedientes ?? null,
+        estado: this.data.estado, 
       };
-
+  
       this.dialogRef.close(cliente);
     } else {
       let mensaje = "Errores en los siguientes campos:\n";
-
       Object.keys(this.form.controls).forEach(campo => {
         const control = this.form.get(campo);
         if (control?.invalid) {
           mensaje += `- ${campo}: `;
-
-          if (control.errors?.['required']) {
-            mensaje += "Este campo es obligatorio.\n";
-          }
-          if (control.errors?.['email']) {
-            mensaje += "Debe ser un correo válido.\n";
-          }
-          if (control.errors?.['pattern']) {
-            mensaje += "Formato inválido.\n";
-          }
-          if (control.errors?.['minlength']) {
-            mensaje += `Debe tener al menos ${control.errors['minlength'].requiredLength} caracteres.\n`;
-          }
-          if (control.errors?.['maxlength']) {
-            mensaje += `Debe tener máximo ${control.errors['maxlength'].requiredLength} caracteres.\n`;
-          }
+          if (control.errors?.['required']) mensaje += "Este campo es obligatorio.\n";
+          if (control.errors?.['email']) mensaje += "Debe ser un correo válido.\n";
+          if (control.errors?.['pattern']) mensaje += "Formato inválido.\n";
+          if (control.errors?.['minlength']) mensaje += `Debe tener al menos ${control.errors['minlength'].requiredLength} caracteres.\n`;
+          if (control.errors?.['maxlength']) mensaje += `Debe tener máximo ${control.errors['maxlength'].requiredLength} caracteres.\n`;
         }
       });
-
     }
   }
+  
 
 }

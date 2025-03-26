@@ -143,7 +143,18 @@ export class JuzgadosPage implements OnInit {
       abrirDialog(): void {
         const dialogRef = this.dialog.open(DialogJuzgadoComponent, {
           width: '500px',
+          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+
         });
+
+        /*
+        const dialogRef = this.dialog.open(DialogClienteComponent, {
+          width: '500px',
+          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+          data: { }
+        });
+
+        */
       
         dialogRef.afterClosed().subscribe((juzgado: JuzgadoModel) => {
           if (juzgado) {
@@ -199,7 +210,9 @@ export class JuzgadosPage implements OnInit {
       abrirModificar(juzgado: JuzgadoModel) {
         const dialogRef = this.dialog.open(DialogJuzgadoModificarComponent, {
           width: '500px',
-          data: juzgado
+          data: juzgado,
+          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+
         });
             
         dialogRef.afterClosed().subscribe((juzgadoModificado: JuzgadoModel) => {

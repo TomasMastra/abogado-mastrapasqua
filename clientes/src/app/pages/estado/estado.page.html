@@ -1,0 +1,169 @@
+<div> 
+  <mat-toolbar color="primary">
+    <button mat-icon-button (click)="sidenav.toggle()">
+      <mat-icon style="color: #ffffff">menu</mat-icon>
+    </button>
+    <span style="color: #ffffff">ESTADOS</span>
+  </mat-toolbar>
+  
+  <mat-sidenav-container class="sidenav-container" style="background-color: #1976d2">
+    <mat-sidenav #sidenav mode="side" opened>
+      <div class="sidebar-content">
+        <img class="avatar mat-elevation-z8" src="../../../assets/botones/user.png" />
+        <h4 class="name">Andres Mastrapasqua</h4>
+        <p class="designation">Abogado</p>
+
+        <mat-divider></mat-divider>
+
+        <button mat-button class="menu-button">
+          <mat-icon style="color: #ffffff">home</mat-icon>
+          <span style="color: #ffffff">Menú</span>
+        </button>
+        <button mat-button class="menu-button" (click)="goTo('/lista-clientes')">
+          <mat-icon style="color: #ffffff">person</mat-icon>
+          <span style="color: #ffffff">Clientes</span>
+        </button>
+        <button mat-button class="menu-button" (click)="goTo('/lista-expedientes')">
+          <mat-icon style="color: #ffffff">folder_open</mat-icon>
+          <span style="color: #ffffff">Expedientes</span>
+        </button>
+        <button mat-button class="menu-button" (click)="goTo('/estado')">
+          <mat-icon style="color: #ffffff">folder_open</mat-icon>
+          <span style="color: #ffffff">Estados</span>
+        </button>
+        <button mat-button class="menu-button" [matMenuTriggerFor]="generalMenu">
+          <mat-icon style="color: #ffffff">apps</mat-icon>
+          <span style="color: #ffffff">General</span>
+        </button>
+
+        <mat-menu #generalMenu="matMenu">
+          <button mat-menu-item (click)="goTo('/juzgados')">
+            <mat-icon>gavel</mat-icon>
+            <span>Juzgados</span>
+          </button>
+          <button mat-menu-item (click)="goTo('/localidades')">
+            <mat-icon>location_on</mat-icon>
+            <span>Localidades</span>
+          </button>
+          <button mat-menu-item (click)="goTo('/demandado')">
+            <mat-icon>gavel</mat-icon>
+            <span>Demandados</span>
+          </button>
+        </mat-menu>
+
+        <mat-divider></mat-divider>
+
+        <button mat-button class="menu-button">
+          <mat-icon style="color: #ffffff">settings</mat-icon>
+          <span style="color: #ffffff">Ajustes</span>
+        </button>
+      </div>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <div class="content mat-elevation-z8">
+        <ion-list class="lista-clientes">
+          <!-- Sección 1: Búsqueda de expediente -->
+          <div *ngIf="menu == '1'">
+            <div class="toolbar">
+              <ion-input 
+                placeholder="Número" 
+                class="input-busqueda"
+                [(ngModel)]="numero">
+              </ion-input>
+      
+              <ion-input 
+                placeholder="Año" 
+                class="input-busqueda"
+                [(ngModel)]="anio">
+              </ion-input>
+            </div>
+
+            <button mat-button class="menu-button" (click)="buscar()">
+              <mat-icon style="color: #ffffff">search</mat-icon>
+              <span style="color: #ffffff">Buscar expediente</span>
+            </button>
+          </div>
+
+          <!-- Sección 2: Información del expediente -->
+          <div *ngIf="menu == '2'">
+            <button mat-button class="menu-button" (click)="cambiarMenu('1')">
+              <mat-icon style="color: #ffffff">arrow_back_ios</mat-icon>
+              <span style="color: #ffffff">Regresar</span>
+            </button>
+          
+            <div style="padding: 16px;">
+              <!-- Estado del expediente -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label style="color: white">Estado del expediente</mat-label>
+                <mat-select style="color: white" [(ngModel)]="estadoSeleccionado">
+                  <mat-option *ngFor="let estado of estados" [value]="estado">
+                    {{ estado }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <!-- Formulario reactivo -->
+              <form [formGroup]="form">
+                <div class="toolbar">
+                  <!-- Honorario (Deshabilitado) -->
+                  <ion-input 
+                    placeholder="Honorario" 
+                    class="input-busqueda"
+                    formControlName="honorario"
+                    [disabled]="true">
+                  </ion-input>
+
+                  <!-- Fecha de inicio (formControlName corregido) -->
+                  <ion-input 
+                    placeholder="Fecha de inicio"
+                    type="date"
+                    class="input-busqueda"
+                    formControlName="fecha_inicio"
+                    placeholder="Apellido"
+                    name="apellido"
+                    id="apellido"
+                    [disabled]="true">
+                  </ion-input>
+                </div>
+
+                <!-- Apellido con validaciones 
+                <div class="form__group field">
+                  <input 
+                    type="text"
+                    class="form__field"
+                    placeholder="Apellido"
+                    name="apellido"
+                    id="apellido"
+                    formControlName="apellido"/>
+                  <label for="apellido" class="form__label">Apellido</label>
+
+                  <div class="error" *ngIf="form.controls['apellido']?.invalid && (form.controls['apellido']?.dirty || form.controls['apellido']?.touched)">
+                    <div *ngIf="form.controls['apellido']?.errors?.['required']">El apellido es requerido</div>
+                    <div *ngIf="form.controls['apellido']?.errors?.['pattern']">Únicamente letras y espacios</div>
+                  </div>
+                </div> -->
+
+                <!-- Jueces -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label style="color: white">Jueces</mat-label>
+                  <mat-select style="color: white" formControlName="juezSeleccionado">
+                    <mat-option *ngFor="let juez of jueces" [value]="juez">
+                      {{ juez.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <!-- Apelación -->
+                <div class="form__group field">
+                  <input type="checkbox" id="apelable" formControlName="apelable"/>
+                  <label for="apelable">¿El expediente fue apelado?</label>
+                </div>
+              </form>
+            </div>
+          </div>
+        </ion-list>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

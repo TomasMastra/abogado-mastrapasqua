@@ -167,8 +167,16 @@ export class DialogExpedienteModificarComponent   {
           numero: this.form.value.numero,
           anio: this.form.value.anio,
           demandadoModel: this.demandadoElegido,
-          estado: this.data?.estado
- 
+          estado: this.data?.estado,
+          sala_radicacion: this.form.value.sala_radicacion ?? null,
+          honorario: this.form.value.honorario ?? null,
+          fecha_inicio: this.form.value.fecha_inicio ?? null,
+          fecha_sentencia: this.form.value.fecha_sentencia ?? null, 
+          hora_sentencia: this.form.value.hora_sentencia ?? null, 
+
+          // modificar
+          juez_id: null,
+          juezModel: { id: '', nombre: '' },
         };
     
         this.dialogRef.close(expediente);

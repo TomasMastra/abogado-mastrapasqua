@@ -1,5 +1,6 @@
 import { ClienteModel } from '../cliente/cliente.component';
 import { DemandadoModel } from '../demandado/demandado.component';
+import { JuezModel } from '../juez/juez.component';
 
 export interface ExpedienteModel {
   id: string,
@@ -13,5 +14,12 @@ export interface ExpedienteModel {
   anio: number,
   demandadoModel: DemandadoModel,
   estado: string,
+  sala_radicacion: string | null,
+  honorario: string | null,
+  fecha_inicio: string | null,
+  fecha_sentencia: string | null,
+  hora_sentencia: string | null,
+  juez_id: string | null,
+  juezModel: JuezModel | null
   }
   
