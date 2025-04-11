@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { mergeMap, map } from 'rxjs/operators';
+import { mergeMap, map, switchMap } from 'rxjs/operators';
 
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
 import { ExpedienteModel } from '../models/expediente/expediente.component';
@@ -110,27 +110,32 @@ export class ExpedientesService {
         );
       }
 
-
       buscarExpedientes(texto: string) {
         const textoLower = texto.toLowerCase();
         const url = `${this.apiUrl}/buscar?texto=${textoLower}`;
       
-        this.http.get<ExpedienteModel[]>(url).subscribe(  // Usar 'url' en lugar de 'this.apiUrl'
-          (expedientes) => {
-            expedientes.forEach((expediente) => {
-              this.getClientesPorExpediente(expediente.id).subscribe((clientes) => {
-                expediente.clientes = clientes; 
-              });
+        return this.http.get<ExpedienteModel[]>(url).pipe(
+          switchMap(expedientes => {
+            if (expedientes.length === 0) {
+              return of([]);
+            }
+      
+            const requests = expedientes.map(expediente => {
+              const clientes$ = this.getClientesPorExpediente(expediente.id);
+              const demandado$ = this.getDemandadoPorId(expediente.demandado_id!);
+      
+              return forkJoin([clientes$, demandado$]).pipe(
+                map(([clientes, demandado]) => {
+                  expediente.clientes = clientes;
+                  expediente.demandadoModel = demandado;
+                  return expediente;
+                })
+              );
             });
       
-            this.expedientesSubject.next(expedientes);  
-          },
-          (error) => {
-            console.error('Error al obtener expedientes:', error);
-          }
+            return forkJoin(requests);
+          })
         );
-      
-        return this.clientes$; // Este 'clientes$' no parece ser útil aquí, ya que estás emitiendo 'expedientesSubject'
       }
       
       agregarClientesAExpediente(expedienteId: number, clienteId: number): Observable<any> {
@@ -194,8 +199,30 @@ export class ExpedientesService {
         }
         
 
+        getExpedientesPorEstado(estado: string) {
+          const params = { estado }; 
+                  
+          this.http.get<ExpedienteModel[]>(`${this.apiUrl}/estado`, { params }).subscribe(
+            (expedientes) => {
+              expedientes.forEach((expediente) => {
+                this.getClientesPorExpediente(expediente.id).subscribe((clientes) => {
+                  expediente.clientes = clientes;
+                });
         
-      
-      
+                this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
+                  expediente.demandadoModel = demandado;
+                });
+              });
+        
+              this.expedientesSubject.next(expedientes);
+            },
+            (error) => {
+              console.error('Error al obtener expedientes:', error);
+            }
+          );
+        
+          return this.clientes$;
+        }
+        
 
 }

@@ -203,7 +203,25 @@ export class DialogExpedienteModificarComponent   {
           juicio: this.juicioSeleccionado,
           ultimo_movimiento: this.data?.ultimo_movimiento,
           monto: this.data?.monto,
-          apela: this.data?.apela
+          apela: this.data?.apela,
+          juzgadoModel: null,
+
+          // 📌 Campos nuevos - Capital
+          estadoCapitalSeleccionado: this.data?.estadoCapitalSeleccionado ?? null,
+          subEstadoCapitalSeleccionado: this.data?.subEstadoCapitalSeleccionado ?? null,
+          fechaCapitalSubestado: this.data?.fechaCapitalSubestado ?? null,
+          estadoLiquidacionCapitalSeleccionado: this.data?.estadoLiquidacionCapitalSeleccionado ?? null,
+          fechaLiquidacionCapital: this.data?.fechaLiquidacionCapital ?? null,
+          montoLiquidacionCapital: this.data?.montoLiquidacionCapital ?? null,
+
+          // 📌 Campos nuevos - Honorarios
+          estadoHonorariosSeleccionado: this.data?.estadoHonorariosSeleccionado ?? null,
+          subEstadoHonorariosSeleccionado: this.data?.subEstadoHonorariosSeleccionado ?? null,
+          fechaHonorariosSubestado: this.data?.fechaHonorariosSubestado ?? null,
+          estadoLiquidacionHonorariosSeleccionado: this.data?.estadoLiquidacionHonorariosSeleccionado ?? null,
+          fechaLiquidacionHonorarios: this.data?.fechaLiquidacionHonorarios ?? null,
+          montoLiquidacionHonorarios: this.data?.montoLiquidacionHonorarios ?? null
+
 
         };
     

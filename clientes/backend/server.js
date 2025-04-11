@@ -317,27 +317,62 @@ sql.connect(dbConfig)
             .input('fecha_sentencia', sql.DateTime, nuevosDatos.fecha_sentencia)
             .input('monto', sql.Int, nuevosDatos.monto)
             .input('apela', sql.Bit, nuevosDatos.apela)
+            .input('ultimo_movimiento', sql.DateTime, nuevosDatos.ultimo_movimiento)
+
+ // 🆕 Campos nuevos: Capital
+ .input('estadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoCapitalSeleccionado)
+ .input('subEstadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.subEstadoCapitalSeleccionado)
+ .input('fechaCapitalSubestado', sql.DateTime, nuevosDatos.fechaCapitalSubestado)
+ .input('estadoLiquidacionCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoLiquidacionCapitalSeleccionado)
+ .input('fechaLiquidacionCapital', sql.DateTime, nuevosDatos.fechaLiquidacionCapital)
+ .input('montoLiquidacionCapital', sql.Decimal(15, 2), nuevosDatos.montoLiquidacionCapital)
+
+ // 🆕 Campos nuevos: Honorarios
+ .input('estadoHonorariosSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosSeleccionado)
+ .input('subEstadoHonorariosSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosSeleccionado)
+ .input('fechaHonorariosSubestado', sql.DateTime, nuevosDatos.fechaHonorariosSubestado)
+ .input('estadoLiquidacionHonorariosSeleccionado', sql.NVarChar, nuevosDatos.estadoLiquidacionHonorariosSeleccionado)
+ .input('fechaLiquidacionHonorarios', sql.DateTime, nuevosDatos.fechaLiquidacionHonorarios)
+ .input('montoLiquidacionHonorarios', sql.Decimal(15, 2), nuevosDatos.montoLiquidacionHonorarios)
+
+ .query(`
+   UPDATE expedientes
+   SET 
+     titulo = @titulo,
+     descripcion = @descripcion,
+     numero = @numero,
+     anio = @anio,
+     juzgado_id = @juzgado_id,
+     demandado_id = @demandado_id,
+     estado = @estado,
+     juez_id = @juez_id,
+     honorario = @honorario,
+     fecha_inicio = @fecha_inicio,
+     juicio = @juicio,
+     fecha_sentencia = @fecha_sentencia,
+     monto = @monto,
+     apela = @apela,
+     ultimo_movimiento = @ultimo_movimiento,
 
 
-            .query(`
-              UPDATE expedientes
-              SET 
-                titulo = @titulo,
-                descripcion = @descripcion,
-                numero = @numero,
-                anio = @anio,
-                juzgado_id = @juzgado_id,
-                demandado_id = @demandado_id,
-                estado = @estado,
-                juez_id = @juez_id,
-                honorario = @honorario,
-                fecha_inicio = @fecha_inicio,
-                juicio = @juicio,
-                fecha_sentencia = @fecha_sentencia,
-                monto = @monto,
-                apela = @apela
-              WHERE id = @id
-            `);
+     -- 🚀 Actualización de campos nuevos (capital)
+     estadoCapitalSeleccionado = @estadoCapitalSeleccionado,
+     subEstadoCapitalSeleccionado = @subEstadoCapitalSeleccionado,
+     fechaCapitalSubestado = @fechaCapitalSubestado,
+     estadoLiquidacionCapitalSeleccionado = @estadoLiquidacionCapitalSeleccionado,
+     fechaLiquidacionCapital = @fechaLiquidacionCapital,
+     montoLiquidacionCapital = @montoLiquidacionCapital,
+
+     -- 🚀 Actualización de campos nuevos (honorarios)
+     estadoHonorariosSeleccionado = @estadoHonorariosSeleccionado,
+     subEstadoHonorariosSeleccionado = @subEstadoHonorariosSeleccionado,
+     fechaHonorariosSubestado = @fechaHonorariosSubestado,
+     estadoLiquidacionHonorariosSeleccionado = @estadoLiquidacionHonorariosSeleccionado,
+     fechaLiquidacionHonorarios = @fechaLiquidacionHonorarios,
+     montoLiquidacionHonorarios = @montoLiquidacionHonorarios
+
+   WHERE id = @id
+ `);
 
             //const expedienteId = resultado.recordset[0].id;
   
@@ -958,12 +993,12 @@ app.get("/expedientes/buscarPorNumeroyAnio", async (req, res) => {
   }
 });
 
-app.get("/expedientes/buscarPorEstado", async (req, res) => {
+app.get("/expedientes/estado", async (req, res) => {
   try {
       const { estado } = req.query; 
 
-      if (!numero || !anio) {
-          return res.status(400).json({ error: "Se requieren 'numero' y 'anio'." });
+      if (!estado ) {
+          return res.status(400).json({ error: "Se requiere estado." });
       }
 
       const result = await pool
@@ -978,6 +1013,27 @@ app.get("/expedientes/buscarPorEstado", async (req, res) => {
       res.status(500).send(err);
   }
 });
+
+/* OBTENER JUZGADO POR ID */
+app.get('/juzgados/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query("SELECT * FROM juzgados WHERE id = @id");
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: 'Juzgado no encontrado' });
+    }
+
+    res.json(result.recordset[0]); // Retornamos el primer resultado, que es el juzgado
+  } catch (err) {
+    console.error('Error al obtener juzgado:', err);
+    return res.status(500).send('Error al obtener juzgado');
+  }
+});
+
 
 
              // Iniciar el servidor

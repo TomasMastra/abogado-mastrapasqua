@@ -38,6 +38,7 @@ export class JuzgadosService {
 
   // NO ESTA EN EL SERVER
   getJuzgadoPorId(id: string) {
+    console.log(id)
     return this.http.get<JuzgadoModel>(`${this.apiUrl}/${id}`);
   }
 
@@ -81,6 +82,7 @@ export class JuzgadosService {
 getExpedientesPorJuzgado(juzgadoId: string) {
   return this.http.get<any[]>(`http://localhost:3000/expedientes/clientes?id=${juzgadoId}`);
 }
+
 
   
 }

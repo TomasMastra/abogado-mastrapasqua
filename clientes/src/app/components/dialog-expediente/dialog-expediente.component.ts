@@ -256,7 +256,24 @@ export class DialogExpedienteComponent {
         juicio: this.juicioSeleccionado,
         ultimo_movimiento: this.data?.ultimo_movimiento,
         monto: null,
-        apela: null
+        apela: null,
+        juzgadoModel: null,
+
+        // 📌 Campos nuevos - Capital
+        estadoCapitalSeleccionado: null,
+        subEstadoCapitalSeleccionado: null,
+        fechaCapitalSubestado: null,
+        estadoLiquidacionCapitalSeleccionado: null,
+        fechaLiquidacionCapital: null,
+        montoLiquidacionCapital: null,
+
+        // 📌 Campos nuevos - Honorarios
+        estadoHonorariosSeleccionado: null,
+        subEstadoHonorariosSeleccionado: null,
+        fechaHonorariosSubestado: null,
+        estadoLiquidacionHonorariosSeleccionado: null,
+        fechaLiquidacionHonorarios: null,
+        montoLiquidacionHonorarios: null
 
 
       };

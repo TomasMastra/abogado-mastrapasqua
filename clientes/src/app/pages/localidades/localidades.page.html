@@ -1,133 +1,50 @@
+<div class="content mat-elevation-z8">
 
-<div> 
-  <mat-toolbar color="primary">
-    <button mat-icon-button (click)="sidenav.toggle()">
-      <mat-icon style="color: #ffffff">menu</mat-icon>
-    </button>
-    <span style="color: #ffffff">Clientes</span>
-  </mat-toolbar>
-  
-  <mat-sidenav-container class="sidenav-container" style="background-color: #1976d2">
-    <mat-sidenav #sidenav mode="side" opened>
-      <div class="sidebar-content">
-        <img class="avatar mat-elevation-z8" src="../../../assets/botones/user.png" />
-        <h4 class="name">Andres Mastrapasqua</h4>
-        <p class="designation">Abogado</p>
-  
-        <mat-divider></mat-divider>
-  
-        <button mat-button class="menu-button">
-          <mat-icon style="color: #ffffff">home</mat-icon>
-          <span style="color: #ffffff">Menú</span>
-        </button>
-        <button mat-button class="menu-button" (click)="goTo('/lista-clientes')">
-          <mat-icon style="color: #ffffff">person</mat-icon >
-          <span style="color: #ffffff">Clientes</span>
-        </button>
-        <button mat-button class="menu-button" [matMenuTriggerFor]="expedienteMenu">
-          <mat-icon style="color: #ffffff">folder_open</mat-icon>
-          <span style="color: #ffffff">Expedientes</span>
-        </button>
+  <ion-list class="lista-clientes">
+    <div class="toolbar">
+      <ion-input
+        placeholder="Buscar localidad"
+        class="input-busqueda"
+        [(ngModel)]="busqueda"
+        (ngModelChange)="buscar()">
+      </ion-input>
 
-        <mat-menu #expedienteMenu="matMenu">
-          <button mat-menu-item (click)="goTo('/lista-expedientes')">
-            <mat-icon>gavel</mat-icon>
-            <span>ABM</span>
+      <button mat-button class="list-button" (click)="abrirDialog()">
+        <mat-icon style="color: #ffffff">add_location</mat-icon>
+        <span style="color: #ffffff">Agregar localidad</span>
+      </button>
+
+      <button mat-button class="list-button">
+        <mat-icon style="color: #ffffff">download</mat-icon>
+      </button>
+
+      <button mat-button class="list-button">
+        <mat-icon style="color: #ffffff">more_vert</mat-icon>
+      </button>
+    </div>
+
+    <div>
+      <ion-item-sliding *ngFor="let localidad of localidades" class="cliente">
+        <ion-item class="cliente" *ngIf="hayLocalidades && localidades.length > 0">
+          <ion-label>
+            <h1>{{ localidad.localidad }}</h1>
+          </ion-label>
+
+          <button mat-button class="list-button" (click)="eliminarLocalidad(localidad)">
+            <mat-icon style="color: #ffffff">delete</mat-icon>
           </button>
-          <button mat-menu-item (click)="goTo('/estado')">
-            <mat-icon>location_on</mat-icon>
-            <span>Estados</span>
+
+          <button mat-button class="list-button" (click)="abrirModificar(localidad)">
+            <mat-icon style="color: #ffffff">edit</mat-icon>
           </button>
-          <button mat-menu-item (click)="goTo('/honorario-diferido')">
-            <mat-icon>paid</mat-icon>
-            <span>Honorarios</span>
-          </button>
-        </mat-menu>
-      
-        <button mat-button class="menu-button" [matMenuTriggerFor]="generalMenu">
-          <mat-icon style="color: #ffffff">apps</mat-icon>
-          <span style="color: #ffffff">General</span>
-        </button>
+        </ion-item>
+      </ion-item-sliding>
 
-        <mat-menu #generalMenu="matMenu">
-          <button mat-menu-item (click)="goTo('/juzgados')">
-            <mat-icon>gavel</mat-icon>
-            <span>Juzgados</span>
-          </button>
-          <button mat-menu-item (click)="goTo('/localidades')">
-            <mat-icon>location_on</mat-icon>
-            <span>Localidades</span>
-          </button>
-          <button mat-menu-item (click)="goTo('/demandado')">
-            <mat-icon>gavel</mat-icon>
-            <span>Demandados</span>
-          </button>
-        </mat-menu>
-  
-        <mat-divider></mat-divider>
-  
-        <button mat-button class="menu-button">
-          <mat-icon style="color: #ffffff">settings</mat-icon>
-          <span style="color: #ffffff">Ajustes</span>
-        </button>
-      </div>
-    </mat-sidenav>
-  
-    
-    <mat-sidenav-content>
-      <div class="content mat-elevation-z8">
-        <!--  -->
-         
-        <ion-list  class="lista-clientes">
-          <div class="toolbar">
-            <ion-input 
-            placeholder="Buscar localidad" 
-            class="input-busqueda"
-            [(ngModel)]="busqueda"
-            (ngModelChange)="buscar()">
-          </ion-input>
-            <button mat-button class="list-button" (click)="abrirDialog()" >
-              <mat-icon style="color: #ffffff">add_location</mat-icon>
-              <span style="color: #ffffff">Agregar localidad</span>
-            </button>
-            <button mat-button class="list-button" >
-              <mat-icon style="color: #ffffff">download</mat-icon>
-            </button>
-            <button mat-button class="list-button">
-              <mat-icon style="color: #ffffff">more_vert</mat-icon>
-            </button>
-          </div>
-        <div > 
-          <ion-item-sliding *ngFor="let localidad of localidades" class="cliente" >
-            <ion-item class="cliente" *ngIf="hayLocalidades && localidades.length > 0">
-              <ion-label>
-                <h1>{{ localidad.localidad }}</h1>
-              </ion-label>
-        
+      <ion-item *ngIf="!hayLocalidades && localidades.length <= 0" class="cliente">
+        <ion-label text-center>{{ texto }}</ion-label>
+      </ion-item>
+    </div>
 
+  </ion-list>
 
-              <button mat-button class="list-button" (click)="eliminarLocalidad(localidad)">
-                <mat-icon style="color: #ffffff">delete</mat-icon>
-              </button>
-
-              <button mat-button class="list-button" (click)="abrirModificar(localidad)">
-                <mat-icon style="color: #ffffff" >edit</mat-icon>
-              </button>
-            </ion-item>
-          </ion-item-sliding>
-
-          <ion-item *ngIf="!hayLocalidades && localidades.length <= 0" class="cliente" >
-            <ion-label text-center>{{ texto }}</ion-label>
-          </ion-item>
-          
-        </div>
-
-
-        </ion-list>
-        
-        
-        <!-- -->
-      </div>
-    </mat-sidenav-content>
-  </mat-sidenav-container>
-  </div>
+</div>

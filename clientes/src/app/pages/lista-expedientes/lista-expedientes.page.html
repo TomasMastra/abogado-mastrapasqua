@@ -1,135 +1,59 @@
+<div class="content mat-elevation-z8">
 
-<div> 
-<mat-toolbar color="primary">
-  <button mat-icon-button (click)="sidenav.toggle()">
-    <mat-icon style="color: #ffffff">menu</mat-icon>
-  </button>
-  <span style="color: #ffffff">Expedientes</span>
-</mat-toolbar>
+  <ion-list class="lista-clientes">
 
-<mat-sidenav-container class="sidenav-container" style="background-color: #1976d2">
-  <mat-sidenav #sidenav mode="side" opened>
-    <div class="sidebar-content">
-      <img class="avatar mat-elevation-z8" src="../../../assets/botones/user.png" />
-      <h4 class="name">Andres Mastrapasqua</h4>
-      <p class="designation">Abogado</p>
+    <div class="toolbar">
+      <ion-input 
+        placeholder="Buscar por numero, actora o demandado"
+        class="input-busqueda"
+        [(ngModel)]="busqueda"
+        (ngModelChange)="buscar()">
+      </ion-input>
 
-      <mat-divider></mat-divider>
-
-      <button mat-button class="menu-button">
-        <mat-icon style="color: #ffffff">home</mat-icon>
-        <span style="color: #ffffff">Menú</span>
-      </button>
-      <button mat-button class="menu-button" (click)="goTo('/lista-clientes')">
+      <button mat-button class="list-button" (click)="abrirDialog()">
         <mat-icon style="color: #ffffff">person</mat-icon>
-        <span style="color: #ffffff">Clientes</span>
+        <span style="color: #ffffff">Agregar expediente</span>
       </button>
 
-      <button mat-button class="menu-button" [matMenuTriggerFor]="expedienteMenu">
-        <mat-icon style="color: #ffffff">folder_open</mat-icon>
-        <span style="color: #ffffff">Expedientes</span>
+      <button mat-button class="list-button">
+        <mat-icon style="color: #ffffff">download</mat-icon>
       </button>
 
-      <mat-menu #expedienteMenu="matMenu">
-        <button mat-menu-item (click)="goTo('/lista-expedientes')">
-          <mat-icon>gavel</mat-icon>
-          <span>ABM</span>
-        </button>
-        <button mat-menu-item (click)="goTo('/estado')">
-          <mat-icon>location_on</mat-icon>
-          <span>Estados</span>
-        </button>
-        <button mat-menu-item (click)="goTo('/honorario-diferido')">
-          <mat-icon>paid</mat-icon>
-          <span>Honorarios</span>
-        </button>
-      </mat-menu>
-      <button mat-button class="menu-button" [matMenuTriggerFor]="generalMenu">
-        <mat-icon style="color: #ffffff">apps</mat-icon>
-        <span style="color: #ffffff">General</span>
-      </button>
-
-      <mat-menu #generalMenu="matMenu">
-        <button mat-menu-item (click)="goTo('/juzgados')">
-          <mat-icon>gavel</mat-icon>
-          <span>Juzgados</span>
-        </button>
-        <button mat-menu-item (click)="goTo('/localidades')">
-          <mat-icon>location_on</mat-icon>
-          <span>Localidades</span>
-        </button>
-        <button mat-menu-item (click)="goTo('/demandado')">
-          <mat-icon>gavel</mat-icon>
-          <span>Demandados</span>
-        </button>
-      </mat-menu>
-
-      <mat-divider></mat-divider>
-
-      <button mat-button class="menu-button">
-        <mat-icon style="color: #ffffff">settings</mat-icon>
-        <span style="color: #ffffff">Ajustes</span>
+      <button mat-button class="list-button">
+        <mat-icon style="color: #ffffff">more_vert</mat-icon>
       </button>
     </div>
-  </mat-sidenav>
 
-  
-  <mat-sidenav-content>
-    <div class="content mat-elevation-z8">
-      <!--  -->
-       
-      <ion-list  class="lista-clientes">
-        <div class="toolbar">
-          <ion-input 
-          placeholder="Buscar por numero, actora o demandado" 
-          class="input-busqueda"
-          [(ngModel)]="busqueda"
-          (ngModelChange)="buscar()">
-        </ion-input>          <button mat-button class="list-button" (click)="abrirDialog()">
-            <mat-icon style="color: #ffffff">person</mat-icon>
-            <span style="color: #ffffff">Agregar expediente</span>
+    <div>
+      <ion-item-sliding *ngFor="let expediente of expedientes" class="cliente">
+        <ion-item class="cliente" *ngIf="hayExpedientes && expedientes.length > 0">
+          <ion-label>
+            <h2 *ngIf="expediente.clientes.length === 1">
+              {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} contra {{ expediente.demandadoModel.nombre }}
+            </h2>
+            <h2 *ngIf="expediente.clientes.length > 1">
+              {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} y otros contra {{ expediente.demandadoModel.nombre }}
+            </h2>
+            <h2 *ngIf="expediente.clientes.length === 0">
+              {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandadoModel.nombre }}
+            </h2>
+          </ion-label>
+
+          <button mat-button class="list-button" (click)="eliminarExpediente(expediente)">
+            <mat-icon style="color: #ffffff">delete</mat-icon>
           </button>
-          <button mat-button class="list-button">
-            <mat-icon style="color: #ffffff">download</mat-icon>
+
+          <button mat-button class="list-button" (click)="abrirModificar(expediente)">
+            <mat-icon style="color: #ffffff">edit</mat-icon>
           </button>
-          <button mat-button class="list-button">
-            <mat-icon style="color: #ffffff">more_vert</mat-icon>
-          </button>
-        </div>
-      <div > 
-        <ion-item-sliding *ngFor="let expediente of expedientes" class="cliente">
-          <ion-item class="cliente" *ngIf="hayExpedientes && expedientes.length > 0">
-            <ion-label>
-              <h2 *ngIf="expediente.clientes.length === 1">
-                {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} contra {{ expediente.demandadoModel.nombre }}
-              </h2>
-              <h2 *ngIf="expediente.clientes.length > 1">
-                {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} y otros contra {{ expediente.demandadoModel.nombre }}
-              </h2>
-              <h2 *ngIf="expediente.clientes.length === 0">
-                {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandadoModel.nombre }}
-              </h2>
-            </ion-label>
-            
-        
-            <button mat-button class="list-button" (click)="eliminarExpediente(expediente)">
-              <mat-icon style="color: #ffffff">delete</mat-icon>
-            </button>
-        
-            <button mat-button class="list-button" (click)="abrirModificar(expediente)">
-              <mat-icon style="color: #ffffff">edit</mat-icon>
-            </button>
-          </ion-item>
-        </ion-item-sliding>
-        
-        <ion-item *ngIf="!hayExpedientes && expedientes.length <= 0" class="cliente" >
-          <ion-label text-center>{{ texto }}</ion-label>
         </ion-item>
-      </div>
-      </ion-list>
-      
+      </ion-item-sliding>
 
+      <ion-item *ngIf="!hayExpedientes && expedientes.length <= 0" class="cliente">
+        <ion-label text-center>{{ texto }}</ion-label>
+      </ion-item>
     </div>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+
+  </ion-list>
+
 </div>

@@ -63,7 +63,7 @@ export class EstadoPage implements OnInit {
   juzgados: JuzgadoModel[] = [];
   juzgadoSeleccionado: any;
 
-  estados: any[] = ['en gestíon', 'inicio', 'prueba', 'clausura p.', 'fiscal', 'sentencia'];
+  estados: any[] = ['en gestíon', 'inicio', 'prueba', 'clausura periodo prueba', 'fiscal', 'sentencia'];
   estadoSeleccionado: any;
 
   honorarios: any[] = ['Regulacion 1º instancia', 'Difiere regulacion 1º instancia', 'Costas por su orden'];
@@ -80,6 +80,25 @@ export class EstadoPage implements OnInit {
 
 
 
+// Capital
+estadoCapitalSeleccionado: string | null = null;
+subEstadoCapitalSeleccionado: string | null = null;
+fechaCapitalSubestado: string | null = null;
+estadoLiquidacionCapitalSeleccionado: string | null = null;
+fechaLiquidacionCapital: string | null = null;
+montoLiquidacionCapital: number | null = null;
+
+// Honorarios
+estadoHonorariosSeleccionado: string | null = null;
+subEstadoHonorariosSeleccionado: string | null = null;
+fechaHonorariosSubestado: string | null = null;
+estadoLiquidacionHonorariosSeleccionado: string | null = null;
+fechaLiquidacionHonorarios: string | null = null;
+montoLiquidacionHonorarios: number | null = null;
+
+deshabilitarApeladoOFirme = false;
+
+
   constructor(
     private router: Router,
     private expedienteService: ExpedientesService,
@@ -87,12 +106,33 @@ export class EstadoPage implements OnInit {
       private juzgadosService: JuzgadosService,
     ) {
   
+      this.resetearCamposEstadoYHonorarios();
+
       this.form = new FormGroup(
         {
           honorario: new FormControl('', [Validators.required]),
           fecha_sentencia: new FormControl('', [Validators.required/*, this.fechaMayorA("2024-09-23")*/]),
           juez: new FormControl('', [Validators.required]),
           monto: new FormControl('', [Validators.required]),
+
+          ultimo_movimiento: new FormControl('', [Validators.required]),
+
+
+          // Capital
+          estadoCapitalSeleccionado: new FormControl('', [Validators.required]),
+          subEstadoCapitalSeleccionado: new FormControl(''),
+          fechaCapitalSubestado: new FormControl(''),
+          estadoLiquidacionCapitalSeleccionado: new FormControl(''),
+          fechaLiquidacionCapital: new FormControl(''),
+          montoLiquidacionCapital: new FormControl(''),
+
+          // Honorarios
+          estadoHonorariosSeleccionado: new FormControl('', [Validators.required]),
+          subEstadoHonorariosSeleccionado: new FormControl(''),
+          fechaHonorariosSubestado: new FormControl(''),
+          estadoLiquidacionHonorariosSeleccionado: new FormControl(''),
+          fechaLiquidacionHonorarios: new FormControl(''),
+          montoLiquidacionHonorarios: new FormControl(''),
         }
       );    
 
@@ -114,7 +154,81 @@ export class EstadoPage implements OnInit {
       }
     }
     
-
+    public actualizarValidacionesCondicionales() {
+      // Capital - Subestado
+      const subEstadoCapital = this.form.get('subEstadoCapitalSeleccionado');
+      const fechaCapitalSubestado = this.form.get('fechaCapitalSubestado');
+    
+      if (this.form.value.estadoCapitalSeleccionado === 'apelado') {
+        subEstadoCapital?.setValidators([Validators.required]);
+        fechaCapitalSubestado?.setValidators([Validators.required]);
+      } else {
+        subEstadoCapital?.clearValidators();
+        fechaCapitalSubestado?.clearValidators();
+      }
+      subEstadoCapital?.updateValueAndValidity();
+      fechaCapitalSubestado?.updateValueAndValidity();
+    
+      // Capital - Liquidación
+      const estadoLiquidacionCapital = this.form.get('estadoLiquidacionCapitalSeleccionado');
+      const fechaLiquidacionCapital = this.form.get('fechaLiquidacionCapital');
+      const montoLiquidacionCapital = this.form.get('montoLiquidacionCapital');
+    
+      if (this.form.value.estadoCapitalSeleccionado === 'firme') {
+        estadoLiquidacionCapital?.setValidators([Validators.required]);
+        fechaLiquidacionCapital?.setValidators([Validators.required]);
+      } else {
+        estadoLiquidacionCapital?.clearValidators();
+        fechaLiquidacionCapital?.clearValidators();
+      }
+      estadoLiquidacionCapital?.updateValueAndValidity();
+      fechaLiquidacionCapital?.updateValueAndValidity();
+    
+      if (this.form.value.estadoLiquidacionCapitalSeleccionado === 'liquidacion practicada') {
+        montoLiquidacionCapital?.setValidators([Validators.required]);
+      } else {
+        montoLiquidacionCapital?.clearValidators();
+      }
+      montoLiquidacionCapital?.updateValueAndValidity();
+    
+      // Honorarios - Subestado
+      const subEstadoHonorarios = this.form.get('subEstadoHonorariosSeleccionado');
+      const fechaHonorariosSubestado = this.form.get('fechaHonorariosSubestado');
+    
+      if (this.form.value.estadoHonorariosSeleccionado === 'apelado') {
+        subEstadoHonorarios?.setValidators([Validators.required]);
+        fechaHonorariosSubestado?.setValidators([Validators.required]);
+      } else {
+        subEstadoHonorarios?.clearValidators();
+        fechaHonorariosSubestado?.clearValidators();
+      }
+      subEstadoHonorarios?.updateValueAndValidity();
+      fechaHonorariosSubestado?.updateValueAndValidity();
+    
+      // Honorarios - Liquidación
+      const estadoLiquidacionHonorarios = this.form.get('estadoLiquidacionHonorariosSeleccionado');
+      const fechaLiquidacionHonorarios = this.form.get('fechaLiquidacionHonorarios');
+      const montoLiquidacionHonorarios = this.form.get('montoLiquidacionHonorarios');
+    
+      if (this.form.value.estadoHonorariosSeleccionado === 'firme') {
+        estadoLiquidacionHonorarios?.setValidators([Validators.required]);
+        fechaLiquidacionHonorarios?.setValidators([Validators.required]);
+      } else {
+        estadoLiquidacionHonorarios?.clearValidators();
+        fechaLiquidacionHonorarios?.clearValidators();
+      }
+      estadoLiquidacionHonorarios?.updateValueAndValidity();
+      fechaLiquidacionHonorarios?.updateValueAndValidity();
+    
+      if (this.form.value.estadoLiquidacionHonorariosSeleccionado === 'liquidacion practicada') {
+        montoLiquidacionHonorarios?.setValidators([Validators.required]);
+      } else {
+        montoLiquidacionHonorarios?.clearValidators();
+      }
+      montoLiquidacionHonorarios?.updateValueAndValidity();
+    }
+    
+    
 
   
   /*
@@ -149,10 +263,28 @@ export class EstadoPage implements OnInit {
     this.form.reset();
 
     this.form.reset({
-      honorario: '',
+      honorario: null,
       fecha_sentencia: this.form.value.fecha_sentencia,
-      juez: this.form.value.juez
+      juez: this.form.value.juez,
+    
+      // Capital
+      estadoCapitalSeleccionado: null,
+      subEstadoCapitalSeleccionado: null,
+      fechaCapitalSubestado: null,
+      estadoLiquidacionCapitalSeleccionado: null,
+      fechaLiquidacionCapital: null,
+      montoLiquidacionCapital: null,
+    
+      // Honorarios
+      estadoHonorariosSeleccionado: null,
+      subEstadoHonorariosSeleccionado: null,
+      fechaHonorariosSubestado: null,
+      estadoLiquidacionHonorariosSeleccionado: null,
+      fechaLiquidacionHonorarios: null,
+      montoLiquidacionHonorarios: null
     });
+    
+    
     this.router.navigate([path]); 
   }
 
@@ -232,67 +364,98 @@ export class EstadoPage implements OnInit {
         );
     }
 
+    actualizarEstado() {
 
-    actualizarEstado(){
-      if ( (this.form.valid && this.estadoSeleccionado == 'sentencia') || (this.estadoSeleccionado != 'sentencia')) {
+      console.log('Estado Capital Seleccionado:', this.estadoCapitalSeleccionado);
+      console.log('Subestado Capital Seleccionado:', this.subEstadoCapitalSeleccionado);
+      console.log('Fecha Capital Subestado:', this.fechaCapitalSubestado);
+      console.log('Estado Liquidación Capital Seleccionado:', this.estadoLiquidacionCapitalSeleccionado);
+      console.log('Fecha Liquidación Capital:', this.fechaLiquidacionCapital);
+      console.log('Monto Liquidación Capital:', this.montoLiquidacionCapital);
+
+      // Honorarios
+      console.log('Estado Honorarios Seleccionado:', this.estadoHonorariosSeleccionado);
+      console.log('Subestado Honorarios Seleccionado:', this.subEstadoHonorariosSeleccionado);
+      console.log('Fecha Honorarios Subestado:', this.fechaHonorariosSubestado);
+      console.log('Estado Liquidación Honorarios Seleccionado:', this.estadoLiquidacionHonorariosSeleccionado);
+      console.log('Fecha Liquidación Honorarios:', this.fechaLiquidacionHonorarios);
+      console.log('Monto Liquidación Honorarios:', this.montoLiquidacionHonorarios);
+
+      const esSentencia = this.estadoSeleccionado === 'sentencia';
+    
+      if ((this.form.valid && esSentencia) || (!esSentencia)) {
         const expediente: ExpedienteModel = {
-          id: this.expediente?.id ?? '0',  
+          id: this.expediente?.id ?? '0',
           titulo: '',
-          descripcion: '', 
-          fecha_creacion: this.expediente?.fecha_creacion ?? '', 
+          descripcion: '',
+          fecha_creacion: this.expediente?.fecha_creacion ?? '',
           clientes: this.expediente?.clientes ?? null,
-          juzgado_id: this.expediente?.juzgado_id ?? null, // Asumiendo que `juzgadoEelegido` tiene un campo `id`
-          demandado_id: this.expediente?.demandado_id ?? null,    
+          juzgado_id: this.expediente?.juzgado_id ?? null,
+          demandado_id: this.expediente?.demandado_id ?? null,
           numero: this.expediente.numero,
           anio: this.expediente.anio,
           demandadoModel: this.expediente.demandadoModel,
           estado: this.estadoSeleccionado,
-
-          sala_radicacion:  null,
-          honorario: this.form.value.honorario?.trim() === '' ? null : this.form.value.honorario,
+          sala_radicacion: null,
+    
+          honorario: esSentencia && this.form.value.honorario?.trim() !== '' ? this.form.value.honorario : null,
           fecha_inicio: this.expediente?.fecha_inicio,
-          fecha_sentencia: this.form.value.fecha_sentencia?.trim() === '' ? null : this.form.value.fecha_sentencia, 
-          hora_sentencia:  null, 
-
-          juez_id: this.juezSeleccionado ? this.juezSeleccionado.id : null,
-          juezModel: { id:  '', nombre:  '' },
-
+          fecha_sentencia: esSentencia && this.form.value.fecha_sentencia ? this.form.value.fecha_sentencia : null,
+          hora_sentencia: null,
+    
+          juez_id: esSentencia && this.juezSeleccionado ? this.juezSeleccionado.id : null,
+          juezModel: { id: '', nombre: '' },
+    
           juicio: this.expediente?.juicio,
-          ultimo_movimiento: this.expediente?.ultimo_movimiento,
-          monto: this.form.value.monto,
-          apela: this.apela
+          ultimo_movimiento: this.form.value.ultimo_movimiento?.trim() !== '' ? this.form.value.ultimo_movimiento : this.form.value.fecha_sentencia,
+          monto: esSentencia ? this.form.value.monto : null,
+          apela: esSentencia ? this.apela : null,
+          juzgadoModel: null,
 
-          
+          // 📌 Capital
+          estadoCapitalSeleccionado: this.estadoCapitalSeleccionado ?? null,
+          subEstadoCapitalSeleccionado: this.subEstadoCapitalSeleccionado ?? null,
+          fechaCapitalSubestado: this.fechaCapitalSubestado ?? null,
+          estadoLiquidacionCapitalSeleccionado: this.estadoLiquidacionCapitalSeleccionado ?? null,
+          fechaLiquidacionCapital: this.fechaLiquidacionCapital ?? null,
+          montoLiquidacionCapital: this.montoLiquidacionCapital ?? null,
+
+          // 📌 Honorarios
+          estadoHonorariosSeleccionado: this.estadoHonorariosSeleccionado ?? null,
+          subEstadoHonorariosSeleccionado: this.subEstadoHonorariosSeleccionado ?? null,
+          fechaHonorariosSubestado: this.fechaHonorariosSubestado ?? null,
+          estadoLiquidacionHonorariosSeleccionado: this.estadoLiquidacionHonorariosSeleccionado ?? null,
+          fechaLiquidacionHonorarios: this.fechaLiquidacionHonorarios ?? null,
+          montoLiquidacionHonorarios: this.montoLiquidacionHonorarios ?? null
         };
-
+    
         this.expedienteService.deleteClienteExpedientePorId(expediente.id).subscribe(response => {
           console.log('Respuesta del servidor:', response);
         }, error => {
           console.error('Error al eliminar clientes:', error);
         });
-
+    
         this.expedienteService.actualizarExpediente(expediente.id, expediente)
-        .subscribe(response => {
-          console.log('Expediente actualizado:', response);
-          this.menu = '1';
-          this.form.reset();
-
-        }, error => {
-          console.error('Error al actualizar expediente:', error);
+          .subscribe(response => {
+            console.log('Expediente actualizado:', response);
+            this.menu = '1';
+            this.form.reset();
+          }, error => {
+            console.error('Error al actualizar expediente:', error);
+          });
+    
+      } else {
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "error",
+          title: "Faltan datos por ingresar",
+          showConfirmButton: false,
+          timer: 1500
         });
-
-
-          }else {
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "error",
-              title: "Faltan datos por ingresar",
-              showConfirmButton: false,
-              timer: 1500
-            });
-          }
-          }
+      }
+    }
+    
 
       /*Valida si el caracter ingresado es numerico*/
       validateNumber(event: KeyboardEvent) {
@@ -320,36 +483,287 @@ export class EstadoPage implements OnInit {
         };
       
         this.form.get('monto')?.setValue(montos[honorario as keyof typeof montos] ?? '');
+
       }
 
-  asignarDatos(){
-    
-  //HONORARIO
-  this.honorarioSeleccionado = this.expediente.honorario;
-
-  //FECHA SENTENCIA
-  const fecha_sentencia = this.expediente.fecha_sentencia;
-  const fecha = new Date(fecha_sentencia);
-  const fechaFormateada = fecha.toISOString().split('T')[0]; // Esto da el formato yyyy-MM-dd
-  this.form.get('fecha_sentencia')?.setValue(fechaFormateada);
-  console.log(fecha_sentencia);
-
-    //MONTO DEL HONORARIO
-  const monto = this.expediente.monto;
-  this.form.get('monto')?.setValue(this.expediente.monto);
-
-
-
-  if (this.expediente.juez_id) {
-    const juezEncontrado = this.jueces.find(juez => juez.id === this.expediente.juez_id);
-    if (juezEncontrado) {
-      console.log('juez encontrado');
-      this.form.get('juez')?.setValue(juezEncontrado);
-    }
-  }
+      asignarDatos() {
+        // 1️⃣ Asignamos las variables locales primero
+      
+        // Honorario
+        this.honorarioSeleccionado = this.expediente.honorario;
+      
+        // Fecha sentencia formateada
+        const fecha_sentencia = this.expediente.fecha_sentencia;
+        const fechaSentenciaFormateada = new Date(fecha_sentencia).toISOString().split('T')[0];
+      
+        // Juez seleccionado
+        if (this.expediente.juez_id) {
+          const juezEncontrado = this.jueces.find(juez => juez.id === this.expediente.juez_id);
+          if (juezEncontrado) {
+            this.juezSeleccionado = juezEncontrado;
+          }
+        }
+      
+        // Capital
+        this.estadoCapitalSeleccionado = this.expediente.estadoCapitalSeleccionado ?? null;
+        this.subEstadoCapitalSeleccionado = this.expediente.subEstadoCapitalSeleccionado ?? null;
+        this.fechaCapitalSubestado = this.expediente.fechaCapitalSubestado 
+          ? new Date(this.expediente.fechaCapitalSubestado).toISOString().split('T')[0] 
+          : null;
+        this.estadoLiquidacionCapitalSeleccionado = this.expediente.estadoLiquidacionCapitalSeleccionado ?? null;
+        this.fechaLiquidacionCapital = this.expediente.fechaLiquidacionCapital 
+          ? new Date(this.expediente.fechaLiquidacionCapital).toISOString().split('T')[0] 
+          : null;
+        this.montoLiquidacionCapital = this.expediente.montoLiquidacionCapital ?? null;
+      
+        // Honorarios
+        this.estadoHonorariosSeleccionado = this.expediente.estadoHonorariosSeleccionado ?? null;
+        this.subEstadoHonorariosSeleccionado = this.expediente.subEstadoHonorariosSeleccionado ?? null;
+        this.fechaHonorariosSubestado = this.expediente.fechaHonorariosSubestado 
+          ? new Date(this.expediente.fechaHonorariosSubestado).toISOString().split('T')[0] 
+          : null;
+        this.estadoLiquidacionHonorariosSeleccionado = this.expediente.estadoLiquidacionHonorariosSeleccionado ?? null;
+        this.fechaLiquidacionHonorarios = this.expediente.fechaLiquidacionHonorarios 
+          ? new Date(this.expediente.fechaLiquidacionHonorarios).toISOString().split('T')[0] 
+          : null;
+        this.montoLiquidacionHonorarios = this.expediente.montoLiquidacionHonorarios ?? null;
+      
+        // 2️⃣ Cuando todo está listo, recién ahí seteamos el formulario
+        this.form.setValue({
+          honorario: this.honorarioSeleccionado,
+          fecha_sentencia: fechaSentenciaFormateada,
+          juez: this.juezSeleccionado,
+          monto: this.expediente.monto,
+          ultimo_movimiento: this.expediente.ultimo_movimiento,
+      
+          estadoCapitalSeleccionado: this.estadoCapitalSeleccionado,
+          subEstadoCapitalSeleccionado: this.subEstadoCapitalSeleccionado,
+          fechaCapitalSubestado: this.fechaCapitalSubestado,
+          estadoLiquidacionCapitalSeleccionado: this.estadoLiquidacionCapitalSeleccionado,
+          fechaLiquidacionCapital: this.fechaLiquidacionCapital,
+          montoLiquidacionCapital: this.montoLiquidacionCapital,
+      
+          estadoHonorariosSeleccionado: this.estadoHonorariosSeleccionado,
+          subEstadoHonorariosSeleccionado: this.subEstadoHonorariosSeleccionado,
+          fechaHonorariosSubestado: this.fechaHonorariosSubestado,
+          estadoLiquidacionHonorariosSeleccionado: this.estadoLiquidacionHonorariosSeleccionado,
+          fechaLiquidacionHonorarios: this.fechaLiquidacionHonorarios,
+          montoLiquidacionHonorarios: this.montoLiquidacionHonorarios,
+        });
+      
+        // 3️⃣ Opcional: refrescamos las validaciones por seguridad
+        Object.keys(this.form.controls).forEach(field => {
+          const control = this.form.get(field);
+          control?.markAsTouched({ onlySelf: true });
+          control?.updateValueAndValidity();
+        });
+      
+        // 4️⃣ Por último, actualizamos las validaciones condicionales
+        this.actualizarValidacionesCondicionales();
+      }
       
 
+actualizarEstadoCapital() {
+
+  //console.log(this.montoLiquidacionCapital);
+  if (this.estadoCapitalSeleccionado === 'apelado') {
+    // Si es apelado, limpio los de liquidación
+    this.estadoLiquidacionCapitalSeleccionado = null;
+    this.fechaLiquidacionCapital = null;
+    this.montoLiquidacionCapital = null;
+
+    this.form.get('estadoLiquidacionCapitalSeleccionado')?.setValue(null);
+    this.form.get('fechaLiquidacionCapital')?.setValue(null);
+    this.form.get('montoLiquidacionCapital')?.setValue(null);
+
+  } else if (this.estadoCapitalSeleccionado === 'firme') {
+    // Si es firme, limpio los subestados de apelación
+    this.subEstadoCapitalSeleccionado = null;
+    this.fechaCapitalSubestado = null;
+
+    this.form.get('subEstadoCapitalSeleccionado')?.setValue(null);
+    this.form.get('fechaCapitalSubestado')?.setValue(null);
+
+  } else if (this.estadoCapitalSeleccionado === 'diferido'){
+    console.error('Error al modificar el estado del capital');
+  }else {
+        // Si es apelado, limpio los de liquidación
+        this.estadoLiquidacionCapitalSeleccionado = null;
+        this.fechaLiquidacionCapital = null;
+        this.montoLiquidacionCapital = null;
+    
+        this.form.get('estadoLiquidacionCapitalSeleccionado')?.setValue(null);
+        this.form.get('fechaLiquidacionCapital')?.setValue(null);
+        this.form.get('montoLiquidacionCapital')?.setValue(null);
+  }
 }
+
+actualizarHonorario(){
+  if (this.honorarioSeleccionado == 'Difiere regulacion 1º instancia') {
+    //this.deshabilitarApeladoOFirme = true;
+    this.estadoHonorariosSeleccionado = null;
+
+    this.estadoHonorariosSeleccionado = 'diferido';
+
+    this.subEstadoHonorariosSeleccionado = 'diferido';
+
+  } else  {
+    //this.deshabilitarApeladoOFirme = false;
+    this.estadoHonorariosSeleccionado = null;
+
+    if(this.estadoHonorariosSeleccionado == 'diferido'){
+      this.estadoHonorariosSeleccionado == null;
+    }
+
+    if(this.subEstadoHonorariosSeleccionado == 'diferido'){
+      this.subEstadoHonorariosSeleccionado == null;
+    }
+  } 
+}
+/*
+actualizarEstadoHonorario() {
+  if (this.estadoHonorariosSeleccionado == 'apelado') {
+    // Si está apelado, limpio lo de "firme"
+    this.estadoLiquidacionHonorariosSeleccionado = null;
+    this.fechaLiquidacionHonorarios = null;
+    this.montoLiquidacionHonorarios = null;
+//estadoLiquidacionHonorariosSeleccionado
+
+    this.form.get('fechaLiquidacionHonorarios')?.setValue(null);
+    this.form.get('estadoLiquidacionHonorariosSeleccionado')?.setValue(null);
+    this.form.get('montoLiquidacionHonorarios')?.setValue(null);
+
+
+  } else if (this.estadoHonorariosSeleccionado === 'firme') {
+    // Si está firme, limpio lo de "apelado"
+    this.subEstadoHonorariosSeleccionado = null;
+    this.fechaHonorariosSubestado = null;
+  } else if (this.estadoHonorariosSeleccionado == 'diferido') {
+    // Si está diferido, limpio todo lo demás
+    //this.subEstadoHonorariosSeleccionado = null;
+    //this.fechaHonorariosSubestado = null;
+    this.estadoLiquidacionHonorariosSeleccionado = null;
+    this.fechaLiquidacionHonorarios = null;
+    this.montoLiquidacionHonorarios = null;
+  } else if (this.estadoHonorariosSeleccionado == 'pendiente') {
+        this.estadoLiquidacionHonorariosSeleccionado = null;
+        this.fechaLiquidacionHonorarios = null;
+        this.montoLiquidacionHonorarios = null;
+    
+        this.form.get('fechaLiquidacionHonorarios')?.setValue(null);
+        this.form.get('estadoLiquidacionHonorariosSeleccionado')?.setValue(null);
+        this.form.get('montoLiquidacionHonorarios')?.setValue(null);
+  }
+}*/
+/*
+actualizarEstadoHonorario() {
+  // Primero limpieza general de subestado y liquidaciones
+  this.subEstadoHonorariosSeleccionado = null;
+  this.fechaHonorariosSubestado = null;
+  this.estadoLiquidacionHonorariosSeleccionado = null;
+  this.fechaLiquidacionHonorarios = null;
+  this.montoLiquidacionHonorarios = null;
+
+  this.form.get('subEstadoHonorariosSeleccionado')?.setValue(null);
+  this.form.get('fechaHonorariosSubestado')?.setValue(null);
+  this.form.get('estadoLiquidacionHonorariosSeleccionado')?.setValue(null);
+  this.form.get('fechaLiquidacionHonorarios')?.setValue(null);
+  this.form.get('montoLiquidacionHonorarios')?.setValue(null);
+
+  // Luego, revisamos si hace falta asignar valores específicos
+  if (this.estadoHonorariosSeleccionado === 'diferido') {
+    this.subEstadoHonorariosSeleccionado = 'diferido';
+    this.form.get('subEstadoHonorariosSeleccionado')?.setValue('diferido');
+  }
+}*/
+
+actualizarEstadoHonorario() {
+
+  //console.log(this.montoLiquidacionCapital);
+  if (this.estadoHonorariosSeleccionado === 'apelado') {
+    // Si es apelado, limpio los de liquidación
+    this.estadoLiquidacionHonorariosSeleccionado = null;
+    this.fechaLiquidacionHonorarios = null;
+    this.montoLiquidacionHonorarios = null;
+
+  /*  this.form.get('estadoLiquidacionCapitalSeleccionado')?.setValue(null);
+    this.form.get('fechaLiquidacionCapital')?.setValue(null);
+    this.form.get('montoLiquidacionCapital')?.setValue(null);*/
+
+  } else if (this.estadoHonorariosSeleccionado === 'firme') {
+    // Si es firme, limpio los subestados de apelación
+    this.subEstadoHonorariosSeleccionado = null;
+    this.fechaHonorariosSubestado = null;
+
+    /*this.form.get('subEstadoCapitalSeleccionado')?.setValue(null);
+    this.form.get('fechaCapitalSubestado')?.setValue(null);*/
+
+  } else if (this.estadoHonorariosSeleccionado === 'diferido'){
+    console.error('Error al modificar el estado del honorario');
+  }else {
+        // Si es apelado, limpio los de liquidación
+        this.estadoLiquidacionHonorariosSeleccionado = null;
+        this.fechaLiquidacionHonorarios = null;
+        this.montoLiquidacionHonorarios = null;
+    
+       /* this.form.get('estadoLiquidacionCapitalSeleccionado')?.setValue(null);
+        this.form.get('fechaLiquidacionCapital')?.setValue(null);
+        this.form.get('montoLiquidacionCapital')?.setValue(null);*/
+  }
+}
+
+
+actualizarEstadoDeLiquidacionCapital(){
+  if(this.estadoLiquidacionCapitalSeleccionado != 'liquidacion practicada'){
+    this.montoLiquidacionCapital = null;
+  }
+
+  if (this.estadoCapitalSeleccionado !== 'firme') {
+    this.subEstadoCapitalSeleccionado == null;
+    this.montoLiquidacionCapital = null;
+    this.estadoLiquidacionCapitalSeleccionado = null;
+    this.form.get('montoLiquidacionHonorarios')?.setValue(null);
+  }
+}
+
+actualizarEstadoLiquidacionHonorarios(){
+  if (this.estadoLiquidacionHonorariosSeleccionado !== 'liquidacion practicada') {
+    this.montoLiquidacionHonorarios = null;
+
+
+    this.form.get('montoLiquidacionHonorarios')?.setValue(null); 
+  }
+
+  if (this.estadoHonorariosSeleccionado !== 'firme') {
+    this.subEstadoCapitalSeleccionado == null;
+    this.montoLiquidacionHonorarios = null;
+    this.estadoLiquidacionHonorariosSeleccionado = null;
+    this.form.get('montoLiquidacionHonorarios')?.setValue(null);
+  }
+  
+}
+
+
+
+resetearCamposEstadoYHonorarios() {
+  // Capital
+  this.estadoCapitalSeleccionado = null;
+  this.subEstadoCapitalSeleccionado = null;
+  this.fechaCapitalSubestado = null;
+  this.estadoLiquidacionCapitalSeleccionado = null;
+  this.fechaLiquidacionCapital = null;
+  this.montoLiquidacionCapital = null;
+
+  // Honorarios
+  this.estadoHonorariosSeleccionado = null;
+  this.subEstadoHonorariosSeleccionado = null;
+  this.fechaHonorariosSubestado = null;
+  this.estadoLiquidacionHonorariosSeleccionado = null;
+  this.fechaLiquidacionHonorarios = null;
+  this.montoLiquidacionHonorarios = null;
+}
+
+
       
 }
 

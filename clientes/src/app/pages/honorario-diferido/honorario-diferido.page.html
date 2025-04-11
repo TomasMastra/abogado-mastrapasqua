@@ -1,148 +1,69 @@
+<div class="content mat-elevation-z8" [class.blur-content]="cargando">
 
+  <div class="toolbar">
+    <ion-input style="color: white; font-weight: bold;"
+      placeholder="Buscar por número o año"
+      class="input-busqueda"
+      [(ngModel)]="busqueda"
+      (ngModelChange)="buscar()">
+    </ion-input>
 
-<div> 
-  <mat-toolbar color="primary">
-    <button mat-icon-button (click)="sidenav.toggle()">
-      <mat-icon style="color: #ffffff">menu</mat-icon>
+    <button mat-button class="list-button">
+      <mat-icon style="color: #ffffff">download</mat-icon>
     </button>
-    <span style="color: #ffffff">Clientes</span>
-  </mat-toolbar>
-  
-  <mat-sidenav-container class="sidenav-container" style="background-color: #1976d2">
-    <mat-sidenav #sidenav mode="side" opened>
-      <div class="sidebar-content">
-        <img class="avatar mat-elevation-z8" src="../../../assets/botones/user.png" />
-        <h4 class="name">Andres Mastrapasqua</h4>
-        <p class="designation">Abogado</p>
-  
-        <mat-divider></mat-divider>
-  
-        <button mat-button class="menu-button">
-          <mat-icon style="color: #ffffff">home</mat-icon>
-          <span style="color: #ffffff">Menú</span>
-        </button>
-        <button mat-button class="menu-button" >
-          <mat-icon style="color: #ffffff">person</mat-icon>
-          <span style="color: #ffffff">Clientes</span>
-        </button>
+    <button mat-button class="list-button">
+      <mat-icon style="color: #ffffff">more_vert</mat-icon>
+    </button>
 
+    <label for="styledSelect1" class="custom-select">
+      <select id="styledSelect1" name="options" (change)="cambiarEstado($event)">
+        <option value="">Seleccionar estado</option>
+        <option value="todos" selected>Todos</option>
+        <option value="inicio">Inicio</option>
+        <option value="prueba">Prueba</option>
+        <option value="fiscal">Fiscal</option>
+        <option value="clausula periodo prueba">Clausula periodo prueba</option>
+        <option value="sentencia">Sentencia</option>
+      </select>
+    </label>
+  </div>
 
-        <button mat-button class="menu-button" [matMenuTriggerFor]="expedienteMenu">
-          <mat-icon style="color: #ffffff">folder_open</mat-icon>
-          <span style="color: #ffffff">Expedientes</span>
-        </button>
+  <div *ngIf="cargando" class="fullscreen-loader">
+    <mat-progress-spinner mode="indeterminate" color="accent"></mat-progress-spinner>
+  </div>
 
-        <mat-menu #expedienteMenu="matMenu">
-          <button mat-menu-item (click)="goTo('/lista-expedientes')">
-            <mat-icon>gavel</mat-icon>
-            <span>ABM</span>
-          </button>
-          <button mat-menu-item (click)="goTo('/estado')">
-            <mat-icon>location_on</mat-icon>
-            <span>Estados</span>
-          </button>
-          <button mat-menu-item (click)="goTo('/honorario-diferido')">
-            <mat-icon>paid</mat-icon>
-            <span>Honorarios</span>
-          </button>
-        </mat-menu>
-      
-        <button mat-button class="menu-button" [matMenuTriggerFor]="generalMenu">
-          <mat-icon style="color: #ffffff">apps</mat-icon>
-          <span style="color: #ffffff">General</span>
-        </button>
+  <div class="table-container" *ngIf="!cargando">
+    <table>
+      <thead>
+        <tr>
+          <th>Nº expediente</th>
+          <th>Juzgado</th>
+          <th>Carátula</th>
+          <th>Fecha sentencia</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of honorariosDiferidos">
+          <td>{{ item.numero }}/{{ item.anio }}</td>
+          <td>{{ item.juzgadoModel?.nombre || 'Sin juzgado' }}</td>
+          <td *ngIf="item.clientes.length === 1">
+            {{ item.clientes[0].nombre }} {{ item.clientes[0].apellido }} contra {{ item.demandadoModel.nombre }}
+          </td>
+          <td *ngIf="item.clientes.length > 1">
+            {{ item.clientes[0].nombre }} {{ item.clientes[0].apellido }} y otros contra {{ item.demandadoModel.nombre }}
+          </td>
+          <td *ngIf="item.clientes.length === 0">
+            (sin actora) contra {{ item.demandadoModel.nombre }}
+          </td>
+          <td>{{ item.fecha_sentencia | date:'yyyy-MM-dd' }}</td>
+          <td>{{ item.estado }}</td>
+        </tr>
+        <tr *ngIf="!hayHonorarios">
+          <td colspan="5" style="text-align: center;">No se encontraron honorarios.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-        <mat-menu #generalMenu="matMenu">
-          <button mat-menu-item (click)="goTo('/juzgados')">
-            <mat-icon>gavel</mat-icon>
-            <span>Juzgados</span>
-          </button>
-          <button mat-menu-item (click)="goTo('/localidades')">
-            <mat-icon>location_on</mat-icon>
-            <span>Localidades</span>
-          </button>
-          <button mat-menu-item (click)="goTo('/demandado')">
-            <mat-icon>gavel</mat-icon>
-            <span>Demandados</span>
-          </button>
-        </mat-menu>
-  
-        <mat-divider></mat-divider>
-  
-        <button mat-button class="menu-button">
-          <mat-icon style="color: #ffffff">settings</mat-icon>
-          <span style="color: #ffffff">Ajustes</span>
-        </button>
-      </div>
-    </mat-sidenav>
-
-
-    <mat-sidenav-content>
-      <div class="content mat-elevation-z8">
-        <div *ngIf="cargando" class="loader-container">
-          <mat-progress-spinner mode="indeterminate" color="accent"></mat-progress-spinner>
-        </div>
-
-        <div class="toolbar">
-          <button mat-button class="list-button" (click)="cargarHonorariosDiferidos()">
-            <mat-icon style="color: #ffffff">refresh</mat-icon>
-            <span style="color: #ffffff">Actualizar lista</span>
-          </button>
-        </div>
-
-        <div class="table-container" *ngIf="!cargando">
-          <table>
-            <thead>
-              <tr>
-                <th>Nº expediente</th>
-                <th>Juzgado</th>
-                <th>Carátula</th>
-                <th>Fecha sentencia</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of honorariosDiferidos">
-                <td>{{ item.numero }}/{{ item.anio }}</td> 
-                <td>Juzgado</td>
-                <td *ngIf="item.clientes.length === 1">
-                  {{ item.clientes[0].nombre }} {{ item.clientes[0].apellido }} contra {{ item.demandadoModel.nombre }}
-                </td>
-                <td *ngIf="item.clientes.length > 1">
-                  {{ item.clientes[0].nombre }} {{ item.clientes[0].apellido }} y otros contra {{ item.demandadoModel.nombre }}
-                </td>
-                <td *ngIf="item.clientes.length === 0">
-                  (sin actora) contra {{ item.demandadoModel.nombre }}
-                </td>
-                <td>{{ item.fecha_sentencia | date:'yyyy-MM-dd' }}</td>
-                <td>{{ item.estado }}</td>
-              </tr>
-              <tr *ngIf="!hayHonorarios">
-                <td colspan="4" style="text-align: center;">No hay honorarios diferidos cargados.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </mat-sidenav-content>
-  </mat-sidenav-container>
 </div>
-
-
-
-
-<!--
-
-            <ion-label>
-              <td *ngIf="expediente.clientes.length === 1">
-                {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} contra {{ expediente.demandadoModel.nombre }}
-              </td>
-              <td *ngIf="expediente.clientes.length > 1">
-                {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} y otros contra {{ expediente.demandadoModel.nombre }}
-              </td>
-              <td *ngIf="expediente.clientes.length === 0">
-                {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandadoModel.nombre }}
-              </td>
-            </ion-label>
-
--->

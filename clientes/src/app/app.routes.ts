@@ -7,7 +7,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'lista-clientes',
+    redirectTo: 'home',
     pathMatch: 'full',
   },
   {
