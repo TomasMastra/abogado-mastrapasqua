@@ -61,7 +61,8 @@ export class ExpedientesService {
       console.error('ID de demandado no definido');
     }
 
-    const url = `http://localhost:3000/demandados/${id}`;
+    const url = `http://192.168.68.103:3000/demandados/${id}`;
+    
     return this.http.get<DemandadoModel>(url);
   }
   

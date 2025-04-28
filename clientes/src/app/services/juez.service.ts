@@ -47,6 +47,6 @@ export class JuezService {
         }
 
         getExpedientesPorJuez(juez_id: string) {
-          return this.http.get<any[]>(`http://localhost:3000/expedientes/jueces?id=${juez_id}`);
+          return this.http.get<any[]>(`http://192.168.68.103:3000/expedientes/jueces?id=${juez_id}`);
         }
 }
