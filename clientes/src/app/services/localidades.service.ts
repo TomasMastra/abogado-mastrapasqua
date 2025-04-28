@@ -18,7 +18,9 @@ export class LocalidadesService {
     })
   };
 
-  private apiUrl = 'http://localhost:3000/localidades';  
+  //private apiUrl = 'http://localhost:3000/localidades';  
+  private apiUrl = 'http://192.168.68.103:3000/localidades';
+
   private localidadesSubject = new BehaviorSubject<LocalidadModel[]>([]); 
   localidades$ = this.localidadesSubject.asObservable();  
 

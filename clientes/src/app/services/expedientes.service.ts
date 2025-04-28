@@ -15,7 +15,9 @@ import { catchError, tap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class ExpedientesService {
-  private apiUrl = 'http://localhost:3000/expedientes';  
+  //private apiUrl = 'http://localhost:3000/expedientes';  
+  private apiUrl = 'http://192.168.68.103:3000/expedientes';
+
   private expedientesSubject = new BehaviorSubject<ExpedienteModel[]>([]); // Emite un arreglo vacío inicialmente
   clientes$ = this.expedientesSubject.asObservable();  // Expone el observable de clientes
 
@@ -172,11 +174,9 @@ export class ExpedientesService {
           params: { numero, anio }
         });
       }*/
-        getClientePorNumeroYAnio(numero: string, anio: string, juzgado_id: number) {
+        getClientePorNumeroYAnio(numero: string, anio: string, tipo: string) {
 
-          console.log('id ',  juzgado_id)
-          //juzgado_id = '2';
-          return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/buscarPorNumeroyAnio`, { params: { numero, anio, juzgado_id } }).pipe(
+          return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/buscarPorNumeroAnioTipo`, { params: { numero, anio, tipo } }).pipe(
             mergeMap(expedientes => {
               if (!expedientes.length) return of([]); // Si no hay expedientes, devolver un array vacío
         

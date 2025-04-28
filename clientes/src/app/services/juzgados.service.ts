@@ -17,8 +17,9 @@ export class JuzgadosService {
       'Accept': 'application/json'
     })
   };
+  private apiUrl = 'http://192.168.68.103:3000/juzgados';
 
-  private apiUrl = 'http://localhost:3000/juzgados';  
+  //private apiUrl = 'http://localhost:3000/juzgados';  
   private juzgadosSubject = new BehaviorSubject<JuzgadoModel[]>([]); 
   juzgados$ = this.juzgadosSubject.asObservable();  
 

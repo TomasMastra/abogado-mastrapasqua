@@ -26,14 +26,15 @@
 
               <form [formGroup]="form">
 
-              <mat-form-field appearance="outline" class="full-width" style="width: 100%">
-                <mat-label style="color: white">Seleccionar juzgado</mat-label>
-                <mat-select style="color: white" formControlName="juez" [(ngModel)]="juzgadoSeleccionado">
-                  <mat-option *ngFor="let juzgado of juzgados" [value]="juzgado">
-                    {{ juzgado.nombre }} 
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width" style="width: 100%">
+                  <mat-label style="color: white">Seleccionar tipo de juzgado</mat-label>
+                  <mat-select style="color: white" formControlName="tipo">
+                    <mat-option *ngFor="let tipo of tipos" [value]="tipo">
+                      {{ tipo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                
               </form>
               
 
@@ -117,7 +118,7 @@
                 <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="32px">
                   <mat-form-field appearance="outline" class="half-width">
                     <mat-label style="color: white">Honorario</mat-label>
-                    <mat-select style="color: white" formControlName="honorario" [(ngModel)]="honorarioSeleccionado" (selectionChange)="actualizarMonto($event.value); actualizarHonorario(); actualizarValidacionesCondicionales()">
+                    <mat-select style="color: white"     formControlName="honorario" [(ngModel)]="honorarioSeleccionado" (selectionChange)="actualizarMonto($event.value); actualizarValidacionesCondicionales(); actualizarHonorario()">
                       <mat-option *ngFor="let honorario of honorarios" [value]="honorario">
                         {{ honorario }}
                       </mat-option>
@@ -191,7 +192,7 @@
 </div>
 
 <!-- Contenedor general -->
-<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 16px;" *ngIf="expediente.capitalCobrado != 1">
 
   <!-- Fila de selectores -->
   <div style="display: flex; gap: 16px;">
@@ -199,7 +200,7 @@
     <!-- Estado del Capital -->
     <mat-form-field appearance="outline" style="flex: 1;">
       <mat-label style="color: white">Estado del Capital</mat-label>
-      <mat-select style="color: white" [(ngModel)]="estadoCapitalSeleccionado" name="estadoCapitalSeleccionado" (selectionChange)="actualizarEstadoCapital(); actualizarValidacionesCondicionales()">
+      <mat-select style="color: white" [(ngModel)]="estadoCapitalSeleccionado" name="estadoCapitalSeleccionado" (selectionChange)="actualizarValidacionesCondicionales()">
         <mat-option value="apelado">Apelado</mat-option>
         <mat-option value="firme">Firme</mat-option>
         <mat-option value="pendiente">Pendiente</mat-option>
@@ -226,7 +227,7 @@
 
     <mat-form-field *ngIf="estadoCapitalSeleccionado == 'firme'" appearance="outline" style="flex: 1;">
       <mat-label style="color: white">Estado de liquidación Capital</mat-label>
-      <mat-select style="color: white" [(ngModel)]="estadoLiquidacionCapitalSeleccionado" name="estadoLiquidacionCapitalSeleccionado" (selectionChange)="actualizarEstadoDeLiquidacionCapital(); actualizarValidacionesCondicionales()">
+      <mat-select style="color: white" [(ngModel)]="subEstadoCapitalSeleccionado" name="subEstadoCapitalSeleccionado" (selectionChange)="actualizarValidacionesCondicionales()">
         <mat-option value="liquidacion pendiente">Liquidación pendiente</mat-option>
         <mat-option value="liquidacion practicada">Liquidación practicada</mat-option>
         <mat-option value="traslado liquidacion">Traslado de liquidación</mat-option>
@@ -260,13 +261,13 @@
       *ngIf="estadoCapitalSeleccionado == 'firme'"
       type="date"
       class="input-busqueda"
-      [(ngModel)]="fechaLiquidacionCapital"
-      name="fechaLiquidacionCapital">
+      [(ngModel)]="fechaCapitalSubestado"
+      name="fechaCapitalSubestado">
     </ion-input>
 
     <!-- Input monto -->
     <ion-input
-      *ngIf="estadoLiquidacionCapitalSeleccionado == 'liquidacion practicada'"
+      *ngIf="subEstadoCapitalSeleccionado == 'liquidacion practicada'"
       placeholder="Monto Capital"
       type="number"
       class="input-busqueda"
@@ -278,6 +279,10 @@
 
 </div>
 
+<div style="display: flex; flex-direction: column; gap: 16px;" *ngIf="expediente.capitalCobrado != 0">
+  CAPITAL COBRADO.
+</div>
+
 <!-- 📌 HONORARIOS -->
 <div class="divider-container">
   <mat-divider class="white-divider"></mat-divider>
@@ -286,7 +291,7 @@
 </div>
 
 <!-- Contenedor general -->
-<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 16px;" *ngIf="expediente.honorarioCobrado!= 1">
 
   <!-- Fila de selectores -->
   <div style="display: flex; gap: 16px;">
@@ -343,12 +348,15 @@
       <mat-label style="color: white">Estado de liquidación Honorarios</mat-label>
       <mat-select
       style="color: white"
-      [(ngModel)]="estadoLiquidacionHonorariosSeleccionado"
-      name="estadoLiquidacionHonorariosSeleccionado"
+      [(ngModel)]="subEstadoHonorariosSeleccionado"
+      name="subEstadoHonorariosSeleccionado"
       (selectionChange)="actualizarValidacionesCondicionales()">
     
       <mat-option value="espera que vuelva">Espera que vuelva</mat-option>
       <mat-option value="solicita intimacion">Solicita se intima</mat-option>
+      <mat-option value="cedula intima">Cedula intima</mat-option>
+      <mat-option value="solicita embargo">Solicita embargo</mat-option>
+      <mat-option value="embargo">Embargo</mat-option>
       <mat-option value="da en pago parcial">Da en pago parcial</mat-option>
       <mat-option value="da en pago total">Da en pago total</mat-option>
       <mat-option value="solicita giro">Solicita giro</mat-option>
@@ -400,8 +408,8 @@
       *ngIf="estadoHonorariosSeleccionado === 'firme'"
       type="date"
       class="input-busqueda"
-      [(ngModel)]="fechaLiquidacionHonorarios"
-      name="fechaLiquidacionHonorarios">
+      [(ngModel)]="fechaHonorariosSubestado"
+      name="fechaHonorariosSubestado">
     </ion-input>
 
 <!-- 
@@ -422,6 +430,10 @@
 
   </div>
 
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px;" *ngIf="expediente.honorarioCobrado!= 0">
+  HONORARIO COBRADO.
 </div>
 
 

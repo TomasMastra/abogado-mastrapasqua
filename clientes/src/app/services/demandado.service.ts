@@ -10,7 +10,9 @@ import { catchError, tap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class DemandadosService {
-  private apiUrl = 'http://localhost:3000/demandados';  
+  //private apiUrl = 'http://localhost:3000/demandados';  
+  private apiUrl = 'http://192.168.68.103:3000/demandados';
+
   private demandadosSubject = new BehaviorSubject<DemandadoModel[]>([]); // Emite un arreglo vacío inicialmente
   demandados$ = this.demandadosSubject.asObservable();  // Expone el observable de clientes
 

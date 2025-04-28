@@ -193,7 +193,7 @@ sql.connect(dbConfig)
                   camposRequeridos: ['numero', 'anio', 'demandado', 'juzgado', 'clientes']
               });
           }
-
+/*
           const resultExiste = await pool.request()
           .input('numero', sql.Int, numero)
           .input('anio', sql.Int, anio)
@@ -203,7 +203,32 @@ sql.connect(dbConfig)
             SELECT COUNT(*) AS count
             FROM expedientes
             WHERE numero = @numero AND anio = @anio AND juzgado_id = @juzgado_id
+          `);*/
+
+          const tipoJuzgadoResult = await pool.request()
+          .input('juzgado_id', sql.Int, juzgado_id)
+          .query(`
+            SELECT tipo FROM juzgados WHERE id = @juzgado_id
           `);
+        
+        if (!tipoJuzgadoResult.recordset.length) {
+          return res.status(400).json({ error: 'No se encontró el tipo del juzgado especificado.' });
+        }
+        
+        const tipo = tipoJuzgadoResult.recordset[0].tipo;
+        
+        const resultExiste = await pool.request()
+          .input('numero', sql.Int, numero)
+          .input('anio', sql.Int, anio)
+          .input('tipo', sql.NVarChar, tipo)
+          .query(`
+            SELECT COUNT(*) AS count
+            FROM expedientes e
+            JOIN juzgados j ON e.juzgado_id = j.id
+            WHERE e.numero = @numero AND e.anio = @anio AND j.tipo = @tipo
+          `);
+        
+
 
           if (resultExiste.recordset[0].count > 0) {
             return res.status(400).json({
@@ -577,7 +602,7 @@ app.get("/localidades", (req, res) => {
 
 app.post('/juzgados/agregar', async (req, res) => {
   try {
-    const { localidad_id, direccion, nombre} = req.body;
+    const { localidad_id, direccion, nombre, tipo} = req.body;
 
     if (!localidad_id) {
       return res.status(400).json({
@@ -588,13 +613,15 @@ app.post('/juzgados/agregar', async (req, res) => {
 
     const result = await pool.request()
     .input('localidad_id', sql.Int, Number(localidad_id))
-    .input('nombre', sql.NVarChar, nombre) // Se declara la variable @nombre
-    .input('direccion', sql.NVarChar, direccion) // Se declara la variable @nombre
+    .input('nombre', sql.NVarChar, nombre)
+    .input('direccion', sql.NVarChar, direccion)
+    .input('tipo', sql.NVarChar, tipo) // Se declara la variable @nombre
+
 
     .query(`
-        INSERT INTO juzgados (nombre, direccion, localidad_id)
+        INSERT INTO juzgados (nombre, direccion, localidad_id, tipo)
         OUTPUT INSERTED.id  
-        VALUES (@nombre, @direccion, @localidad_id)
+        VALUES (@nombre, @direccion, @localidad_id, @tipo)
       `);
 
     // El id del cliente insertado estará en result.recordset[0].id
@@ -711,9 +738,6 @@ app.post('/expedientes/agregarExpedienteClientes', async (req, res) => {
 app.put('/localidades/modificar/:id', async (req, res) => {
   const { id } = req.params;
   const nuevosDatos = req.body;
-  
-  console.log('ID de la localidad a modificar:', id);
-  console.log('Nuevos datos recibidos:', nuevosDatos);
 
   try {
       const resultado = await pool.request()
@@ -747,9 +771,6 @@ app.put('/localidades/modificar/:id', async (req, res) => {
   const { id } = req.params;
   const nuevosDatos = req.body;
   
-  console.log('ID de la localidad a modificar:', id);
-  console.log('Nuevos datos recibidos:', nuevosDatos);
-
   try {
       const resultado = await pool.request()
           .input('id', sql.Int, id)
@@ -781,9 +802,6 @@ app.put('/localidades/modificar/:id', async (req, res) => {
 app.put('/juzgados/modificar/:id', async (req, res) => {
   const { id } = req.params;
   const nuevosDatos = req.body;
-  
-  console.log('ID del juzgado a modificar:', id);
-  console.log('Nuevos datos recibidos:', nuevosDatos);
 
   try {
       const resultado = await pool.request()
@@ -792,12 +810,15 @@ app.put('/juzgados/modificar/:id', async (req, res) => {
           .input('nombre', sql.NVarChar, nuevosDatos.nombre)
           .input('direccion', sql.NVarChar, nuevosDatos.direccion)
           .input('estado', sql.NVarChar, nuevosDatos.estado)
+          .input('tipo', sql.NVarChar, nuevosDatos.tipo)
+
           .query(`
               UPDATE juzgados
               SET localidad_id = @localidad_id,
                   nombre = @nombre,
                   direccion = @direccion,
-                  estado = @estado
+                  estado = @estado,
+                  tipo = @tipo
               WHERE id = @id
           `);
 
@@ -1007,6 +1028,7 @@ app.get("/juez", async (req, res) => {
 
        
 //BUSCAR EXPEDIENTES POR NUMERO, AÑO Y ID EL JUZGADO
+/*
 app.get("/expedientes/buscarPorNumeroyAnio", async (req, res) => {
   try {
       const { numero, anio, juzgado_id } = req.query; 
@@ -1028,7 +1050,39 @@ app.get("/expedientes/buscarPorNumeroyAnio", async (req, res) => {
       console.error("Error al obtener expedientes:", err);
       res.status(500).send(err);
   }
+});*/
+
+// BUSCAR EXPEDIENTES POR NUMERO, AÑO Y TIPO DE JUZGADO (JOIN)
+app.get("/expedientes/buscarPorNumeroAnioTipo", async (req, res) => {
+  try {
+    const { numero, anio, tipo } = req.query;
+
+    if (!numero || !anio || !tipo) {
+      return res.status(400).json({ error: "Se requieren 'numero', 'anio' y 'tipo'." });
+    }
+
+    const result = await pool
+      .request()
+      .input("numero", sql.Int, numero)
+      .input("anio", sql.Int, anio)
+      .input("tipo", sql.NVarChar, tipo)
+      .query(`
+        SELECT e.*
+        FROM expedientes e
+        JOIN juzgados j ON e.juzgado_id = j.id
+        WHERE e.estado != 'eliminado'
+          AND e.numero = @numero
+          AND e.anio = @anio
+          AND j.tipo = @tipo
+      `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error al obtener expedientes:", err);
+    res.status(500).send(err);
+  }
 });
+
 
 //TRAE EXPEDIENTES FILTRADOS POR UN ESTADO
 app.get("/expedientes/estado", async (req, res) => {

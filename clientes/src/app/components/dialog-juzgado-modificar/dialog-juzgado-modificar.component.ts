@@ -55,28 +55,24 @@ export class DialogJuzgadoModificarComponent {
   private destroy$ = new Subject<void>(); 
   localidadElegida: any; 
 
+  tipos: any[] = ['CCF', 'COM', 'CIV', 'CC'];
+  tipoSeleccionado: any;
   constructor(
     private juzgadosService: JuzgadosService, private localidadesService: LocalidadesService,
     public dialogRef: MatDialogRef<DialogJuzgadoModificarComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-
     this.form = new FormGroup({
-      nombre: new FormControl(data?.nombre ?? ''),
+      nombre: new FormControl(data?.nombre ?? '', [Validators.required]),
       direccion: new FormControl(data?.direccion ?? ''),
-      //estado: new FormControl(data?.estadi ?? '', [Validators.required, Validators.minLength(7), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
       localidad: new FormControl( '', [Validators.required]),
-
-    });
-
-
-
-
-    
+      tipo: new FormControl( '', [Validators.required]),
+    }); 
   }
 
   ngOnInit() {
     this.cargarLocalidad();
+    this.cargarTipo();
   
     // Suscribirse a cambios del formulario para actualizar localidadElegida
     this.form.get('localidad')?.valueChanges.subscribe(value => {
@@ -125,10 +121,12 @@ export class DialogJuzgadoModificarComponent {
       );
   }
 
-  
-
-
-
+  cargarTipo(){
+    if (this.data) {
+      this.tipoSeleccionado = this.data.tipo;
+      this.form.get('tipo')?.setValue(this.tipoSeleccionado);
+    }
+  }
 
   closeDialog(): void {
     this.dialogRef.close();
@@ -138,13 +136,18 @@ export class DialogJuzgadoModificarComponent {
     if (this.form.valid) {
       const localidadSeleccionada = this.form.value.localidad;
       console.log('Localidad seleccionada:', localidadSeleccionada);
+
+      const tipoSeleccionado = this.form.value.tipo;
+      console.log('Localidad seleccionada:', tipoSeleccionado);
   
       const juzgado: JuzgadoModel = {
         localidad_id: localidadSeleccionada?.id ?? null,
         nombre: this.form.value.nombre ?? null,
         direccion: this.form.value.direccion ?? null,
         id: this.data.id,
-        estado: 'activo'
+        estado: 'activo',
+        tipo: tipoSeleccionado
+
       };
   
       this.dialogRef.close(juzgado);

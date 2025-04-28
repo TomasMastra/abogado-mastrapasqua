@@ -144,8 +144,7 @@ export class HonorarioDiferidoPage implements OnInit {
   
       if(selectedValue == 'todos'){
         this.cargarHonorariosDiferidos();
-      }else{
-        
+      }else{  
         this.cargarPorEstado(selectedValue);
       }
   }
@@ -224,70 +223,81 @@ obtenerValorOrden(item: any, campo: string): any {
 
 
 cobrar(tipo: 'capital' | 'honorario', expediente: ExpedienteModel) {
-  if (tipo === 'capital') {
-    expediente.capitalCobrado = true;
-  } else if (tipo === 'honorario') {
-    expediente.honorarioCobrado = true;
-  }
+  Swal.fire({
+    title: `¿Seguro que querés cobrar el ${tipo === 'capital' ? 'capital' : 'honorario'}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, cobrar',
+    cancelButtonText: 'Cancelar',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Si confirma, seguimos con el cobro
+      if (tipo === 'capital') {
+        expediente.capitalCobrado = true;
+      } else if (tipo === 'honorario') {
+        expediente.honorarioCobrado = true;
+      }
 
-  // Verificamos si se cobraron ambos
-  const ambosCobrados = expediente.capitalCobrado && expediente.honorarioCobrado;
-
-  if (ambosCobrados) {
-    expediente.estado = 'cobrado';
-  }
-
-  this.expedienteService.actualizarExpediente(expediente.id, expediente).subscribe({
-    next: () => {
-      this.cargarPorEstado('sentencia'); // Refrescar la tabla
+      const ambosCobrados = expediente.capitalCobrado && expediente.honorarioCobrado;
 
       if (ambosCobrados) {
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "success",
-          title: "Se cobró el capital y el honorario. Estado actualizado a COBRADO.",
-          showConfirmButton: false,
-          timer: 3000
-        });
-      } else if (tipo === 'capital') {
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "success",
-          title: "Capital cobrado correctamente.",
-          showConfirmButton: false,
-          timer: 3000
-        });
-      } else if (tipo === 'honorario') {
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "success",
-          title: "Honorario cobrado correctamente.",
-          showConfirmButton: false,
-          timer: 3000
-        });
+        expediente.estado = 'cobrado';
       }
-    },
-    error: (err) => {
-      console.error('Error al actualizar el expediente:', err);
 
-      // Restaurar cambio si falló la actualización
-      if (tipo === 'capital') expediente.capitalCobrado = false;
-      if (tipo === 'honorario') expediente.honorarioCobrado = false;
+      this.expedienteService.actualizarExpediente(expediente.id, expediente).subscribe({
+        next: () => {
+          this.cargarPorEstado('sentencia');
 
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "error",
-        title: "Error al cobrar. Intentalo nuevamente.",
-        showConfirmButton: false,
-        timer: 3000
+          if (ambosCobrados) {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Se cobró el capital y el honorario. Estado actualizado a COBRADO.",
+              showConfirmButton: false,
+              timer: 3000
+            });
+          } else if (tipo === 'capital') {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Capital cobrado correctamente.",
+              showConfirmButton: false,
+              timer: 3000
+            });
+          } else if (tipo === 'honorario') {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Honorario cobrado correctamente.",
+              showConfirmButton: false,
+              timer: 3000
+            });
+          }
+        },
+        error: (err) => {
+          console.error('Error al actualizar el expediente:', err);
+
+          if (tipo === 'capital') expediente.capitalCobrado = false;
+          if (tipo === 'honorario') expediente.honorarioCobrado = false;
+
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Error al cobrar. Intentalo nuevamente.",
+            showConfirmButton: false,
+            timer: 3000
+          });
+        }
       });
     }
+    // Si cancela, no hace nada
   });
 }
+
 
 
   

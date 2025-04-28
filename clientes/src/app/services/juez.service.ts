@@ -16,7 +16,9 @@ export class JuezService {
       })
     };
   
-    private apiUrl = 'http://localhost:3000/juez';  
+    //private apiUrl = 'http://localhost:3000/juez';
+    private apiUrl = 'http://192.168.68.103:3000/juez';
+  
     private juezSubject = new BehaviorSubject<JuezModel[]>([]); 
     juez$ = this.juezSubject.asObservable();  
   

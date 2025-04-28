@@ -143,19 +143,10 @@ export class JuzgadosPage implements OnInit {
       abrirDialog(): void {
         const dialogRef = this.dialog.open(DialogJuzgadoComponent, {
           width: '500px',
-          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
+          disableClose: true,
 
         });
-
-        /*
-        const dialogRef = this.dialog.open(DialogClienteComponent, {
-          width: '500px',
-          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
-          data: { }
-        });
-
-        */
-      
+  
         dialogRef.afterClosed().subscribe((juzgado: JuzgadoModel) => {
           if (juzgado) {
             // Primero, agregar el cliente a la base de datos
@@ -175,7 +166,7 @@ export class JuzgadosPage implements OnInit {
       
       
             }, error => {
-              console.error('Error al agregar cliente:', error);
+              console.error('Error al agregar juzgado:', error);
             });
           }
         });

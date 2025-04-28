@@ -23,12 +23,18 @@
           </mat-form-field>
         </div>
 
-        <div class="form__group field full-width">
-          <input type="input" class="form__field" placeholder="Tipo" name="tipo" id="tipo" required formControlName="tipo"/>
-          <label for="tipo" class="form__label">Tipo</label>
-          <div class="error" *ngIf="form.controls?.['tipo']?.invalid && (form.controls?.['tipo']?.dirty || form.controls?.['tipo']?.touched)">
-            <div *ngIf="form.controls?.['tipo']?.errors?.['required']" style="color: red;">El tipo es requerido</div>
-          </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width" style="width: 100%">
+            <mat-label style="color: white">Seleccionar tipo de juzgado</mat-label>
+            <mat-select style="color: white" formControlName="tipo">
+              <mat-option *ngFor="let tipo of tipos" [value]="tipo">
+                {{ tipo }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.controls?.['tipo']?.touched && form.controls?.['tipo']?.hasError('required')">
+              El tipo es requerido
+            </mat-error>
+          </mat-form-field>
         </div>
 
 

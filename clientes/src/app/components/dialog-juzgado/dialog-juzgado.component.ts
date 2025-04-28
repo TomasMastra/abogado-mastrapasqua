@@ -48,6 +48,8 @@ export class DialogJuzgadoComponent {
   hayExpedientes: boolean = true;
   private destroy$ = new Subject<void>(); 
   localidadElegida: any; 
+  tipos: any[] = ['CCF', 'COM', 'CIV', 'CC'];
+  tipoSeleccionado: any;
 
   constructor(
     private juzgadosService: JuzgadosService, private localidadesService: LocalidadesService,
@@ -102,16 +104,16 @@ export class DialogJuzgadoComponent {
 
   acceptDialog(): void {
     if(this.form.valid){
- 
-      console.log('localidadElegida.id', this.localidadElegida.id);
-      console.log('Tipo de localidadElegida.id', typeof this.localidadElegida.id);
+      const tipoSeleccionado = this.form.value.tipo;
+      console.log('Localidad seleccionada:', tipoSeleccionado);
 
       const juzgado: JuzgadoModel = {
       localidad_id: Number(this.localidadElegida.id),
       nombre: this.form.value.nombre ?? null,
       direccion: this.form.value.direccion,
       id: '0',
-      estado: 'activo'
+      estado: 'activo',
+      tipo: tipoSeleccionado
     };
 
     this.dialogRef.close(juzgado);

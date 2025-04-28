@@ -4,5 +4,6 @@ export interface JuzgadoModel {
   nombre: string,
   direccion: string,
   estado: string,
+  tipo: string
   }
   

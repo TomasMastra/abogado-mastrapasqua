@@ -17,8 +17,8 @@ export class ClientesService {
       'Accept': 'application/json'
     })
   };
-
-  private apiUrl = 'http://localhost:3000/clientes';  
+  private apiUrl = 'http://192.168.68.103:3000/clientes';
+  //private apiUrl = 'http://localhost:3000/clientes';  
   private clientesSubject = new BehaviorSubject<ClienteModel[]>([]); // Emite un arreglo vacío inicialmente
   clientes$ = this.clientesSubject.asObservable();  // Expone el observable de clientes
 
