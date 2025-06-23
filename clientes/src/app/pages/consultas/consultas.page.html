@@ -1,0 +1,135 @@
+<div class="content mat-elevation-z8" [class.blur-content]="cargando">
+
+  <div class="toolbar">
+    <ion-input style="color: white; font-weight: bold;"
+      placeholder="Buscar por número o año"
+      class="input-busqueda"
+      [(ngModel)]="busqueda">
+    </ion-input>
+
+<label for="styledSelect1" class="custom-select">
+  <select id="styledSelect1" name="options" [(ngModel)]="tipoSeleccionado" (change)="filtrar()">
+    <option [value]="''">Todos</option>
+    <option *ngFor="let tipo of tiposJuzgado" [value]="tipo">
+      {{ tipo }}
+    </option>
+  </select>
+</label>
+
+<label for="selectJuzgado" class="custom-select">
+  <select id="selectJuzgado" [(ngModel)]="juzgadoSeleccionado" (change)="filtrar()">
+    <option [value]="''">Todos los Juzgados</option>
+    <option *ngFor="let juzgado of listaJuzgados" [value]="juzgado.id">
+      {{ juzgado.nombre }}
+    </option>
+  </select>
+</label>
+
+
+<label for="selectAbogado" class="custom-select">
+  <select id="selectAbogado" [(ngModel)]="abogadoSeleccionado" (change)="filtrar()">
+    <option [value]="''">Todos los Abogados</option>
+    <option *ngFor="let abogado of listaUsuarios" [value]="abogado.id">
+      {{ abogado.nombre }}
+    </option>
+  </select>
+</label>
+
+<label for="selectProcurador" class="custom-select">
+  <select id="selectProcurador" [(ngModel)]="procuradorSeleccionado" (change)="filtrar()">
+    <option [value]="''">Todos los Procuradores</option>
+    <option *ngFor="let abogado of listaUsuarios" [value]="abogado.id">
+      {{ abogado.nombre }}
+    </option>
+  </select>
+</label>
+
+    <button mat-button class="list-button">
+      <mat-icon style="color: #ffffff">download</mat-icon>
+    </button>
+    <button mat-button class="list-button">
+      <mat-icon style="color: #ffffff">more_vert</mat-icon>
+    </button>
+  </div>
+
+  <div *ngIf="cargando" class="fullscreen-loader">
+    <mat-progress-spinner mode="indeterminate" color="accent"></mat-progress-spinner>
+  </div>
+
+  <div class="table-container" *ngIf="!cargando">
+    <table>
+      <thead>
+        <tr>
+          <th (click)="ordenarPor('numero')" [class.activo]="ordenCampo === 'numero'">
+            Nº expediente
+            <span class="flecha" *ngIf="ordenCampo === 'numero'">{{ ordenAscendente ? '↑' : '↓' }}</span>
+          </th>
+          <th>
+            Caratula
+          </th>
+            <th (click)="ordenarPor('ultimo_movimiento')" [class.activo]="ordenCampo === 'ultimo_movimiento'">
+            Ultimo movimiento
+            <span class="flecha" *ngIf="ordenCampo === 'ultimo_movimiento'">{{ ordenAscendente ? '↑' : '↓' }}</span>
+          </th>
+          <th (click)="ordenarPor('estado')" [class.activo]="ordenCampo === 'estado'">
+            Estado
+            <span class="flecha" *ngIf="ordenCampo === 'estado'">{{ ordenAscendente ? '↑' : '↓' }}</span>
+          </th>
+            <th (click)="ordenarPor('abogado')" [class.activo]="ordenCampo === 'abogado'">
+            Abogado
+            <span class="flecha" *ngIf="ordenCampo === 'abogado'">{{ ordenAscendente ? '↑' : '↓' }}</span>
+          </th>
+            <th (click)="ordenarPor('procurador')" [class.activo]="ordenCampo === 'procurador'">
+            Procurador
+            <span class="flecha" *ngIf="ordenCampo === 'procurador'">{{ ordenAscendente ? '↑' : '↓' }}</span>
+          </th>
+        </tr>
+      </thead>
+   <tbody>
+  <ng-container *ngFor="let item of honorariosDiferidosOrdenados"
+                (mouseenter)="item.hover = true"
+                (mouseleave)="item.hover = false">
+    
+    <ng-container *ngIf="esVisible(item)">
+      
+      <tr [class.hover]="item.hover">
+        <td style="background-color: #07295c;">{{ item.numero }}/{{ item.anio }}</td>
+        <td style="background-color: #07295c;">          
+<ion-label>
+  <h2 *ngIf="item.clientes.length === 1 && item.demandados?.length === 1">
+    {{ item.numero }}/{{ item.anio }} {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} contra {{ item.demandados[0]?.nombre }}
+  </h2>
+  <h2 *ngIf="item.clientes.length === 1 && item.demandados?.length > 1">
+    {{ item.numero }}/{{ item.anio }} {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} contra {{ item.demandados[0]?.nombre }} y otros
+  </h2>
+
+  <h2 *ngIf="item.clientes.length > 1 && item.demandados?.length === 1">
+    {{ item.numero }}/{{ item.anio }} {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} y otros contra {{ item.demandados[0]?.nombre }}
+  </h2>
+  <h2 *ngIf="item.clientes.length > 1 && item.demandados?.length > 1">
+    {{ item.numero }}/{{ item.anio }} {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} y otros contra {{ item.demandados[0]?.nombre }} y otros
+  </h2>
+
+  <h2 *ngIf="item.clientes.length === 0 && item.demandados?.length === 1">
+    {{ item.numero }}/{{ item.anio }} (sin actora) contra {{ item.demandados[0]?.nombre }}
+  </h2>
+  <h2 *ngIf="item.clientes.length === 0 && item.demandados?.length > 1">
+    {{ item.numero }}/{{ item.anio }} (sin actora) contra {{ item.demandados[0]?.nombre }} y otros
+  </h2>
+</ion-label>
+
+        </td>
+        <td style="background-color: #07295c;">{{ item.ultimo_movimiento | date:'dd/MM/yyyy' }}</td>
+        <td style="background-color: #07295c;">{{ item.estado }}</td>
+        <td style="background-color: #07295c;">{{ getNombreAbogado(item.usuario_id) }}</td>
+
+        <td style="background-color: #07295c;">{{ getNombreAbogado(item.procurador_id) }}</td>
+
+      </tr>
+
+    </ng-container>
+  </ng-container>
+</tbody>
+
+      
+      

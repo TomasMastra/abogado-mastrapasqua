@@ -7,6 +7,8 @@ export interface ExpedienteModel {
   id: string,
   titulo: string | null,
   clientes: ClienteModel[], 
+  demandados: DemandadoModel[], 
+
   fecha_creacion: string,
   descripcion: string,
   juzgado_id: number | null,
@@ -28,6 +30,8 @@ export interface ExpedienteModel {
   monto: number | null,
   apela: boolean | null,
   juzgadoModel: JuzgadoModel | null
+  procurador_id: number | null,
+  sala: string | null,
 
     // 📌 Capital
     estadoCapitalSeleccionado: string | null,
@@ -46,6 +50,14 @@ export interface ExpedienteModel {
     fechaLiquidacionHonorarios: string | null,
     montoLiquidacionHonorarios: number | null,
     honorarioCobrado: boolean | null,
-    cantidadUMA: Number | null
+    cantidadUMA: Number | null,
+    numeroCliente: string | null,
+    minutosSinLuz: string | null,
+    periodoCorte: string | null,
+    porcentaje: number | null,
+    fecha_cobro: string | null,
+    fecha_cobro_capital: string | null,
+    valorUMA: number | null;
+
   }
   

@@ -14,6 +14,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { Router } from '@angular/router';
+import { UmaService } from 'src/app/services/uma.service';
 
 @Component({
   selector: 'app-home',
@@ -26,7 +27,8 @@ import { Router } from '@angular/router';
           MatFormFieldModule, MatInputModule, MatCardModule],
 })
 export class HomePage {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private umaService: UmaService,
+  ) {}
 
   goTo(path: string) {
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {

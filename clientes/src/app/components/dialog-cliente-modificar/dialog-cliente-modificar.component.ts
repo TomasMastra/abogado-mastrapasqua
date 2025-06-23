@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ClientesService } from 'src/app/services/clientes.service';
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { IonCheckbox, IonItemSliding } from "@ionic/angular/standalone";
 
 
@@ -29,6 +29,20 @@ import Swal from 'sweetalert2';
 
 import { UsuarioService } from 'src/app/services/usuario.service';
 
+function fechaMediacionValida(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+
+  const hoy = new Date().toISOString().split('T')[0]; // '2024-06-02'
+  return control.value < hoy ? { fechaPasada: true } : null;
+}
+
+function fechaNacimientoValida(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+
+  const hoy = new Date().toISOString().split('T')[0]; // '2024-06-02'
+  return control.value > hoy ? { fechaInvalida: true } : null;
+}
+
 @Component({
   selector: 'app-dialog-cliente-modificar',
   templateUrl: './dialog-cliente-modificar.component.html',
@@ -48,6 +62,8 @@ export class DialogClienteModificarComponent {
 
   protected form: FormGroup;
   menu: number = 1;
+  hoy: Date = new Date();
+
 
   constructor(
     private clienteService: ClientesService,
@@ -55,34 +71,39 @@ export class DialogClienteModificarComponent {
     public dialogRef: MatDialogRef<DialogClienteModificarComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ClienteModel
   ) {
+    console.log('Data recibida en el Dialog:', data);
+
     this.form = new FormGroup({
       nombre: new FormControl('', [Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]), 
       apellido: new FormControl('', [Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),  
       dni: new FormControl('', [Validators.minLength(7), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
       telefono: new FormControl('', [Validators.minLength(6), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
-      fechaNacimiento: new FormControl(''),  // No tiene validadores
-      direccion: new FormControl('')  // No tiene validadores
+      fechaNacimiento: new FormControl('', [fechaNacimientoValida]),
+      direccion: new FormControl(''),
+      fechaMediacion: new FormControl('', [fechaMediacionValida]),
+      
+
     });
     
 
     if (data) {
-      const fechaNacimiento = this.data.fecha_nacimiento;
-      const fechas = new Date(this.data.fecha_nacimiento!);
-      const fechaFormateada = fechaNacimiento!.toString().split('T')[0]; // Esto da el formato yyyy-MM-dd
+          const fechaFormateada = data.fecha_nacimiento
+      ? new Date(data.fecha_nacimiento).toISOString().split('T')[0] 
+      : '';
+
+          const fechaMediacionFormateada = data.fecha_mediacion 
+      ? new Date(data.fecha_mediacion).toISOString().split('T')[0] 
+      : '';
 
       this.form.setValue({
         nombre: data.nombre || '',
         apellido: data.apellido || '',
-        fechaNacimiento: fechaFormateada || '',
+        fechaNacimiento: fechaFormateada,
         direccion: data.direccion || '',
         dni: data.dni || '',
         telefono: data.telefono || '',
-
-
+        fechaMediacion: fechaMediacionFormateada,
       });
-
-
-
     }
   }
 
@@ -101,11 +122,13 @@ export class DialogClienteModificarComponent {
         direccion: this.form.value.direccion ?? this.data.direccion,
         dni: this.form.value.dni ? Number(this.form.value.dni) : this.data.dni,
         telefono: this.form.value.telefono ?? this.data.telefono,
-        fecha_creacion: this.data?.fecha_creacion ?? 'ejemplo', 
+        fecha_creacion: this.data?.fecha_creacion ?? '', 
         email: this.form.value.nombre,
         expedientes: this.data?.expedientes ?? null,
         estado: this.data.estado, 
-        usuario_id: this.usuarioService.usuarioLogeado.id
+        usuario_id: this.usuarioService.usuarioLogeado!.id.toString(),
+        fecha_mediacion: this.form.value.fechaMediacion || null,
+
       };
   
       this.dialogRef.close(cliente);
@@ -149,3 +172,5 @@ export class DialogClienteModificarComponent {
     } 
 
 }
+
+

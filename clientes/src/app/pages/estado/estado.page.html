@@ -25,7 +25,6 @@
               </ion-input>
 
               <form [formGroup]="form">
-
                 <mat-form-field appearance="outline" class="full-width" style="width: 100%">
                   <mat-label style="color: white">Seleccionar tipo de juzgado</mat-label>
                   <mat-select style="color: white" formControlName="tipo">
@@ -34,7 +33,6 @@
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
-                
               </form>
               
 
@@ -56,19 +54,8 @@
               <span style="color: #ffffff">Regresar</span>
             </button>
 
-<div class="expediente-info">
-  <h6 *ngIf="expediente.clientes.length === 1">
-    {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} contra {{ expediente.demandadoModel.nombre }}
-  </h6>
-  <h6 *ngIf="expediente.clientes.length > 1">
-    {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0].nombre }} {{ expediente.clientes[0].apellido }} y otros contra {{ expediente.demandadoModel.nombre }}
-  </h6>
-  <h6 *ngIf="expediente.clientes.length === 0">
-    {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandadoModel.nombre }}
-  </h6>
-</div>
 
-@if(expediente.estado != 'cobrado')
+@if(expediente.estado != 'Cobrado')
 {
 
             <div class="toolbar">
@@ -83,18 +70,14 @@
 
             </div>
           
-            <div style="padding: 16px;">
-              <!-- Estado del expediente -->
-
-              
+            <div style="padding: 16px;">              
               <form [formGroup]="form">
-
-              <div class="divider-container" *ngIf="estadoSeleccionado != 'sentencia' && estadoSeleccionado!= 'cobrado'">
+              <div class="divider-container">
                 <mat-divider class="white-divider"></mat-divider>
                 <span class="divider-text">Ultimo movimiento</span>
                 <mat-divider class="white-divider"></mat-divider>
               </div>
-              <ion-input *ngIf="estadoSeleccionado != 'sentencia' && estadoSeleccionado != 'cobrado'" 
+              <ion-input
               placeholder="Ultimo movimiento"
               type="date"
               class="input-busqueda"
@@ -105,7 +88,7 @@
               </form>
               
               <!-- Formulario reactivo -->
-              <form [formGroup]="form" *ngIf="estadoSeleccionado=='sentencia'">
+              <form [formGroup]="form" *ngIf="estadoSeleccionado=='Sentencia'">
 
 
 
@@ -155,18 +138,43 @@
                   id="monto">
                 </ion-input> -->
 
-                <ion-input
+                <ion-input *ngIf="expediente.honorarioCobrado == 0 && umaSeleccionado != 'acuerdo'"
                 placeholder="Cantidad de UMA" 
                 formControlName="cantidadUMA"
                 class="input-busqueda"
-                type="number"
+                type="text"
                 [(ngModel)]="cantidadUMA"
                 (ngModelChange)="calcularMontoUMA()">
               </ion-input>
+
+            <mat-form-field appearance="outline" *ngIf="expediente.honorarioCobrado == 0">
+              <mat-label style="color: white">Seleccioná UMA</mat-label>
+              <mat-select
+                formControlName="umaSeleccionado"
+                [compareWith]="compararUMA"
+                (selectionChange)="calcularMontoUMA()">
+              <mat-option value="acuerdo">Acuerdo</mat-option>
+                <mat-option *ngFor="let umas of uma" [value]="umas">
+                  {{ umas.valor }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+                  <ion-input *ngIf="umaSeleccionado == 'acuerdo'"
+                placeholder="Monto" 
+                formControlName="montoAcuerdo"
+                class="input-busqueda"
+                type="number"
+                [(ngModel)]="montoUMA">
+              </ion-input>
+
+
+
+
             
             
               <!-- Monto calculado -->
-               <h2>
+               <h2 *ngIf="expediente.honorarioCobrado == 0">
                 MONTO: ${{ montoUMA | number:'1.0-0' }}
               </h2> 
         
@@ -180,9 +188,40 @@
           id="fecha_sentencia">
         </ion-input>
 
-                </div>
+          </div>
                 
       <form [formGroup]="form" >
+
+<!-- Para CCF: I, II, III -->
+<mat-form-field *ngIf="expediente.juzgadoModel.tipo === 'CCF'" appearance="outline" style="flex: 1;">
+  <mat-label style="color: white">Sala</mat-label>
+  <mat-select
+    style="color: white"
+    formControlName="sala"               
+    [(ngModel)]="sala"                    
+    name="sala"
+  >
+    <mat-option *ngFor="let s of ['Sin asignar','I','II','III']" [value]="s">
+      {{ s }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
+<!-- Para COM: A, B, C, D, E, F -->
+<mat-form-field *ngIf="expediente.juzgadoModel.tipo === 'COM'" appearance="outline" style="flex: 1;">
+  <mat-label style="color: white">Sala</mat-label>
+  <mat-select
+    style="color: white"
+    formControlName="sala"
+    [(ngModel)]="sala"
+    name="sala"
+  >
+    <mat-option *ngFor="let s of ['Sin asignar','A','B','C','D','E','F']" [value]="s">
+      {{ s }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
                 
 <!-- 📌 CAPITAL -->
 <div class="divider-container">
@@ -214,7 +253,7 @@
       <mat-select style="color: white" [(ngModel)]="subEstadoCapitalSeleccionado" name="subEstadoCapitalSeleccionado" (selectionChange)="actualizarValidacionesCondicionales()">
         <mat-option value="pendiente de elevacion">Pendiente de elevación</mat-option>
         <mat-option value="en sala">En sala</mat-option>
-        <mat-option value="resolucion sala">Resolución sala</mat-option>
+        <mat-option value="resolucion sala">A resolver</mat-option>
       </mat-select>
     </mat-form-field>
 
@@ -225,15 +264,33 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field *ngIf="estadoCapitalSeleccionado == 'firme'" appearance="outline" style="flex: 1;">
-      <mat-label style="color: white">Estado de liquidación Capital</mat-label>
-      <mat-select style="color: white" [(ngModel)]="subEstadoCapitalSeleccionado" name="subEstadoCapitalSeleccionado" (selectionChange)="actualizarValidacionesCondicionales()">
-        <mat-option value="liquidacion pendiente">Liquidación pendiente</mat-option>
-        <mat-option value="liquidacion practicada">Liquidación practicada</mat-option>
-        <mat-option value="traslado liquidacion">Traslado de liquidación</mat-option>
-        <mat-option value="solicita aprobacion">Solicita se apruebe liquidación</mat-option>
-      </mat-select>
-    </mat-form-field>
+<mat-form-field *ngIf="estadoCapitalSeleccionado == 'firme'" appearance="outline" style="flex: 1;">
+  <mat-label style="color: white">Estado de liquidación Capital</mat-label>
+  <mat-select
+    style="color: white"
+    [(ngModel)]="subEstadoCapitalSeleccionado"
+    name="subEstadoCapitalSeleccionado"
+    (selectionChange)="actualizarValidacionesCondicionales()"
+  >
+      <mat-option value="esperar a que baje de sala">Esperar a que baje de sala</mat-option>
+    <mat-option value="liquidacion pendiente">Liquidación pendiente</mat-option>
+    <mat-option value="liquidacion practicada">Liquidación practicada</mat-option>
+    <mat-option value="liquidacion traslado - solicita">Liquidación traslado - solicite</mat-option>
+    <mat-option value="liquidacion - se aprueba">Liquidación - se aprueba</mat-option>
+    <mat-option value="liquidacion aprobada - se intima">Liquidación aprobada - se intima</mat-option>
+    <mat-option value="liquidacion aprobada - cedula">Liquidación aprobada - cédula</mat-option>
+    <mat-option value="liquidacion embarga">Liquidación embarga</mat-option>
+    <mat-option value="embarga deox">Embarga deox</mat-option>
+    <mat-option value="embargo citese de venta">Embargo citese de venta</mat-option>
+    <mat-option value="da en pago total">Da en pago total</mat-option>
+    <mat-option value="da en pago parcial">Da en pago parcial</mat-option>
+    <mat-option value="giro - solicita">Giro - solicita</mat-option>
+    <mat-option value="giro - previo">Giro - previo</mat-option>
+    <mat-option value="giro - consentido">Giro - consentido</mat-option>
+    <mat-option value="giro">Giro</mat-option>
+  </mat-select>
+</mat-form-field>
+
 
   </div>
 
@@ -353,13 +410,19 @@
       (selectionChange)="actualizarValidacionesCondicionales()">
     
       <mat-option value="espera que vuelva">Espera que vuelva</mat-option>
-      <mat-option value="solicita intimacion">Solicita se intima</mat-option>
-      <mat-option value="cedula intima">Cedula intima</mat-option>
-      <mat-option value="solicita embargo">Solicita embargo</mat-option>
-      <mat-option value="embargo">Embargo</mat-option>
+      <mat-option value="honorario se intima">Honorario se intima</mat-option>
+      <mat-option value="honorario cedula">honorario cedula</mat-option>
+
+      <mat-option value="honorario solicita embargo">Honorario solicita embargo</mat-option>
+      <mat-option value="honorario embargo">Honorario embargo</mat-option>
+
       <mat-option value="da en pago parcial">Da en pago parcial</mat-option>
       <mat-option value="da en pago total">Da en pago total</mat-option>
-      <mat-option value="solicita giro">Solicita giro</mat-option>
+
+      <mat-option value="giro - solicita">Giro - solicita</mat-option>
+      <mat-option value="giro - previo">Giro - previo</mat-option>
+      <mat-option value="giro - consiente">Giro - consiente</mat-option>
+
       <mat-option value="giro">Giro</mat-option>
     
     </mat-select>
@@ -435,13 +498,7 @@
 <div style="display: flex; flex-direction: column; gap: 16px;" *ngIf="expediente.honorarioCobrado!= 0">
   HONORARIO COBRADO.
 </div>
-
-
                 </form>
-                
-
-
-              
               </form>
 
               <button mat-button class="menu-estado" style="background-color:#015dbb" (click)="actualizarEstado()">
@@ -451,8 +508,8 @@
             </div>
           }
 
-          @if(expediente.estado == 'cobrado'){
-            <h1>ACA PONER ALGO A FUTURO</h1>
+          @if(expediente.estado == 'Cobrado'){
+            <h1>EXPEIENTE COBRADO</h1>
           }
           </div>
 

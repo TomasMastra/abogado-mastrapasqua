@@ -30,25 +30,39 @@
       </button>
     
       <button mat-button class="list-button">
-        <mat-icon style="color: #ffffff">more_vert</mat-icon>
+        <mat-icon style="color: #ffffff" >more_vert</mat-icon>
       </button>
     </div>
     
 
-    <div>
+    <div *ngIf="hayExpedientes && expedientes.length > 0">
       <ion-item-sliding *ngFor="let expediente of expedientes" class="cliente">
         <ion-item class="cliente" *ngIf="hayExpedientes && expedientes.length > 0">
-          <ion-label>
-            <h2 *ngIf="expediente.clientes.length === 1">
-              {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0]!.nombre }} {{ expediente.clientes[0].apellido }} contra {{ expediente.demandadoModel!.nombre }}
-            </h2>
-            <h2 *ngIf="expediente.clientes.length > 1">
-              {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0]!.nombre }} {{ expediente.clientes[0].apellido }} y otros contra {{ expediente.demandadoModel!.nombre }}
-            </h2>
-            <h2 *ngIf="expediente.clientes.length === 0">
-              {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandadoModel!.nombre }}
-            </h2>
-          </ion-label>
+<ion-label>
+  <h2 *ngIf="expediente.clientes.length === 1 && expediente.demandados?.length === 1">
+    {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0]!.nombre }} {{ expediente.clientes[0]!.apellido }} contra {{ expediente.demandados[0].nombre }}
+  </h2>
+  <h2 *ngIf="expediente.clientes.length === 1 && expediente.demandados.length > 1">
+    {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0]!.nombre }} {{ expediente.clientes[0]!.apellido }} contra {{ expediente.demandados[0].nombre }} y otros
+  </h2>
+
+  <h2 *ngIf="expediente.clientes.length > 1 && expediente.demandados?.length === 1">
+    {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0]!.nombre }} {{ expediente.clientes[0]!.apellido }} y otros contra {{ expediente.demandados[0].nombre }}
+  </h2>
+  <h2 *ngIf="expediente.clientes.length > 1 && expediente.demandados.length > 1">
+    {{ expediente.numero }}/{{ expediente.anio }} {{ expediente.clientes[0]!.nombre }} {{ expediente.clientes[0]!.apellido }} y otros contra {{ expediente.demandados[0].nombre }} y otros
+  </h2>
+
+  <h2 *ngIf="expediente.clientes.length === 0 && expediente.demandados?.length === 1">
+    {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandados[0].nombre }}
+  </h2>
+  <h2 *ngIf="expediente.clientes.length === 0 && expediente.demandados.length > 1">
+    {{ expediente.numero }}/{{ expediente.anio }} (sin actora) contra {{ expediente.demandados[0].nombre }} y otros
+  </h2>
+</ion-label>
+
+
+
 
           <button mat-button class="list-button" (click)="eliminarExpediente(expediente)">
             <mat-icon style="color: #ffffff">delete</mat-icon>

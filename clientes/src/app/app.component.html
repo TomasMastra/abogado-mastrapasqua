@@ -43,7 +43,10 @@
             <mat-icon>paid</mat-icon>
             <span>Honorarios</span>
           </button>
-
+          <button mat-menu-item [class.active-route]="isActive('consultas')" (click)="goTo('consultas')">
+            <mat-icon>stacked_inbox</mat-icon>
+            <span>Consultas</span>
+          </button>
         </mat-menu>
         
         <!-- General -->

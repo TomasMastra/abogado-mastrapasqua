@@ -1,142 +1,46 @@
-<!-- <div class="form-alta" style="background-color: #002b5c;"> 
-  <mat-dialog-content>
-    <h1 style="color: #ffffff;">FORMULARIO DE EXPEDIENTE</h1>
-    <form [formGroup]="form">
-      
-      <div class="form-row">
+<mat-dialog-content>
+  <div class="scrollable-content">
+    <h2>Agregar Expediente</h2>
 
-        <div class="form__group field full-width">
-          <input type="number" 
-                 class="form__field" 
-                 placeholder="Numero" 
-                 name="numero" 
-                 id="numero" 
-                 required 
-                 formControlName="numero"
-                 min="0"
-                 max="999999"/>
-          <label for="numero" class="form__label">Numero</label>
-          
-          <div class="error" *ngIf="form.controls?.['numero']?.invalid && (form.controls?.['numero']?.dirty || form.controls?.['numero']?.touched)">
-            <div *ngIf="form.controls?.['numero']?.errors?.['required']" style="color: red;">El número es requerido</div>
-            <div *ngIf="form.controls?.['numero']?.errors?.['min']" style="color: red;">El número debe ser mayor a 0</div>
-            <div *ngIf="form.controls?.['numero']?.errors?.['max']" style="color: red;">El número debe ser menor a 999999</div>
-          </div>
-        </div>
-        
+    <form [formGroup]="form" class="formulario-expediente">
+    <mat-form-field appearance="outline">
+      <mat-label>Número</mat-label>
+      <input matInput formControlName="numero" type="number" />
+      <mat-error *ngIf="form.get('numero')?.hasError('required')">El número es requerido</mat-error>
+    </mat-form-field>
 
-        <div class="form__group field full-width">
-          <input type="input" class="form__field" placeholder="Año" name="anio" id="anio" required formControlName="anio"/>
-          <label for="titulo" class="form__label">Año</label>
-          <div class="error" *ngIf="form.controls?.['anio']?.invalid && (form.controls?.['anio']?.dirty || form.controls?.['anio']?.touched)">
-            <div *ngIf="form.controls?.['anio']?.errors?.['required']" style="color: red;">El año es requerido</div>
-          </div>
-        </div>
+    <mat-form-field appearance="outline">
+      <mat-label>Año</mat-label>
+      <input matInput formControlName="anio" type="number" />
+    </mat-form-field>
 
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estado">
+        <mat-option *ngFor="let estado of estados" [value]="estado">
+          {{ estado }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: white">Demandados</mat-label>
-          <mat-select style="color: white" formControlName="demandado" [(ngModel)]="demandadoElegido">
-            <mat-option *ngFor="let demandado of demandados" [value]="demandado">
-              {{ demandado.nombre }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Porcentaje</mat-label>
+      <input matInput formControlName="porcentaje" type="number" />
+      <mat-error *ngIf="form.get('porcentaje')?.hasError('required')">El porcentaje es requerido</mat-error>
+    </mat-form-field>
 
+    <mat-form-field appearance="outline">
+      <mat-label >Tipo de juicio</mat-label>
+      <mat-select formControlName="juicio">
+        <mat-option *ngFor="let juicio of juicios" [value]="juicio">
+          {{ juicio }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
 
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label style="color: white">Juzgados</mat-label>
-        <mat-select style="color: white" formControlName="juzgado" [(ngModel)]="juzgadoElegido">
-          <mat-option *ngFor="let juzgado of juzgados" [value]="juzgado">
-            {{ juzgado.nombre }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-
-
-      </div>
-
-    </form>
-  </mat-dialog-content>
-
-  <mat-dialog-actions>
-    <button mat-button (click)="closeDialog()">Cancelar</button>
-    <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
-  </mat-dialog-actions>
-</div> -->
-
-
-<div class="form-alta" style="background-color: #002b5c;"> 
-  <mat-dialog-content>
-    <h1 style="color: #ffffff;">FORMULARIO DE EXPEDIENTE</h1>
-    <form [formGroup]="form">
-      
-      <div class="form-row">
-   <!--     <div class="form__group field full-width">
-          <input type="input" class="form__field" placeholder="Titulo" name="titulo" id="titulo" required formControlName="titulo"/>
-          <label for="titulo" class="form__label">Titulo</label>
-          <div class="error" *ngIf="form.controls?.['titulo']?.invalid && (form.controls?.['titulo']?.dirty || form.controls?.['titulo']?.touched)">
-            <div *ngIf="form.controls?.['titulo']?.errors?.['required']" style="color: red;">El titulo es requerido</div>
-          </div>
-        </div> -->
-
-        <div class="form__group field full-width">
-          <input type="number" 
-                 class="form__field" 
-                 placeholder="Numero" 
-                 name="numero" 
-                 id="numero" 
-                 required 
-                 formControlName="numero"
-                 min="0"
-                 max="999999"/>
-          <label for="numero" class="form__label">Numero</label>
-          
-          <div class="error" *ngIf="form.controls?.['numero']?.invalid && (form.controls?.['numero']?.dirty || form.controls?.['numero']?.touched)">
-            <div *ngIf="form.controls?.['numero']?.errors?.['required']" style="color: red;">El número es requerido</div>
-            <div *ngIf="form.controls?.['numero']?.errors?.['min']" style="color: red;">El número debe ser mayor a 0</div>
-            <div *ngIf="form.controls?.['numero']?.errors?.['max']" style="color: red;">El número debe ser menor a 999999</div>
-          </div>
-        </div>
-        
-
-        <div class="form__group field full-width">
-          <input type="input" class="form__field" placeholder="Año" name="anio" id="anio" required formControlName="anio"/>
-          <label for="titulo" class="form__label">Año</label>
-          <div class="error" *ngIf="form.controls?.['anio']?.invalid && (form.controls?.['anio']?.dirty || form.controls?.['anio']?.touched)">
-            <div *ngIf="form.controls?.['anio']?.errors?.['required']" style="color: red;">El año es requerido</div>
-          </div>
-        </div>
-
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: white">Demandados</mat-label>
-          <mat-select style="color: white" formControlName="demandado" [(ngModel)]="demandadoElegido">
-            <mat-option *ngFor="let demandado of demandados" [value]="demandado">
-              {{ demandado.nombre }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.controls?.['demandado']?.invalid && (form.controls?.['demandado']?.dirty || form.controls?.['demandado']?.touched)">
-            <span *ngIf="form.controls?.['demandado']?.errors?.['required']" style="color:red">El demandado es requerido</span>
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: white">Estado del expediente</mat-label>
-          <mat-select style="color: white" formControlName="estado" [(ngModel)]="estadoSeleccionado">
-            <mat-option *ngFor="let estado of estados" [value]="estado">
-              {{ estado }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.controls?.['estado']?.invalid && (form.controls?.['estado']?.dirty || form.controls?.['estado']?.touched)">
-            <span *ngIf="form.controls?.['estado']?.errors?.['required']" style="color:red">El estado es requerido</span>
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: white">{{mensajeSelectJuzgado}}</mat-label>
-          <mat-select style="color: white" formControlName="tipo" (selectionChange)="cambiarTipoJuzgado()">
+            <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color:black">{{mensajeSelectJuzgado}}</mat-label>
+          <mat-select style="color:black" formControlName="tipo" (selectionChange)="cambiarTipoJuzgado()">
             <mat-option  *ngFor="let tipo of tipos" [value]="tipo">
               {{ tipo }}
             </mat-option>
@@ -145,70 +49,103 @@
             El tipo es requerido
           </mat-error>
         </mat-form-field>
+        
+        
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label style="color: white">Juzgados</mat-label>
-        <mat-select style="color: white" formControlName="juzgado" [(ngModel)]="juzgadoElegido">
+        <mat-label style="color:black">Juzgados</mat-label>
+        <mat-select style="color:black" formControlName="juzgado" [(ngModel)]="juzgadoElegido">
           <mat-option *ngFor="let juzgado of juzgados" [value]="juzgado">
             {{ juzgado.nombre }}
           </mat-option>
-        </mat-select>        <mat-error *ngIf="form.controls?.['juzgado']?.invalid && (form.controls?.['juzgado']?.dirty || form.controls?.['juzgado']?.touched)">
+        </mat-select>
+        <mat-error *ngIf="form.controls?.['juzgado']?.invalid && (form.controls?.['juzgado']?.dirty || form.controls?.['juzgado']?.touched)">
           <span *ngIf="form.controls?.['juzgado']?.errors?.['required']" style="color:red">El juzgado es requerido</span>
         </mat-error>
       </mat-form-field>
 
-      <div class="form__group field">
-        <input type="date" class="form__field" placeholder="Fecha de inicio" name="fechainicio" id='fechaInicio' formControlName="fechaInicio"/>
-        <label for="fechaInicio" class="form__label">Fecha de inicio</label>
-        <mat-error *ngIf="form.controls?.['fechaInicio']?.invalid && (form.controls?.['fechaInicio']?.dirty || form.controls?.['fechaInicio']?.touched)">
-          <span *ngIf="form.controls?.['fechaInicio']?.errors?.['required']" style="color:red">La fecha es requerida</span>
-        </mat-error>
-      </div>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label style="color: white">Tipo de juicio</mat-label>
-        <mat-select style="color: white" formControlName="juicio" [(ngModel)]="juicioSeleccionado">
-          <mat-option *ngFor="let juicio of juicios" [value]="juicio">
-            {{ juicio }}
+        <mat-form-field appearance="outline" class="full-width">
+        <mat-label style="color:black">Abogado</mat-label>
+        <mat-select style="color:black"  formControlName="abogado" [(ngModel)]="abogadoSeleccionado">
+          <mat-option style="color:black" *ngFor="let usuario of listaUsuarios" [value]="usuario">
+            {{ usuario.nombre }}
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="form.controls?.['juicio']?.invalid && (form.controls?.['juicio']?.dirty || form.controls?.['juicio']?.touched)">
-          <span *ngIf="form.controls?.['juicio']?.errors?.['required']" style="color:red">El tipo de juicio es requerido</span>
+        <mat-error *ngIf="form.controls?.['abogao']?.invalid && (form.controls?.['abogado']?.dirty || form.controls?.['abogado']?.touched)">
+          <span *ngIf="form.controls?.['abogado']?.errors?.['required']" style="color:red">El abogado es requerido</span>
         </mat-error>
       </mat-form-field>
 
-      
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label style="color: white">Clientes</mat-label>
-        <mat-select style="color: white" formControlName="cliente" [(ngModel)]="clienteSeleccionado" (selectionChange)="seleccionarCliente($event.value)">
-          <mat-option *ngFor="let cliente of clientes" [value]="cliente">{{ cliente.nombre }} {{ cliente.apellido }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-      
-      
-     <!--  <button mat-button (click)="agregarCliente()">Agregar Cliente</button> -->
-      
-<!-- Contenedor con scroll -->
-<div *ngIf="clientesAgregados.length > 0" style="max-height: 200px; overflow-y: auto; border: 1px solid #ffffff; padding: 10px; margin-top: 10px;">
-  <h3>Clientes Agregados</h3>
-  
-  <mat-card *ngFor="let cliente of clientesAgregados" style="margin-bottom: 5px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-    <span>{{ cliente.nombre }} {{ cliente.apellido }}</span>
-    <button mat-icon-button color="warn" (click)="eliminarCliente(cliente)">
-      <mat-icon>delete</mat-icon>
-    </button>
-  </mat-card>
-</div>
-      
+            <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Procurador</mat-label>
+      <mat-select formControlName="procurador" [(ngModel)]="procuradorSeleccionado">
+        <mat-option *ngFor="let usuario of listaUsuarios" [value]="usuario">
+          {{ usuario.nombre }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('procurador')?.hasError('required') && form.get('procurador')?.touched">
+        El procurador es requerido
+      </mat-error>
+    </mat-form-field>
 
+      <mat-form-field appearance="outline">
+      <mat-label>Demandados</mat-label>
+      <mat-select formControlName="demandado" (selectionChange)="seleccionarDemandado($event.value)">
+        <mat-option *ngFor="let demandado of demandados" [value]="demandado">
+          {{ demandado.nombre }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+
+    <div class="clientes-agregados">
+      <h3 style="color:aliceblue">Demandados Agregados</h3>
+      <div *ngFor="let demandado of demandadosAgregados" class="cliente-item">
+        {{ demandado.nombre }}
+        <button mat-icon-button color="warn" (click)="eliminarDemandado(demandado)">
+          <mat-icon>delete</mat-icon>
+        </button>
       </div>
+    </div>
+<mat-form-field appearance="outline" class="full-width">
+  <mat-label>Clientes</mat-label>
+
+  <!-- Input que abre el autocomplete -->
+  <input
+    matInput
+    [formControl]="clienteCtrl"
+    [matAutocomplete]="auto"
+    placeholder="Busca por nombre o apellido" />
+
+  <!-- Autocomplete -->
+  <mat-autocomplete
+    #auto="matAutocomplete"
+    [displayWith]="displayCliente"
+    (optionSelected)="seleccionarCliente($event.option.value)">
+    <mat-option
+      *ngFor="let cliente of filteredClientes | async"
+      [value]="cliente">
+      {{ cliente.nombre }} {{ cliente.apellido }}
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>
+
+    <!-- Contenedor con scroll para clientes agregados -->
+    <div class="clientes-agregados">
+      <h3 style="color:aliceblue">Clientes Agregados</h3>
+      <div *ngFor="let cliente of clientesAgregados" class="cliente-item">
+        {{ cliente.nombre }} {{ cliente.apellido }}
+        <button mat-icon-button color="warn" (click)="eliminarCliente(cliente)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
 
     </form>
-  </mat-dialog-content>
+  </div>
+</mat-dialog-content>
 
-  <mat-dialog-actions>
-    <button mat-button (click)="closeDialog()" style="color:#ffffff">Cancelar</button>
-    <button mat-button color="primary" (click)="acceptDialog()">Aceptar</button>
-  </mat-dialog-actions>
-</div>
-
+<mat-dialog-actions align="end">
+  <button mat-button (click)="closeDialog()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="acceptDialog()">Aceptar</button>
+</mat-dialog-actions>

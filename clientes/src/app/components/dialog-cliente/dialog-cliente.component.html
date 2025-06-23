@@ -37,8 +37,16 @@
         <div class="form__group field">
           <input type="date" class="form__field" placeholder="Fecha de nacimiento" name="fecha_nacimiento" id='fecha_nacimiento' formControlName="fechaNacimiento"/>
           <label for="fecha_nacimiento" class="form__label">Fecha de nacimiento</label>
+<div class="error" *ngIf="form.controls?.['fechaNacimiento']?.errors?.['fechaInvalida']">
+  <div style="color:red">La fecha de nacimiento no puede ser futura.</div>
+</div>
+
+
         </div>
-      </div>
+
+           </div>
+
+
 
       <div class="form-row">
         <div class="form__group field">
@@ -56,6 +64,14 @@
             <div *ngIf="form.controls?.['telefono']?.errors?.['pattern']" style="color:red">Únicamente numeros</div>
           </div>
         </div>
+          <div class="form__group field">
+            <input type="date" class="form__field" placeholder="Fecha de mediacion" name="fechaMediacion" id="fechaMediacion" formControlName="fechaMediacion" [min]="hoy" />
+          <label for="fecha_mediacion" class="form__label">Fecha de mediación</label>
+                    <div class="error" *ngIf="form.controls?.['fechaMediacion']?.errors?.['fechaPasada']">
+  <div style="color:red">La fecha no pueded ser anterior a hoy.</div>
+                    </div>
+        </div>
+        
       </div>
     </form>
   </mat-dialog-content>

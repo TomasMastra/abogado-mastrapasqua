@@ -33,6 +33,8 @@ import { DialogExpedienteModificarComponent } from '../../components/dialog-expe
 
 import Swal from 'sweetalert2'
 
+import { ViewWillEnter } from '@ionic/angular';
+
 
 @Component({
   selector: 'app-lista-expedientes',
@@ -72,9 +74,16 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
     this.cargarExpedientes(); 
   }
 
+    ngAfterViewInit() {
+  // Forzar recarga tras render completo
+  setTimeout(() => {
+    //this.cargarExpedientes();
+  }, 0);
+}
+
   cargarExpedientes() {
     this.expedienteService.getExpedientes()
-      .pipe(takeUntil(this.destroy$)) // Cancela la suscripción cuando destroy$ emita
+      .pipe(takeUntil(this.destroy$))
       .subscribe(
         (expedientes) => {
           this.expedientes = expedientes;
@@ -222,27 +231,27 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
             });
           }
 
-          buscar() {
-            const texto = this.busqueda.trim();
-          
-            // ✅ Si está vacío, restaurar todos los expedientes
-            if (texto === '') {
-              this.expedientes = [...this.expedientesOriginales];
-              this.hayExpedientes = this.expedientes.length > 0;
-              return;
-            }
-          
-            // 🔎 Si hay texto, buscar
-            this.expedienteService.buscarExpedientes(texto).subscribe(
-              (expedientes) => {
-                this.expedientes = expedientes;
-                this.hayExpedientes = this.expedientes.length > 0;
-              },
-              (error) => {
-                console.error('Error al obtener expedientes:', error);
-              }
-            );
+      buscar() {
+        const texto = this.busqueda.trim();
+      
+        // ✅ Si está vacío, restaurar todos los expedientes
+        if (texto === '') {
+          this.expedientes = [...this.expedientesOriginales];
+          this.hayExpedientes = this.expedientes.length > 0;
+          return;
+        }
+      
+        // 🔎 Si hay texto, buscar
+        this.expedienteService.buscarExpedientes(texto).subscribe(
+          (expedientes) => {
+            this.expedientes = expedientes;
+            this.hayExpedientes = this.expedientes.length > 0;
+          },
+          (error) => {
+            console.error('Error al obtener expedientes:', error);
           }
+        );
+      }
           
           
           
@@ -264,10 +273,6 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
           console.error('Error al agregar los clientes:');
           throw err;
         }
-      }
-
-      obtenerDemandado(id: number){
-        this.demandadoService.getDemandadoPorId(id);
       }
 
             // HACER SERVICIO PROPIO

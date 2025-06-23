@@ -13,4 +13,5 @@ email: string,
 expedientes: any[] | null;
 estado: string;
 usuario_id: string,
+fecha_mediacion: string | null,
 }

@@ -50,7 +50,9 @@ export class AppComponent {
     
 
   goTo(path: string) {
-    this.router.navigate([path]);
+    //this.router.navigate([path]);
+    this.router.navigate([path], { replaceUrl: true });
+
   }
 
   isActive(route: string): boolean {

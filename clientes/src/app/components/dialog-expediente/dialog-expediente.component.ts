@@ -1,4 +1,6 @@
 import { Component, Inject } from '@angular/core';
+import { Observable, startWith, map } from 'rxjs';
+
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -33,8 +35,10 @@ import { ClientesService } from 'src/app/services/clientes.service';
 import { ClienteModel } from 'src/app/models/cliente/cliente.component';
 
 import Swal from 'sweetalert2';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 import { UsuarioService } from 'src/app/services/usuario.service';
+import { UsuarioModel } from 'src/app/models/usuario/usuario.component';
 
 @Component({
   selector: 'app-dialog-expediente',
@@ -51,7 +55,8 @@ import { UsuarioService } from 'src/app/services/usuario.service';
     MatSelectModule,
     MatDatepickerModule,
     MatCardModule,
-    MatIconModule   
+    MatIconModule,
+    MatAutocompleteModule
   ]
 })
 export class DialogExpedienteComponent {
@@ -61,17 +66,63 @@ export class DialogExpedienteComponent {
    juzgadosOriginales: JuzgadoModel[] = [];
 
    demandados: DemandadoModel[] = [];
+   demandadosAgregados: DemandadoModel[] = [];
+
    clientes: ClienteModel[] = [];
    clientesAgregados: ClienteModel[] = [];
+
    jueces: JuezModel[] = [];
 
    tipos: any[] = ['todos', 'CCF', 'COM', 'CIV', 'CC'];
    tipoSeleccionado: any = 'todos';
 
-   estados: any[] = ['en gestíon', 'inicio', 'prueba', 'clausura p.', 'fiscal', 'sentencia'];
+
+estados: any[] = [  
+  'Sorteado',
+  'Inicio - Previo',
+  'Inicio - Plantea Revocatoria',
+  'Inicio - Da Cumplimiento',
+  'Inicio - Apela',
+  'Inicio - Plantea Nulidad',
+  'Traslado demanda - Se Ordena',
+  'Traslado demanda - Cedula',
+  'Traslado demanda - Notificado',
+  'Contesta demanda - Traslado',
+  'Contesta demanda - Cedula',
+  'Contesta Traslado',
+  'Se resuelva',
+  'Apertura a Prueba - Solicita',
+  'Apertura a Prueba - Cedula',
+  'Apertura a Prueba - Audiencia 360',
+  'Pruebas - Se provean',
+  'Prueba - Cedula Perito',
+  'Prueba - Cedula Parte',
+  'Prueba - Acredita Oficio',
+  'Prueba - Solicita Oficio reiteratorio',
+  'Prueba - Acredita Testimonial',
+  'Prueba - Desiste',
+  'Prueba - Impugna',
+  'Prueba - Se intime parte',
+  'Prueba - Se intime perito',
+  'Clausura periodo Prueba - Solicita',
+  'Clausura periodo Prueba - Pase a certificar',
+  'Alegatos - Solicita',
+  'Alegatos - Cedula',
+  'Alegatos - Presenta',
+  'Fiscal - Solicita',
+  'Fiscal - Cedula',
+  'Defensor Oficial - Solicita',
+  'Defensor Oficial - Cedula',
+  'Defensor Oficial - Ratifica lo actuado',
+  'Sentencia - Previo',
+  'Sentencia - Solicita',
+  'Sentencia - Pasen autos a Sentencia',
+  'Sentencia',
+  'Cobrado'
+];
    estadoSeleccionado: any = 'inicio';
 
-   juicios: any[] = ['ordinario', 'sumarisimo'];
+   juicios: any[] = ['ordinario', 'sumarisimo', 'a definir'];
    juicioSeleccionado: any;
 
    menu: string = '1';
@@ -80,8 +131,16 @@ export class DialogExpedienteComponent {
     juzgadoElegido: any; 
     demandadoElegido: any;
     clienteSeleccionado: any; 
+
+    clienteCtrl = new FormControl<string>('');
+    filteredClientes!: Observable<ClienteModel[]>;
     juezSeleccionado: any;
     mensajeSelectJuzgado: any = 'Filtrar juzgado';
+
+    listaUsuarios: UsuarioModel[] = [];
+    abogadoSeleccionado: any;
+    procuradorSeleccionado: any;
+
 
     constructor(
       private expedienteService: ExpedientesService,
@@ -104,6 +163,14 @@ export class DialogExpedienteComponent {
         juicio: new FormControl('', [Validators.required]),
         fechaInicio: new FormControl('', [Validators.required]),
         tipo: new FormControl('todos', [Validators.required]),
+        porcentaje: new FormControl('', [Validators.required]),
+        abogado: new FormControl('', [Validators.required]),
+      procurador: new FormControl('', [Validators.required]),       // ← nuevo
+
+        // EDESUR Y EDENOR
+        numeroCliente: new FormControl(''),
+        minutosSinLuz: new FormControl(''),
+        periodoCorte: new FormControl(''),
 
       });
     
@@ -115,7 +182,10 @@ export class DialogExpedienteComponent {
           numero: data.numero || '',
           anio: data.anio || '',
           estado: data.estado || '',
-
+          juicio: data.juicio || '',
+          porcentaje: data.porcentaje || '',
+          abogado: data.usuario_id || '',
+          procurador: data.procurador_id || '',
         });
     
         //this.actualizarValidadoresPorEstado(data.estado);  // Asume que "estado" es una propiedad en "data"
@@ -130,16 +200,35 @@ export class DialogExpedienteComponent {
     this.cargarDemandados();
     this.cargarClientes();
     this.cargarJueces();
+    this.cargarUsuarios();
 
     this.form.get('estado')?.valueChanges.subscribe(estado => {
       this.estadoSeleccionado = estado;  // Puedes actualizar el valor si lo necesitas
       //this.actualizarValidadoresPorEstado(estado);  // Para actualizar los validadores según el estado
     });
+        this.filteredClientes = this.clienteCtrl.valueChanges.pipe(
+      startWith(''),
+      map(text => this.filtrarClientes(text!))
+    );
 
   }
 
   closeDialog(): void {
     this.dialogRef.close();
+  }
+
+  private filtrarClientes(text: string) {
+  const term = text.toLowerCase();
+  return this.clientes.filter(c =>
+    (`${c.nombre} ${c.apellido}`).toLowerCase().includes(term)
+  );
+}
+
+  /** Le dice al autocomplete cómo “stringificar” un ClienteModel */
+  displayCliente(cliente: ClienteModel): string {
+    return cliente
+      ? `${cliente.nombre} ${cliente.apellido}`
+      : '';
   }
 
 cambiarTipoJuzgado() {
@@ -167,9 +256,6 @@ cargarJuzgado() {
       }
     );
 }
-
-
-
 
   cargarDemandados() {
     this.demandadoService.getDemandados()
@@ -212,7 +298,23 @@ cargarJuzgado() {
       );
   }
 
+    cargarUsuarios() {
+    this.usuarioService.getUsuarios()
+      .pipe(takeUntil(this.destroy$)) // Cancela la suscripción cuando destroy$ emita
+      .subscribe(
+        (usuarios) => {
+          this.listaUsuarios = usuarios;
+            //this.abogadoSeleccionado = this.usuarioService.usuarioLogeado;
+          //this.expedientesOriginales = [...expedientes];
+          //this.hayExpedientes = this.listaExpedientes.length > 0;
+          this.abogadoSeleccionado = this.listaUsuarios.find(u => u.id === this.usuarioService.usuarioLogeado?.id);
 
+        },
+        (error) => {
+          console.error('Error al obtener abogados:', error);
+        }
+      );
+  }
   
   acceptDialog(): void {
     console.log('Datos recibidos en el formulario:', this.data); // 👈 Verifica la estructura de los datos
@@ -228,6 +330,7 @@ cargarJuzgado() {
         descripcion: '',
         fecha_creacion: this.data?.fecha_creacion ?? '',
         clientes: this.clientesAgregados,
+        demandados: this.demandadosAgregados ?? [],
         juzgado_id: this.juzgadoElegido?.id ?? null,
         demandado_id: this.demandadoElegido?.id ?? null,
         numero: this.form.value.numero,
@@ -241,12 +344,18 @@ cargarJuzgado() {
         hora_sentencia: null,
         juez_id: this.juezSeleccionado?.id ?? null,
         juezModel: { id: '', nombre: '', apellido: '', estado: '' },
-        juicio: this.juicioSeleccionado,
+        juicio: this.form.value.juicio,
         ultimo_movimiento: this.data?.ultimo_movimiento,
         monto: null,
         apela: null,
         juzgadoModel: null,
-        usuario_id: this.usuarioService.usuarioLogeado.id,
+        usuario_id: this.abogadoSeleccionado.id,
+        porcentaje: this.form.value.porcentaje,
+        fecha_cobro: null,
+        fecha_cobro_capital: null,
+        valorUMA: null,
+        procurador_id:  this.procuradorSeleccionado.id,
+        sala: null,
 
 
         // 📌 Campos nuevos - Capital
@@ -267,8 +376,11 @@ cargarJuzgado() {
         fechaLiquidacionHonorarios: null,
         montoLiquidacionHonorarios: null,
         honorarioCobrado: false,
-        cantidadUMA: null
-
+        cantidadUMA: null,
+        numeroCliente: this.form.value.numeroCliente || null,
+        minutosSinLuz: this.form.value.minutosSinLuz || null,
+        periodoCorte: this.form.value.periodoCorte || null
+        
 
       };
 
@@ -296,8 +408,11 @@ cargarJuzgado() {
         { nombre: 'anio', control: 'anio' },
         { nombre: 'juicio', control: 'juicio' },
         { nombre: 'estado', control: 'estado' },
-        { nombre: 'fechaInicio', control: 'fechaInicio' },
+        //{ nombre: 'fecha de inicio', control: 'fechaInicio' },
         { nombre: 'tipo', control: 'tipo' },
+        { nombre: 'porcentaje', control: 'porcentaje' },
+        { nombre: 'abogado', control: 'abogado' },
+        { nombre: 'procurador', control: 'procurador' },
 
       ];
     
@@ -313,16 +428,18 @@ cargarJuzgado() {
       return faltantes;
     } 
 
-  seleccionarCliente(cliente: ClienteModel): void {
-    // Mostrar una alerta (opcional, para ver el cliente seleccionado)
-    console.log("Cliente seleccionado:", cliente);
-    
-    // Asignar el cliente seleccionado a la variable clienteSeleccionado
+  seleccionarDemandado(demandado: DemandadoModel): void { 
+    this.demandadoElegido = demandado;
+  
+    if (this.demandadosAgregados.indexOf(demandado) === -1) {
+      this.demandadosAgregados.push(demandado);
+    }
+  }
+
+  seleccionarCliente(cliente: ClienteModel): void { 
     this.clienteSeleccionado = cliente;
   
-    // Verificar si el cliente ya está agregado a la lista
     if (this.clientesAgregados.indexOf(cliente) === -1) {
-      // Si no está en la lista, agregarlo
       this.clientesAgregados.push(cliente);
     }
   }
@@ -331,19 +448,55 @@ cargarJuzgado() {
 
   agregarCliente(): void {
 
-
     if (this.clienteSeleccionado) {
-      this.clientesAgregados.push(this.clienteSeleccionado);  // Agregar cliente al expediente
-      this.clienteSeleccionado = null;  // Limpiar la selección
+      this.clientesAgregados.push(this.clienteSeleccionado);
+      this.clienteSeleccionado = null;
+    }
+  }
+
+  eliminarDemandado(demandado: DemandadoModel): void {
+    const index = this.demandadosAgregados.indexOf(demandado);
+    if (index > -1) {
+      this.demandadosAgregados.splice(index, 1);
     }
   }
 
   eliminarCliente(cliente: ClienteModel): void {
     const index = this.clientesAgregados.indexOf(cliente);
     if (index > -1) {
-      this.clientesAgregados.splice(index, 1);  // Eliminar cliente de la lista
+      this.clientesAgregados.splice(index, 1);
     }
   }
+
+
+    cambiarDemandado(demandado: any) {
+  //alert(demandado.nombre);
+  this.demandadoElegido = demandado;
+  this.setValidacionesEmpresaElectrica(demandado);
+
+}
+  esEmpresaElectrica(demandado: any): boolean {
+  //const empresa = demandado.nombre.toLowerCase();
+  return demandado.id === 1 || demandado.id === 7;
+}
+
+setValidacionesEmpresaElectrica(demandado: any) {
+  const esElectrica = this.esEmpresaElectrica(demandado);
+
+  if (esElectrica) {
+    this.form.get('numeroCliente')?.setValidators([Validators.required]);
+    this.form.get('minutosSinLuz')?.setValidators([Validators.required]);
+    this.form.get('periodoCorte')?.setValidators([Validators.required]);
+  } else {
+    this.form.get('numeroCliente')?.clearValidators();
+    this.form.get('minutosSinLuz')?.clearValidators();
+    this.form.get('periodoCorte')?.clearValidators();
+  }
+
+  this.form.get('numeroCliente')?.updateValueAndValidity();
+  this.form.get('minutosSinLuz')?.updateValueAndValidity();
+  this.form.get('periodoCorte')?.updateValueAndValidity();
+}
 
 
 

@@ -17,12 +17,26 @@ import { Subject } from 'rxjs';
 import { ExpedienteModel } from 'src/app/models/expediente/expediente.component';
 import { ExpedientesService } from 'src/app/services/expedientes.service';
 
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators,  AbstractControl, ValidationErrors } from '@angular/forms';
 import { IonLabel, IonItem } from "@ionic/angular/standalone";
 
 import Swal from 'sweetalert2';
 
 import { UsuarioService } from 'src/app/services/usuario.service';
+import { UsuarioModel } from 'src/app/models/usuario/usuario.component';
+function fechaMediacionValida(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+
+  const hoy = new Date().toISOString().split('T')[0]; // '2024-06-02'
+  return control.value < hoy ? { fechaPasada: true } : null;
+}
+
+function fechaNacimientoValida(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+
+  const hoy = new Date().toISOString().split('T')[0]; // '2024-06-02'
+  return control.value > hoy ? { fechaInvalida: true } : null;
+}
 
 @Component({
   selector: 'app-dialog-cliente',
@@ -42,7 +56,7 @@ import { UsuarioService } from 'src/app/services/usuario.service';
   schemas: [CUSTOM_ELEMENTS_SCHEMA] // Agregar esto si usas Ionic
 
 })
-export class DialogClienteComponent {
+export class DialogClienteComponent{
 
   menu: number = 1;
 
@@ -52,9 +66,14 @@ export class DialogClienteComponent {
   expedientesSeleccionados: any[] = [];
   hayExpedientes: boolean = true;
 
+  listaUsuarios: UsuarioModel[] = [];
+  usuarioSeleccionados: any[] = [];
+
   private destroy$ = new Subject<void>(); 
 
+  hoy: Date = new Date();
 
+  
   constructor(
     private clienteService: ClientesService,
     private usuarioService: UsuarioService,
@@ -63,14 +82,16 @@ export class DialogClienteComponent {
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
 
-    this.form = new FormGroup({
-      nombre: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
-      apellido: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),  
-      dni: new FormControl('', [Validators.minLength(5), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
-      telefono: new FormControl('', [Validators.minLength(5), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
-      fechaNacimiento: new FormControl(''),  // No tiene validadores
-      direccion: new FormControl('')  // No tiene validadores
-    });
+this.form = new FormGroup({
+  nombre: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
+  apellido: new FormControl('', [Validators.required, Validators.pattern("^(?!\\s*$)[a-zA-ZÀ-ÿ\\s]+$")]),
+  dni: new FormControl('', [Validators.minLength(5), Validators.maxLength(8), Validators.pattern("^[0-9]+$")]),
+  telefono: new FormControl('', [Validators.minLength(5), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
+  fechaNacimiento: new FormControl('', [fechaNacimientoValida]), // ✅ ahora con validador
+  direccion: new FormControl(''),
+  fechaMediacion: new FormControl('', [fechaMediacionValida]),   // ✅ ahora con validador
+});
+
     
 
     if (data) {
@@ -81,21 +102,14 @@ export class DialogClienteComponent {
         direccion: data.direccion || '',
         dni: data.dni || '',
         telefono: data.telefono || '',
+        fechaMediacion: data.fecha_mediacion || '',
       });
-
-
-
     }
-
     this.cargarExpedientes();
   }
 
   ngOnInit() {
-
-
-    this.cargarExpedientes(); // Cargar expedientes al iniciar
-
-
+    this.cargarExpedientes();
   }
 
   cargarExpedientes() {
@@ -112,17 +126,34 @@ export class DialogClienteComponent {
         }
       );
   }
+
+    cargarUsuarios() {
+    this.usuarioService.getUsuarios()
+      .pipe(takeUntil(this.destroy$)) // Cancela la suscripción cuando destroy$ emita
+      .subscribe(
+        (usuarios) => {
+          this.listaUsuarios = usuarios;
+          this.usuarioSeleccionados = this.listaUsuarios
+            .filter(u => u.id === this.usuarioService.usuarioLogeado?.id);
+          //this.expedientesOriginales = [...expedientes];
+          //this.hayExpedientes = this.listaExpedientes.length > 0;
+        },
+        (error) => {
+          console.error('Error al obtener abogados:', error);
+        }
+      );
+  }
+
   closeDialog(): void {
     this.dialogRef.close();
   }
 
   acceptDialog(): void {
     if(this.form.valid){
- 
     const cliente: ClienteModel = {
       nombre: this.form.value.nombre ?? null,
       apellido: this.form.value.apellido ?? null,
-      fecha_nacimiento: '1990-01-01 00:00:00.000',
+      fecha_nacimiento: this.form.value.fechaNacimiento || null,
       direccion: this.form.value.direccion && this.form.value.direccion.trim() !== '' ? this.form.value.direccion : '1',
       dni: this.form.value.dni && this.form.value.dni.trim() !== '' ? Number(this.form.value.dni) : 1,
       telefono: this.form.value.telefono && this.form.value.telefono.trim() !== '' ? this.form.value.telefono : '1',
@@ -131,10 +162,8 @@ export class DialogClienteComponent {
       fecha_creacion: 'ejemplo',
       expedientes: this.expedientesSeleccionados,
       estado: 'en gestión',
-      usuario_id: this.usuarioService.usuarioLogeado.id,
-      //expedientes: null
-
-
+      usuario_id: this.usuarioService.usuarioLogeado!.id.toString(),
+      fecha_mediacion: this.form.value.fechaMediacion || null,
     };
 
     this.dialogRef.close(cliente);

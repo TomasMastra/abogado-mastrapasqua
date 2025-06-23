@@ -30,8 +30,8 @@ export class ClientesService {
 getClientes() {
   const usuario = this.usuarioService.usuarioLogeado;
   const params = {
-    usuario_id: usuario.id,
-    rol: usuario.rol
+    usuario_id: usuario!.id,
+    rol: usuario!.rol
   };
 
   this.http.get<ClienteModel[]>(this.apiUrl, { params }).subscribe(
@@ -71,8 +71,8 @@ searchClientes(texto: string): Observable<ClienteModel[]> {
 
   const params = {
     texto: textoLower,
-    usuario_id: usuario.id,
-    rol: usuario.rol
+    usuario_id: usuario!.id,
+    rol: usuario!.rol
   };
 
   return this.http.get<ClienteModel[]>(`${this.apiUrl}/buscar`, { params }).pipe(

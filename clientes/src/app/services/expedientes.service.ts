@@ -29,8 +29,8 @@ getExpedientes() {
   const usuario = this.usuarioService.usuarioLogeado;
 
   const params = {
-    usuario_id: usuario.id,
-    rol: usuario.rol
+    usuario_id: usuario!.id,
+    rol: usuario!.rol
   };
 
   this.http.get<ExpedienteModel[]>(this.apiUrl, { params }).subscribe(
@@ -40,9 +40,13 @@ getExpedientes() {
           expediente.clientes = clientes;
         });
 
-        this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
-          expediente.demandadoModel = demandado;
+        this.getDemandadosPorExpediente(expediente.id).subscribe((demandados) => {
+          expediente.demandados = demandados;
         });
+
+     /*   this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
+          expediente.demandadoModel = demandado;
+        });*/
       });
 
       this.expedientesSubject.next(expedientes);
@@ -52,7 +56,7 @@ getExpedientes() {
     }
   );
 
-  return this.clientes$; // ¿Querías retornar this.expedientes$ acá? 🤔
+  return this.clientes$;
 }
 
 
@@ -85,8 +89,12 @@ getExpedientes() {
 
   getClientesPorExpediente(id_expediente: string) {
     const url = `${this.apiUrl}/clientesPorExpediente/${id_expediente}`;
-    //console.log('URL llamada:', url);  
     return this.http.get<ClienteModel[]>(url);
+  }
+
+  getDemandadosPorExpediente(id_expediente: string) {
+    const url = `${this.apiUrl}/demandadosPorExpediente/${id_expediente}`;
+    return this.http.get<DemandadoModel[]>(url);
   }
 
   getDemandadoPorId(id: number): Observable<DemandadoModel> {
@@ -129,31 +137,66 @@ getExpedientes() {
     
     
 
-      searchExpedientes(texto: string): Observable<ExpedienteModel[]> {
-        const textoLower = texto.toLowerCase();
-        const url = `${this.apiUrl}/buscar?texto=${textoLower}`;
-      
-        console.log('URL de búsqueda:', url);
-      
-        return this.http.get<ExpedienteModel[]>(url).pipe(
-          tap(response => {
-            console.log('Respuesta de la API:', response);  
-          }),
-          catchError(error => {
-            console.error('Error al buscar expedientes', error);
-            return of([]);  
-          })
-        );
-      }
+    searchExpedientes(texto: string): Observable<ExpedienteModel[]> {
+      const textoLower = texto.toLowerCase();
+      const url = `${this.apiUrl}/buscar?texto=${textoLower}`;
+    
+      console.log('URL de búsqueda:', url);
+    
+      return this.http.get<ExpedienteModel[]>(url).pipe(
+        tap(response => {
+          console.log('Respuesta de la API:', response);  
+        }),
+        catchError(error => {
+          console.error('Error al buscar expedientes', error);
+          return of([]);  
+        })
+      );
+    }
+/*
+    buscarExpedientes(texto: string) {
+      const textoLower = texto.toLowerCase();
+      const usuario = this.usuarioService.usuarioLogeado;
 
-buscarExpedientes(texto: string) {
+      const params = {
+        texto: textoLower,
+        usuario_id: usuario.id,
+        rol: usuario.rol
+      };
+
+      return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/buscar`, { params }).pipe(
+        switchMap(expedientes => {
+          if (expedientes.length === 0) {
+            return of([]);
+          }
+
+          const requests = expedientes.map(expediente => {
+            const clientes$ = this.getClientesPorExpediente(expediente.id);
+            const demandado$ = this.getDemandadoPorId(expediente.demandado_id!);
+
+            return forkJoin([clientes$, demandado$]).pipe(
+              map(([clientes, demandado]) => {
+                expediente.clientes = clientes;
+                expediente.demandadoModel = demandado;
+                return expediente;
+              })
+            );
+          });
+
+          return forkJoin(requests);
+        })
+      );
+    }*/
+
+
+  buscarExpedientes(texto: string) {
   const textoLower = texto.toLowerCase();
   const usuario = this.usuarioService.usuarioLogeado;
 
   const params = {
     texto: textoLower,
-    usuario_id: usuario.id,
-    rol: usuario.rol
+    usuario_id: usuario!.id,
+    rol: usuario!.rol
   };
 
   return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/buscar`, { params }).pipe(
@@ -164,12 +207,12 @@ buscarExpedientes(texto: string) {
 
       const requests = expedientes.map(expediente => {
         const clientes$ = this.getClientesPorExpediente(expediente.id);
-        const demandado$ = this.getDemandadoPorId(expediente.demandado_id!);
+        const demandados$ = this.getDemandadosPorExpediente(expediente.id);  // 🚨 Acá traemos varios, como en getExpedientes()
 
-        return forkJoin([clientes$, demandado$]).pipe(
-          map(([clientes, demandado]) => {
+        return forkJoin([clientes$, demandados$]).pipe(
+          map(([clientes, demandados]) => {
             expediente.clientes = clientes;
-            expediente.demandadoModel = demandado;
+            expediente.demandados = demandados;  // 🚨 Acá asignamos el array
             return expediente;
           })
         );
@@ -180,44 +223,37 @@ buscarExpedientes(texto: string) {
   );
 }
 
+      
+    
+    agregarClientesAExpediente(expedienteId: number, clienteId: number): Observable<any> {
+      console.log('id cliente: ', clienteId, ' expediente id: ', expedienteId);
+    
+      const url = `${this.apiUrl}/agregarExpedienteClientes`;
+      const data = {
+        cliente: clienteId,
+        expediente: expedienteId
+      };
+      console.log('url exp-cli: ', url);
 
-   
-        
-      
-      agregarClientesAExpediente(expedienteId: number, clienteId: number): Observable<any> {
-        console.log('id cliente: ', clienteId, ' expediente id: ', expedienteId);
-      
-        const url = `${this.apiUrl}/agregarExpedienteClientes`;
-        const data = {
-          cliente: clienteId,
-          expediente: expedienteId
-        };
-        console.log('url exp-cli: ', url);
+      return this.http.post(url, data).pipe(
+        tap(response => {
+          console.log('Respuesta de la API:', response);  // Verifica si la respuesta es exitosa
+        }),
+        catchError(error => {
+          console.error('Error al agregar cliente al expediente:', error);
+          return throwError(error);  // Asegúrate de capturar y propagar el error correctamente
+        })
+      );
+    }
+    
+    getExpedientesPorDemandado(id: string) {
+      const params = new HttpParams()
+        .set("id", id)
+        .set("estado", "en gestión");
+    
+      return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/demandados`, { params });
+    }
 
-        return this.http.post(url, data).pipe(
-          tap(response => {
-            console.log('Respuesta de la API:', response);  // Verifica si la respuesta es exitosa
-          }),
-          catchError(error => {
-            console.error('Error al agregar cliente al expediente:', error);
-            return throwError(error);  // Asegúrate de capturar y propagar el error correctamente
-          })
-        );
-      }
-      
-      getExpedientesPorDemandado(id: string) {
-        const params = new HttpParams()
-          .set("id", id)
-          .set("estado", "en gestión");
-      
-        return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/demandados`, { params });
-      }
- /*     
-      getClientePorNumeroYAnio(numero: string, anio: string) {
-        return this.http.get<ClienteModel[]>(`${this.apiUrl}/buscarPorNumeroyAnio`, {
-          params: { numero, anio }
-        });
-      }*/
 getClientePorNumeroYAnio(numero: string, anio: string, tipo: string) {
   const usuario = this.usuarioService.usuarioLogeado;
 
@@ -225,8 +261,8 @@ getClientePorNumeroYAnio(numero: string, anio: string, tipo: string) {
     numero,
     anio,
     tipo,
-    usuario_id: usuario.id,
-    rol: usuario.rol
+    usuario_id: usuario!.id,
+    rol: usuario!.rol
   };
 
   return this.http.get<ExpedienteModel[]>(`${this.apiUrl}/buscarPorNumeroAnioTipo`, { params }).pipe(
@@ -234,49 +270,90 @@ getClientePorNumeroYAnio(numero: string, anio: string, tipo: string) {
       if (!expedientes.length) return of([]);
 
       return forkJoin(
-        expedientes.map(expediente =>
-          forkJoin({
+        expedientes.map(expediente => {
+          const demandadoRequest = expediente.demandado_id
+            ? this.getDemandadoPorId(expediente.demandado_id)
+            : of(null); // 👈 Esto arregla el /null
+
+          return forkJoin({
             clientes: this.getClientesPorExpediente(expediente.id),
-            demandado: this.getDemandadoPorId(expediente.demandado_id!)
+            demandado: demandadoRequest
           }).pipe(
             map(({ clientes, demandado }) => ({
               ...expediente,
               clientes,
               demandadoModel: demandado
             }))
-          )
-        )
+          );
+        })
       );
     })
   );
 }
 
+
         
 
-        getExpedientesPorEstado(estado: string) {
-          const params = { estado }; 
-                  
-          this.http.get<ExpedienteModel[]>(`${this.apiUrl}/estado`, { params }).subscribe(
-            (expedientes) => {
-              expedientes.forEach((expediente) => {
-                this.getClientesPorExpediente(expediente.id).subscribe((clientes) => {
-                  expediente.clientes = clientes;
-                });
-        
-                this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
-                  expediente.demandadoModel = demandado;
-                });
+    getExpedientesPorEstado(estado: string) {
+      const params = { estado }; 
+              
+      this.http.get<ExpedienteModel[]>(`${this.apiUrl}/estado`, { params }).subscribe(
+        (expedientes) => {
+          expedientes.forEach((expediente) => {
+            this.getClientesPorExpediente(expediente.id).subscribe((clientes) => {
+              expediente.clientes = clientes;
+            });
+    
+              this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
+                expediente.demandadoModel = demandado
+
               });
-        
-              this.expedientesSubject.next(expedientes);
-            },
-            (error) => {
-              console.error('Error al obtener expedientes:', error);
-            }
-          );
-        
-          return this.clientes$;
+          });
+    
+          this.expedientesSubject.next(expedientes);
+        },
+        (error) => {
+          console.error('Error al obtener expedientes:', error);
         }
-        
+      );
+    
+      return this.clientes$;
+    }
+    
+
+
+
+  
+getExpedientesCobrados() {
+  const usuario = this.usuarioService.usuarioLogeado;
+
+  const params = {
+    usuario_id: usuario!.id,
+    rol: usuario!.rol
+  };
+
+  this.http.get<ExpedienteModel[]>(`${this.apiUrl}/cobrados`, { params }).subscribe(
+    (expedientes) => {
+      expedientes.forEach((expediente) => {
+        this.getClientesPorExpediente(expediente.id).subscribe((clientes) => {
+          expediente.clientes = clientes;
+        });
+
+              this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
+                expediente.demandadoModel = demandado
+
+              });
+      });
+
+      this.expedientesSubject.next(expedientes);
+    },
+    (error) => {
+      console.error('Error al obtener expedientes:', error);
+    }
+  );
+
+  return this.clientes$;
+}
+
 
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject } from '@angular/core';
-
+import { Observable, startWith, map } from 'rxjs';
 
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
@@ -18,6 +18,7 @@ import { MatOptionModule } from '@angular/material/core';  // Esto también es n
 import { ExpedientesService } from 'src/app/services/expedientes.service';
 import { ExpedienteModel } from 'src/app/models/expediente/expediente.component';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 import { JuzgadosService } from 'src/app/services/juzgados.service';
 import { JuzgadoModel } from 'src/app/models/juzgado/juzgado.component';
@@ -32,7 +33,7 @@ import Swal from 'sweetalert2';
 
 
 import { UsuarioService } from 'src/app/services/usuario.service';
-
+import { UsuarioModel } from 'src/app/models/usuario/usuario.component';
 @Component({
   selector: 'app-dialog-expediente-modificar',
   templateUrl: './dialog-expediente-modificar.component.html',
@@ -49,7 +50,8 @@ import { UsuarioService } from 'src/app/services/usuario.service';
     MatSelectModule,  
     MatOptionModule,  
     MatIconModule,
-    MatCardModule
+    MatCardModule,
+    MatAutocompleteModule
   ]
 })
 
@@ -59,25 +61,78 @@ export class DialogExpedienteModificarComponent   {
   juzgadosOriginales: JuzgadoModel[] = [];
 
   demandados: DemandadoModel[] = [];
+  demandadosAgregados: DemandadoModel[] = [];
+
   clientes: ClienteModel[] = [];
   clientesAgregados: ClienteModel[] = [];
 
   private destroy$ = new Subject<void>(); 
-  juzgadoElegido: any; 
+  juzgadoElegido: any;
   demandadoElegido: any;
-  clienteSeleccionado: any; 
+  clienteSeleccionado: any;
 
   tipos: any[] = ['todos', 'CCF', 'COM', 'CIV', 'CC'];
   tipoSeleccionado: any = 'todos';
 
-  estados: any[] = ['en gestíon', 'inicio', 'prueba', 'clausura p.', 'fiscal', 'sentencia'];
-  estadoSeleccionado: any;
 
-  juicios: any[] = ['ordinario', 'sumarisimo'];
+estados: any[] = [
+  'Sorteado',
+  'Inicio - Previo',
+  'Inicio - Plantea Revocatoria',
+  'Inicio - Da Cumplimiento',
+  'Inicio - Apela',
+  'Inicio - Plantea Nulidad',
+  'Traslado demanda - Se Ordena',
+  'Traslado demanda - Cedula',
+  'Traslado demanda - Notificado',
+  'Contesta demanda - Traslado',
+  'Contesta demanda - Cedula',
+  'Contesta Traslado',
+  'Se resuelva',
+  'Apertura a Prueba - Solicita',
+  'Apertura a Prueba - Cedula',
+  'Apertura a Prueba - Audiencia 360',
+  'Pruebas - Se provean',
+  'Prueba - Cedula Perito',
+  'Prueba - Cedula Parte',
+  'Prueba - Acredita Oficio',
+  'Prueba - Solicita Oficio reiteratorio',
+  'Prueba - Acredita Testimonial',
+  'Prueba - Desiste',
+  'Prueba - Impugna',
+  'Prueba - Se intime parte',
+  'Prueba - Se intime perito',
+  'Clausura periodo Prueba - Solicita',
+  'Clausura periodo Prueba - Pase a certificar',
+  'Alegatos - Solicita',
+  'Alegatos - Cedula',
+  'Alegatos - Presenta',
+  'Fiscal - Solicita',
+  'Fiscal - Cedula',
+  'Defensor Oficial - Solicita',
+  'Defensor Oficial - Cedula',
+  'Defensor Oficial - Ratifica lo actuado',
+  'Sentencia - Previo',
+  'Sentencia - Solicita',
+  'Sentencia - Pasen autos a Sentencia',
+  'Sentencia',
+  'Cobrado'
+];  
+estadoSeleccionado: any;
+
+  juicios: any[] = ['ordinario', 'sumarisimo', 'a definir'];
   juicioSeleccionado: any;
 
   mensajeSelectJuzgado: any = 'Filtrar por juzgado';
 
+  listaUsuarios: UsuarioModel[] = [];
+  abogadoSeleccionado: any;
+  procuradorSeleccionado: any;
+
+
+      clienteCtrl = new FormControl<string>('');
+    filteredClientes!: Observable<ClienteModel[]>;
+      juezSeleccionado: any;
   constructor(
     private expedienteService: ExpedientesService,
     private juzgadoService: JuzgadosService,
@@ -98,6 +153,9 @@ export class DialogExpedienteModificarComponent   {
       estado: new FormControl('', [Validators.required]),
       fechaInicio: new FormControl('', [Validators.required]),
       tipo: new FormControl('todos', [Validators.required]),
+      porcentaje: new FormControl('', [Validators.required]),
+      abogado: new FormControl('', [Validators.required]),
+      procurador: new FormControl('', [Validators.required]),      
 
 
     });
@@ -107,12 +165,16 @@ export class DialogExpedienteModificarComponent   {
       this.form.setValue({ 
         tipo: data.juzgadoModel?.tipo ?? 'todos',
         juzgado: data.juzgado_id || '' , 
-        demandado: data.demandado_id || '',
+        demandado: data.demandados || '',
         numero: data.numero || '', 
         anio: data.anio || ''  ,
         juicio: data.juicio,
         estado: data.estado,
         fechaInicio: data.fecha_inicio,
+        porcentaje: data.porcentaje,
+        abogado: data.usuario_id,
+        procurador: data.procurador_id,
+
       });
       
     }
@@ -129,13 +191,32 @@ export class DialogExpedienteModificarComponent   {
 
   ngOnInit() {
     this.cargarJuzgado();
-    this.cargarDemandado();
+    this.cargarDemandados();
     this.cargarClientes();
+    this.cargarUsuarios();
+
+            this.filteredClientes = this.clienteCtrl.valueChanges.pipe(
+          startWith(''),
+          map(text => this.filtrarClientes(text!))
+        );
 
   }
 
   closeDialog(): void {
     this.dialogRef.close();
+  }
+
+    private filtrarClientes(text: string) {
+  const term = text.toLowerCase();
+  return this.clientes.filter(c =>
+    (`${c.nombre} ${c.apellido}`).toLowerCase().includes(term)
+  );
+}
+
+  displayCliente(cliente: ClienteModel): string {
+    return cliente
+      ? `${cliente.nombre} ${cliente.apellido}`
+      : '';
   }
         
 cambiarTipoJuzgado() {
@@ -169,33 +250,16 @@ cargarJuzgado() {
       }
     );
 }
-        cargarDemandado() {
-          this.demandadoService.getDemandados()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(
-              (demandados) => {
-                this.demandados = demandados;
-                // Si ya hay un demandado seleccionado, asignarlo al formulario
-                if (this.data && this.data.demandado_id) {
-                  const demandadoSeleccionado = this.demandados.find(d => +d.id === this.data.demandado_id);
-                  this.form.get('demandado')?.setValue(demandadoSeleccionado || '');
-                  this.demandadoElegido = demandadoSeleccionado;
-                }
-              },
-              (error) => {
-                console.error('Error al obtener demandados:', error);
-              }
-            );
-        }
 
-        cargarClientes() {
-          this.clienteService.getClientes()
+
+        cargarDemandados() {
+          this.demandadoService.getDemandados()
             .pipe(takeUntil(this.destroy$)) 
             .subscribe(
-              (cliente) => {
-                this.clientes = cliente;
-                this.clientesAgregados = this.data.clientes;
-                console.log(this.clientes);
+              (demandado) => {
+                this.demandados = demandado;
+                this.demandadosAgregados = this.data.demandados || [];
+                //console.log(this.demandados);
       
               },
               (error) => {
@@ -203,7 +267,49 @@ cargarJuzgado() {
               }
             );
         }
-        
+        cargarClientes() {
+          this.clienteService.getClientes()
+            .pipe(takeUntil(this.destroy$)) 
+            .subscribe(
+              (cliente) => {
+                this.clientes = cliente;
+                this.clientesAgregados = this.data.clientes;
+                //console.log(this.clientes);
+      
+              },
+              (error) => {
+                console.error('Error al obtener clientes:', error);
+              }
+            );
+        }
+       
+            cargarUsuarios() {
+            this.usuarioService.getUsuarios()
+              .pipe(takeUntil(this.destroy$)) // Cancela la suscripción cuando destroy$ emita
+              .subscribe(
+                (usuarios) => {
+                  this.listaUsuarios = usuarios;
+      
+                if (this.data && this.data.usuario_id) {
+                  const abogadoSeleccionado = this.listaUsuarios.find(d => d.id === +this.data.usuario_id);
+                  this.form.get('abogado')?.setValue(abogadoSeleccionado || '');
+                  this.abogadoSeleccionado = abogadoSeleccionado;
+                }
+
+                if (this.data && this.data.procurador_id) {
+                  const procuradorSeleccionado = this.listaUsuarios.find(d => d.id === +this.data.procurador_id!);
+                  this.form.get('procurador')?.setValue(procuradorSeleccionado || '');
+                  this.procuradorSeleccionado = procuradorSeleccionado;
+                }
+
+                        
+
+                },
+                (error) => {
+                  console.error('Error al obtener abogados:', error);
+                }
+              );
+          }
 
     acceptDialog(): void {
       if (this.form.valid) {
@@ -213,6 +319,8 @@ cargarJuzgado() {
           descripcion: '', 
           fecha_creacion: this.data?.fecha_creacion ?? '', 
           clientes: this.data?.clientes ?? null,
+          demandados: this.data?.demandados,
+
           juzgado_id: this.juzgadoElegido?.id ?? null, 
           demandado_id: this.demandadoElegido?.id ?? null,    
           numero: this.form.value.numero,
@@ -224,7 +332,9 @@ cargarJuzgado() {
           fecha_inicio: this.form.value.fechaInicio ?? null,
           fecha_sentencia: this.data?.fecha_sentencia ?? null, 
           hora_sentencia: this.form.value.hora_sentencia ?? null, 
-
+          fecha_cobro: this.data?.fecha_cobro ?? null,
+          fecha_cobro_capital: this.data?.fecha_cobro_capital ?? null,
+          valorUMA: this.data?.valorUMA ?? null,
           // modificar
           juez_id: null,
           juezModel: { id: '', nombre: '', apellido: '', estado: '' },
@@ -233,7 +343,11 @@ cargarJuzgado() {
           monto: this.data?.monto,
           apela: this.data?.apela,
           juzgadoModel: null,
-          usuario_id: this.usuarioService.usuarioLogeado.id,
+          usuario_id: this.abogadoSeleccionado.id,
+          porcentaje: this.form.value.porcentaje,
+          procurador_id:  this.procuradorSeleccionado.id,
+          sala: this.data?.sala,
+
 
           // 📌 Campos nuevos - Capital
           estadoCapitalSeleccionado: this.data?.estadoCapitalSeleccionado ?? null,
@@ -255,6 +369,10 @@ cargarJuzgado() {
           honorarioCobrado: this.data?.honorarioCobrado ??  null,
           cantidadUMA:  this.data?.cantidadUMA ??  null,
 
+
+          numeroCliente: this.data?.numeroCliente ??  null,
+          minutosSinLuz: this.data?.minutosSinLuz ??  null,
+          periodoCorte: this.data?.periodoCorte ??  null,
 
 
         };
@@ -295,6 +413,8 @@ cargarJuzgado() {
         { nombre: 'estado', control: 'estado' },
         { nombre: 'fechaInicio', control: 'fechaInicio' },
         { nombre: 'tipo', control: 'tipo' },
+        { nombre: 'porcentaje', control: 'porcentaje' },
+        { nombre: 'procurador', control: 'procurador' },
 
 
 
@@ -313,6 +433,16 @@ cargarJuzgado() {
       return faltantes;
     } 
     
+
+    
+  seleccionarDemandado(demandado: DemandadoModel): void { 
+    this.demandadoElegido = demandado;
+  
+    if (this.demandadosAgregados.indexOf(demandado) === -1) {
+      this.demandadosAgregados.push(demandado);
+    }
+  }
+
     seleccionarCliente(cliente: ClienteModel): void {    
       this.clienteSeleccionado = cliente;
       const clienteExiste = this.clientesAgregados.some((c) => c.id === cliente.id);
@@ -334,6 +464,13 @@ cargarJuzgado() {
           this.clienteSeleccionado = null;
         }
       }
+
+    eliminarDemandado(demandado: DemandadoModel): void {
+    const index = this.demandadosAgregados.indexOf(demandado);
+    if (index > -1) {
+      this.demandadosAgregados.splice(index, 1);
+    }
+  }
     
       eliminarCliente(cliente: ClienteModel): void {
         const index = this.clientesAgregados.indexOf(cliente);

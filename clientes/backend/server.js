@@ -27,9 +27,20 @@ sql.connect(dbConfig)
         });
 
         // Ruta para obtener todos los usuarios
-        app.get("/usuarios", (req, res) => {
+        app.get("/usuario", (req, res) => {
             pool.request()
-                .query("SELECT * FROM usuarios")  // Consulta SQL
+                .query("SELECT * FROM usuario")  // Consulta SQL
+                .then(result => {
+                    res.json(result.recordset);  // Devuelve los resultados
+                })
+                .catch(err => {
+                    res.status(500).send(err);  // En caso de error, devuelve 500
+                });
+        });
+
+                app.get("/uma", (req, res) => {
+            pool.request()
+                .query("SELECT * FROM uma ORDER BY fecha_resolucion DESC")  // Consulta SQL
                 .then(result => {
                     res.json(result.recordset);  // Devuelve los resultados
                 })
@@ -59,15 +70,18 @@ sql.connect(dbConfig)
     const usuario = result.recordset[0];
 
     // Podés devolver solo lo que necesites (sin contraseña)
-    res.status(200).json({
-      message: 'Login exitoso',
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        rol: usuario.rol
-      }
-    });
+res.status(200).json({
+  message: 'Login exitoso',
+  usuario: {
+    id: usuario.id,
+    nombre: usuario.nombre,
+    email: usuario.email,
+    rol: usuario.rol,
+    porcentaje: usuario.porcentaje
+  }
+});
+
+
 
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
@@ -162,7 +176,7 @@ app.get('/clientes/buscar', async (req, res) => {
 
           app.post('/clientes/agregar', async (req, res) => {
             try {
-              const { nombre, apellido, dni, telefono, direccion, fecha_nacimiento, email, estado, usuario_id  } = req.body;
+              const { nombre, apellido, dni, telefono, direccion, fecha_nacimiento, email, estado, usuario_id, fecha_mediacion  } = req.body;
           
               if (!nombre || !apellido || !dni || !email) {
                 return res.status(400).json({
@@ -181,11 +195,12 @@ app.get('/clientes/buscar', async (req, res) => {
                 .input('email', sql.NVarChar, email)
                 .input('estado', sql.NVarChar, estado)
                 .input('usuario_id', sql.Int, usuario_id)
+                .input('fecha_mediacion', sql.DateTime, fecha_mediacion)
 
                 .query(`
-                  INSERT INTO clientes (nombre, apellido, dni, telefono, direccion, fecha_nacimiento, email, estado, usuario_id)
+                  INSERT INTO clientes (nombre, apellido, dni, telefono, direccion, fecha_nacimiento, email, estado, usuario_id, fecha_mediacion)
                   OUTPUT INSERTED.id  -- Esto devuelve el id del nuevo cliente insertado
-                  VALUES (@nombre, @apellido, @dni, @telefono, @direccion, @fecha_nacimiento, @email, @estado, @usuario_id)
+                  VALUES (@nombre, @apellido, @dni, @telefono, @direccion, @fecha_nacimiento, @email, @estado, @usuario_id, @fecha_mediacion)
                 `);
           
               // El id del cliente insertado estará en result.recordset[0].id
@@ -223,6 +238,7 @@ app.get('/clientes/buscar', async (req, res) => {
                     .input('dni', sql.Int, nuevosDatos.dni)
                     .input('estado', sql.NVarChar, nuevosDatos.estado)
                     .input('direccion', sql.NVarChar, nuevosDatos.direccion)
+                    .input('fecha_mediacion', sql.NVarChar, nuevosDatos.fecha_mediacion)
 
                     .query(`
                         UPDATE Clientes
@@ -233,7 +249,8 @@ app.get('/clientes/buscar', async (req, res) => {
                             fecha_nacimiento = @fecha_nacimiento,
                             dni = @dni,
                             estado = @estado,
-                            direccion = @direccion
+                            direccion = @direccion,
+                            fecha_mediacion = @fecha_mediacion
                         WHERE id = @id
                     `);
         
@@ -267,9 +284,29 @@ app.get('/clientes/buscar', async (req, res) => {
         }
       });
 
+app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) => {
+  const { id_expediente } = req.params;
+  try {
+    const result = await pool.request()
+      .input('id_expediente', sql.Int, id_expediente)
+      .query(`
+        SELECT d.*
+        FROM demandados d
+        JOIN expedientes_demandados ed ON d.id = ed.id_demandado
+        WHERE ed.id_expediente = @id_expediente
+      `);
+
+    res.json(result.recordset);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener demandados del expediente' });
+  }
+});
+
+
     app.post('/expedientes/agregar', async (req, res) => {
       try {
-          const { titulo, descripcion, demandado_id, juzgado_id, numero, anio, clientes, usuario_id, estado, honorario, monto, ultimo_movimiento, fecha_inicio, juez_id, juicio, fecha_sentencia,  } = req.body;
+          const { titulo, descripcion, demandado_id, juzgado_id, numero, anio, clientes, usuario_id, estado, honorario, monto, ultimo_movimiento, 
+            fecha_inicio, juez_id, juicio, fecha_sentencia, numeroCliente, minutosSinLuz, periodoCorte, demandados, porcentaje, procurador_id  } = req.body;
   
           if (!numero || !anio || !demandado_id || !juzgado_id || !Array.isArray(clientes)) {
               return res.status(400).json({
@@ -277,17 +314,6 @@ app.get('/clientes/buscar', async (req, res) => {
                   camposRequeridos: ['numero', 'anio', 'demandado', 'juzgado', 'clientes']
               });
           }
-/*
-          const resultExiste = await pool.request()
-          .input('numero', sql.Int, numero)
-          .input('anio', sql.Int, anio)
-          .input('juzgado_id', sql.Int, juzgado_id)
-
-          .query(`
-            SELECT COUNT(*) AS count
-            FROM expedientes
-            WHERE numero = @numero AND anio = @anio AND juzgado_id = @juzgado_id
-          `);*/
 
           const tipoJuzgadoResult = await pool.request()
           .input('juzgado_id', sql.Int, juzgado_id)
@@ -309,11 +335,9 @@ app.get('/clientes/buscar', async (req, res) => {
             SELECT COUNT(*) AS count
             FROM expedientes e
             JOIN juzgados j ON e.juzgado_id = j.id
-            WHERE e.numero = @numero AND e.anio = @anio AND j.tipo = @tipo
+            WHERE e.numero = @numero AND e.anio = @anio AND j.tipo = @tipo AND e.estado != 'eliminado'
           `);
         
-
-
           if (resultExiste.recordset[0].count > 0) {
             return res.status(400).json({
               error: 'Ya existe un expediente con el mismo número, año y juzgado.'
@@ -336,11 +360,18 @@ app.get('/clientes/buscar', async (req, res) => {
           .input('juicio', sql.NVarChar, juicio)
           .input('monto', sql.NVarChar, monto)
           .input('usuario_id', sql.Int, usuario_id)
+          .input('numeroCliente', sql.NVarChar, numeroCliente)
+          .input('minutosSinLuz', sql.Int, minutosSinLuz)           
+          .input('periodoCorte', sql.NVarChar, periodoCorte) 
+          .input('porcentaje', sql.Int, porcentaje)
+          .input('procurador_id', sql.Int, procurador_id)
 
           .query(`
-              INSERT INTO expedientes (titulo, descripcion, numero, anio, demandado_id, juzgado_id, fecha_creacion, estado, fecha_inicio, honorario, juez_id, juicio, fecha_sentencia, ultimo_movimiento, monto, usuario_id)
+              INSERT INTO expedientes (titulo, descripcion, numero, anio, demandado_id, juzgado_id, fecha_creacion, estado, fecha_inicio, honorario, juez_id, juicio, fecha_sentencia, ultimo_movimiento, monto, usuario_id,         
+              numeroCliente, minutosSinLuz, periodoCorte, porcentaje, procurador_id)
               OUTPUT INSERTED.id
-              VALUES (@titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id, GETDATE(), @estado, @fecha_inicio, @honorario, @juez_id, @juicio, @fecha_sentencia, @fecha_inicio, @monto, @usuario_id)
+              VALUES (@titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id, GETDATE(), @estado, @fecha_inicio, @honorario, @juez_id, @juicio, @fecha_sentencia, @fecha_inicio, @monto, @usuario_id,
+              @numeroCliente, @minutosSinLuz, @periodoCorte, @porcentaje, @procurador_id)
           `);
       
   
@@ -351,7 +382,15 @@ app.get('/clientes/buscar', async (req, res) => {
   
           const expedienteId = result.recordset[0].id;
   
-          // Insertar los clientes asociados al expediente
+                for (const demandado of demandados) {
+                    await pool.request()
+                      .input('id_demandado', sql.Int, demandado.id)
+                      .input('id_expediente', sql.Int, expedienteId)
+                      .query(`INSERT INTO expedientes_demandados (id_demandado, id_expediente) VALUES (@id_demandado, @id_expediente)`);
+                }
+            
+
+
           for (const cliente of clientes) {
               await pool.request()
                   .input('id_cliente', sql.Int, cliente.id)
@@ -362,7 +401,6 @@ app.get('/clientes/buscar', async (req, res) => {
                   `);
           }
         
-
   
           res.status(201).json({
               message: 'Expediente y clientes agregados correctamente',
@@ -401,7 +439,9 @@ app.get('/clientes/buscar', async (req, res) => {
             WHERE numero = @numero 
             AND anio = @anio 
             AND juzgado_id = @juzgado_id
-            AND id <> @id  -- Excluir el expediente que se está actualizando
+            AND id <> @id  
+            AND estado != 'eliminado'
+
         `);
 
         if (resultExiste.recordset[0].count > 0) {
@@ -418,7 +458,6 @@ app.get('/clientes/buscar', async (req, res) => {
             .input('numero', sql.Int, nuevosDatos.numero)
             .input('anio', sql.Int, nuevosDatos.anio)
             .input('juzgado_id', sql.Int, nuevosDatos.juzgado_id)
-            .input('demandado_id', sql.Int, nuevosDatos.demandado_id)
             .input('estado', sql.NVarChar, nuevosDatos.estado)
             .input('juez_id', sql.Int, nuevosDatos.juez_id)
             .input('honorario', sql.NVarChar, nuevosDatos.honorario)
@@ -428,6 +467,13 @@ app.get('/clientes/buscar', async (req, res) => {
             .input('monto', sql.Int, nuevosDatos.monto)
             .input('apela', sql.Bit, nuevosDatos.apela)
             .input('ultimo_movimiento', sql.DateTime, nuevosDatos.ultimo_movimiento)
+            .input('porcentaje', sql.Int, nuevosDatos.porcentaje)
+            .input('usuario_id', sql.Int, nuevosDatos.usuario_id)
+            .input('fecha_cobro', sql.DateTime, nuevosDatos.fecha_cobro)
+            .input('fecha_cobro_capital', sql.DateTime, nuevosDatos.fecha_cobro_capital)
+            .input('valorUMA', sql.Int, nuevosDatos.valorUMA)
+            .input('procurador_id', sql.Int, nuevosDatos.procurador_id)
+            .input('sala', sql.NVarChar, nuevosDatos.sala)
 
  // 🆕 Campos nuevos: Capital
  .input('estadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoCapitalSeleccionado)
@@ -456,7 +502,6 @@ app.get('/clientes/buscar', async (req, res) => {
      numero = @numero,
      anio = @anio,
      juzgado_id = @juzgado_id,
-     demandado_id = @demandado_id,
      estado = @estado,
      juez_id = @juez_id,
      honorario = @honorario,
@@ -466,6 +511,13 @@ app.get('/clientes/buscar', async (req, res) => {
      monto = @monto,
      apela = @apela,
      ultimo_movimiento = @ultimo_movimiento,
+     porcentaje = @porcentaje,
+     usuario_id = @usuario_id,
+     fecha_cobro = @fecha_cobro,
+     fecha_cobro_capital = @fecha_cobro_capital,
+     procurador_id = @procurador_id,
+     valorUMA = @valorUMA,
+     sala = @sala,
 
 
 
@@ -492,13 +544,31 @@ app.get('/clientes/buscar', async (req, res) => {
 
             //const expedienteId = resultado.recordset[0].id;
   
-            
-            if (nuevosDatos.clientes.length > 0) {
+            if (Array.isArray(nuevosDatos.demandados) && nuevosDatos.demandados.length >= 0) {
 
               // 🔥 Primero eliminar las relaciones existentes
-await pool.request()
-  .input('id_expediente', sql.Int, id)
-  .query(`DELETE FROM clientes_expedientes WHERE id_expediente = @id_expediente`);
+              await pool.request()
+                .input('id_expediente', sql.Int, id)
+                .query(`DELETE FROM expedientes_demandados WHERE id_expediente = @id_expediente`);
+
+              for (const demandado of nuevosDatos.demandados) {
+                await pool.request()
+                  .input('id_expediente', sql.Int, id) // Tipo correcto
+                  .input('id_demandado', sql.Int, demandado.id)
+                  .query(`
+                    INSERT INTO expedientes_demandados (id_expediente, id_demandado)
+                    VALUES (@id_expediente, @id_demandado)
+                  `);
+              }
+
+            }
+            
+            if (nuevosDatos.clientes.length >= 0) {
+
+              // 🔥 Primero eliminar las relaciones existentes
+              await pool.request()
+                .input('id_expediente', sql.Int, id)
+                .query(`DELETE FROM clientes_expedientes WHERE id_expediente = @id_expediente`);
 
               for (const cliente of nuevosDatos.clientes) {
                 // Realiza la actualización de los clientes si es necesario
@@ -523,59 +593,39 @@ await pool.request()
         }
       });
 
+app.put('/expedientes/eliminar/:id_expediente', async (req, res) => {
+  const { id_expediente } = req.params;
 
-      app.delete('/expedientes/eliminar/:id_expediente', async (req, res) => {
-        const { id_expediente } = req.params;
-      
-        try {
-          // Verificar que el id_expediente es válido
-          if (!id_expediente || isNaN(id_expediente)) {
-            return res.status(400).json({ error: 'El ID del expediente es obligatorio y debe ser un número válido' });
-          }
-      
-          // Eliminar todos los clientes asociados al expediente
-          const result = await pool.request()
-            .input('id_expediente', sql.Int, id_expediente)
-            .query(`
-              DELETE FROM clientes_expedientes
-              WHERE id_expediente = @id_expediente
-            `);
-      
-          // Verificar si se eliminó algún registro
-          if (result.rowsAffected[0] > 0) {
-            res.status(200).json({ message: 'Clientes eliminados correctamente del expediente' });
-          } else {
-            res.status(404).json({ message: 'No se encontraron clientes para eliminar en este expediente' });
-          }
-        } catch (err) {
-          console.error('Error al eliminar clientes del expediente:', err.message);
-          res.status(500).json({
-            error: 'Error al eliminar clientes del expediente',
-            message: err.message
-          });
-        }
-      });
-      
-      
-      
-      
-      /*  BUSCAR EXPEDIENTES */
-/*    
-      app.get('/expedientes/buscar', async (req, res) => {
-        const texto = req.query.texto;  // Obtener el parámetro 'texto' de la URL
-        
-        try {
-          const result = await pool.request()
-            .input('texto', sql.NVarChar, `%${texto}%`)
-            .query("SELECT * FROM expedientes WHERE CAST(numero AS NVARCHAR) LIKE @texto OR CAST(anio AS NVARCHAR) LIKE @texto AND estado != 'eliminado'");
-      
-          res.json(result.recordset);  // Retornar los clientes encontrados
-        } catch (err) {
-          console.error('Error al ejecutar la consulta:', err);
-          return res.status(500).send('Error al obtener expedientes');
-        }
-      });*/
-    app.get('/expedientes/buscar', async (req, res) => {
+  try {
+    if (!id_expediente || isNaN(id_expediente)) {
+      return res.status(400).json({ error: 'El ID del expediente es obligatorio y debe ser un número válido' });
+    }
+
+    // Cambiar solo el estado del expediente
+    const result = await pool.request()
+      .input('id_expediente', sql.Int, id_expediente)
+      .query(`
+        UPDATE expedientes
+        SET estado = 'eliminado'
+        WHERE id = @id_expediente
+      `);
+
+    if (result.rowsAffected[0] > 0) {
+      res.status(200).json({ message: 'Expediente eliminado correctamente' });
+    } else {
+      res.status(404).json({ message: 'Expediente no encontrado' });
+    }
+  } catch (err) {
+    console.error('Error al eliminar expediente:', err.message);
+    res.status(500).json({
+      error: 'Error al eliminar expediente',
+      message: err.message
+    });
+  }
+});
+
+
+app.get('/expedientes/buscar', async (req, res) => {
   try {
     const { texto, usuario_id, rol } = req.query;
 
@@ -602,7 +652,7 @@ await pool.request()
 
     if (rol !== 'admin') {
       query += ' AND e.usuario_id = @usuario_id';
-      request.input('usuario_id', sql.Int, parseInt(usuario_id));
+      request.input('usuario_id', sql.Int, parseInt(usuario_id));  // <- aca faltaban paréntesis si lo ves como bloque lógico
     }
 
     const result = await request.query(query);
@@ -613,6 +663,8 @@ await pool.request()
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
+
+
 
       
 
@@ -1189,6 +1241,8 @@ app.get("/expedientes/buscarPorNumeroAnioTipo", async (req, res) => {
   try {
     const { numero, anio, tipo, usuario_id, rol } = req.query;
 
+    console.log('numero: ', numero, 'anio: ', anio, 'tipo: ', tipo);
+
     if (!numero || !anio || !tipo) {
       return res.status(400).json({ error: "Se requieren 'numero', 'anio' y 'tipo'." });
     }
@@ -1466,6 +1520,23 @@ app.get("/clientes/expedientesPorCliente", async (req, res) => {
   }
 });
 
+
+app.get("/expedientes/cobrados", async (req, res) => {
+  try {
+    const result = await pool.request()
+      .query(`
+        SELECT *
+        FROM expedientes
+        WHERE estado != 'eliminado'
+          AND (capitalCobrado = 1 OR honorarioCobrado = 1)
+      `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error al obtener expedientes cobrados:", err);
+    res.status(500).send("Error al obtener expedientes cobrados");
+  }
+});
 
 
 
