@@ -16,6 +16,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { Router } from '@angular/router';
 
@@ -45,7 +46,7 @@ import { UmaService } from 'src/app/services/uma.service';
         MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
         MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule,
         MatMenuModule, MatButtonModule, MatIconModule, MatSelectModule, ReactiveFormsModule,     
-        MatFormFieldModule, MatInputModule, MatProgressSpinnerModule
+        MatFormFieldModule, MatInputModule, MatProgressSpinnerModule, MatCheckboxModule
   ]
 })
 export class EstadoPage implements OnInit {
@@ -72,11 +73,23 @@ estados: any[] = [
   'Inicio - Previo',
   'Inicio - Plantea Revocatoria',
   'Inicio - Da Cumplimiento',
+  'Inicio - Solicita',
   'Inicio - Apela',
+  'Inicio - Recusa',
   'Inicio - Plantea Nulidad',
+  'Inicio - Se Eleve',
   'Traslado demanda - Se Ordena',
-  'Traslado demanda - Cedula',
+
+  'Traslado demanda - Cedula Confronte',
+  'Traslado demanda - Cedula Liberada',
+  'Traslado demanda - Cedula Notificada',
+  'Traslado demanda - Cedula Sin Notificar',
+
   'Traslado demanda - Notificado',
+  'Traslado demanda - Solicita',
+  'Traslado demanda - Previo Rebeldia',
+  'Traslado demanda - Solicita',
+
   'Contesta demanda - Traslado',
   'Contesta demanda - Cedula',
   'Contesta Traslado',
@@ -107,8 +120,7 @@ estados: any[] = [
   'Sentencia - Previo',
   'Sentencia - Solicita',
   'Sentencia - Pasen autos a Sentencia',
-  'Sentencia',
-  'Cobrado'
+  'Sentencia'
 ];
   estadoSeleccionado: any;
 
@@ -173,6 +185,7 @@ deshabilitarApeladoOFirme = false;
           tipo: new FormControl(''),
 
           ultimo_movimiento: new FormControl('', [Validators.required]),
+          requiere_atencion: new FormControl(false),
 
 
           // Capital
@@ -191,6 +204,7 @@ deshabilitarApeladoOFirme = false;
           umaSeleccionado: new FormControl(null, Validators.required),
           sala: new FormControl(''),
           montoAcuerdo: new FormControl(''),
+          fecha_atencion: new FormControl(null),
 
 
         }
@@ -215,82 +229,38 @@ deshabilitarApeladoOFirme = false;
       }
     }
 
-private llenarFormularioConExpediente(expediente: ExpedienteModel) {
-  // 1. Buscás el UMA correspondiente
-  const encontradaUMA = this.uma.find(u => u.valor == expediente.valorUMA) ?? null;
 
-  // 2. Construís el objeto de valores a parchar
-  const valores: any = {
-    honorario: expediente.honorario ?? '',
-    fecha_sentencia: expediente.fecha_sentencia
-      ? new Date(expediente.fecha_sentencia).toISOString().split('T')[0]
-      : '',
-    juez: this.jueces.find(j => j.id === expediente.juez_id) ?? null,
-    //tipo: expediente.tipo ?? '',
-    ultimo_movimiento: expediente.ultimo_movimiento
-      ? new Date(expediente.ultimo_movimiento).toISOString().split('T')[0]
-      : '',
-    estadoCapitalSeleccionado: expediente.estadoCapitalSeleccionado ?? '',
-    subEstadoCapitalSeleccionado: expediente.subEstadoCapitalSeleccionado ?? '',
-    fechaCapitalSubestado: expediente.fechaCapitalSubestado
-      ? new Date(expediente.fechaCapitalSubestado).toISOString().split('T')[0]
-      : '',
-    montoLiquidacionCapital: expediente.montoLiquidacionCapital ?? '',
-    estadoHonorariosSeleccionado: expediente.estadoHonorariosSeleccionado ?? '',
-    subEstadoHonorariosSeleccionado: expediente.subEstadoHonorariosSeleccionado ?? '',
-    fechaHonorariosSubestado: expediente.fechaHonorariosSubestado
-      ? new Date(expediente.fechaHonorariosSubestado).toISOString().split('T')[0]
-      : '',
-    cantidadUMA: expediente.cantidadUMA ?? '',
-    umaSeleccionado: encontradaUMA
-  };
 
-  // 3. Parcheás todo el form de golpe
-  this.form.patchValue(valores);
+  //calcula los valores para el uma meiante cantidad de uma y valor de uma
+  calcularMontoUMA() {
+    const cantidadUMA = this.form.get('cantidadUMA')?.value;
+    const umaSeleccionado = this.form.get('umaSeleccionado')?.value;
+    const montoUMA = this.form.get('montoAcuerdo')?.value;
 
-  // 4. Si querés marcar como touched sólo los que vienen con valor:
-  Object.entries(valores).forEach(([key, value]) => {
-    const control = this.form.get(key);
-    if (control && value !== null && value !== '' && value !== undefined) {
-      control.markAsTouched();
-      control.markAsDirty();
-    }
-  });
+    this.umaSeleccionado  = umaSeleccionado;
+    console.log(umaSeleccionado);
 
-  // 5. Y refrescás las validaciones condicionales
-  //this.actualizarValidacionesCondicionales();
-}
+    if (cantidadUMA && umaSeleccionado != 'acuerdo') {
+    this.montoUMA = umaSeleccionado.valor * cantidadUMA;
+    this.form.get('montoAcuerdo')?.clearValidators();
+      this.form.get('montoAcuerdo')?.updateValueAndValidity();
 
-    
-calcularMontoUMA() {
-  const cantidadUMA = this.form.get('cantidadUMA')?.value;
-  const umaSeleccionado = this.form.get('umaSeleccionado')?.value;
-  const montoUMA = this.form.get('montoAcuerdo')?.value;
+    this.form.get('cantidadUMA')?.setValidators([Validators.required]);
+    this.form.get('cantidadUMA')?.updateValueAndValidity();
+  } else {
+    // Está en 'acuerdo'
+    //this.form.get('cantidadUMA')?.setValue(null);
+    this.cantidadUMA = null;
+    this.form.get('cantidadUMA')?.clearValidators();
+    this.form.get('cantidadUMA')?.updateValueAndValidity();
 
-  this.umaSeleccionado  = umaSeleccionado;
-  console.log(umaSeleccionado);
-
-  if (cantidadUMA && umaSeleccionado != 'acuerdo') {
-  this.montoUMA = umaSeleccionado.valor * cantidadUMA;
-  this.form.get('montoAcuerdo')?.clearValidators();
+    this.form.get('montoAcuerdo')?.setValidators([Validators.required]);
     this.form.get('montoAcuerdo')?.updateValueAndValidity();
 
-  this.form.get('cantidadUMA')?.setValidators([Validators.required]);
-  this.form.get('cantidadUMA')?.updateValueAndValidity();
-} else {
-  // Está en 'acuerdo'
-  //this.form.get('cantidadUMA')?.setValue(null);
-  this.cantidadUMA = null;
-  this.form.get('cantidadUMA')?.clearValidators();
-  this.form.get('cantidadUMA')?.updateValueAndValidity();
+    this.montoUMA = montoUMA;
+  }
 
-  this.form.get('montoAcuerdo')?.setValidators([Validators.required]);
-  this.form.get('montoAcuerdo')?.updateValueAndValidity();
-
-  this.montoUMA = montoUMA;
-}
-
-}
+  }
 
 
   goTo(path: string) {
@@ -307,24 +277,21 @@ calcularMontoUMA() {
       estadoCapitalSeleccionado: null,
       subEstadoCapitalSeleccionado: null,
       fechaCapitalSubestado: null,
-      //estadoLiquidacionCapitalSeleccionado: null,
-      //fechaLiquidacionCapital: null,
       montoLiquidacionCapital: null,
     
       // Honorarios
       estadoHonorariosSeleccionado: null,
       subEstadoHonorariosSeleccionado: null,
       fechaHonorariosSubestado: null,
-      //estadoLiquidacionHonorariosSeleccionado: null,
-      //fechaLiquidacionHonorarios: null,
       cantidadUMA: null,
-      //montoLiquidacionHonorarios: null
+
     });
     
     
     this.router.navigate([path]); 
   }
 
+  //busca un expediente por los campos solicitados (numero, año y tipo de juzgado)
   buscar() {
   const tipo = this.form.value.tipo;
 
@@ -366,10 +333,9 @@ calcularMontoUMA() {
         this.menu = '2';
         this.estadoSeleccionado = this.expediente.estado;
         this.llenarFormularioConExpediente(this.expediente);
-
         this.asignarDatos();
         this.calcularMontoUMA();
-        //this.actualizarValidacionesCondicionales();
+        //this.actualizarCobrado();
         Swal.fire({
           toast: true,
           position: "top-end",
@@ -394,7 +360,7 @@ calcularMontoUMA() {
   );
 }
 
-
+  //Cambia de menu cuando el usuario encuentra un expediente para los datos ingresados
   cambiarMenu(menu: string){
     this.juzgadoSeleccionado = null;
     this.numero = '';
@@ -402,7 +368,8 @@ calcularMontoUMA() {
     this.menu = menu;
   }
 
-    cargarJueces() {
+  //Carga los jueces
+  cargarJueces() {
       this.juezService.getJuez()
         .pipe(takeUntil(this.destroy$)) 
         .subscribe(
@@ -415,7 +382,8 @@ calcularMontoUMA() {
         );
     }
 
-        cargarUma() {
+    // Carga los valores del UMA
+    cargarUma() {
       this.umaService.getUMA()
         .pipe(takeUntil(this.destroy$)) 
         .subscribe(
@@ -429,7 +397,7 @@ calcularMontoUMA() {
         );
     }
 
-
+    // Carga los juzgados
     cargarJuzgados() {
       this.juzgadosService.getJuzgados()
         .pipe(takeUntil(this.destroy$)) 
@@ -448,29 +416,22 @@ calcularMontoUMA() {
         { nombre: 'Honorario', control: 'honorario' },
         { nombre: 'Fecha de Sentencia', control: 'fecha_sentencia' },
         { nombre: 'Juez', control: 'juez' },
-        //{ nombre: 'Monto', control: 'monto' },
         { nombre: 'Último Movimiento', control: 'ultimo_movimiento' },
         { nombre: 'tipo', control: 'tipo' },
 
         // Capital
         { nombre: 'Estado del Capital', control: 'estadoCapitalSeleccionado' },
         { nombre: 'Subestado Capital', control: 'subEstadoCapitalSeleccionado' },
-        //{ nombre: 'Estado Liquidación Capital', control: 'estadoLiquidacionCapitalSeleccionado' },
         { nombre: 'Fecha Subestado Capital', control: 'fechaCapitalSubestado' },
-        //{ nombre: 'Fecha Liquidación Capital', control: 'fechaLiquidacionCapital' },
         { nombre: 'Monto de Liquidación de Capital', control: 'montoLiquidacionCapital' },
     
         // Honorarios
         { nombre: 'Estado de Honorarios', control: 'estadoHonorariosSeleccionado' },
         { nombre: 'Subestado Honorarios', control: 'subEstadoHonorariosSeleccionado' },
-        //{ nombre: 'Estado Liquidación Honorarios', control: 'estadoLiquidacionHonorariosSeleccionado' },
         { nombre: 'Fecha Subestado Honorarios', control: 'fechaHonorariosSubestado' },
-        //{ nombre: 'Fecha Liquidación Honorarios', control: 'fechaLiquidacionHonorarios' },
         { nombre: 'Cantidad UMA', control: 'cantidadUMA' },
-
-        { nombre: 'ULTIMO MOVIMIENTO', control: 'ultimo_movimiento' },
-        { nombre: 'sala', control: 'sala' },
-
+        { nombre: 'Ultimo movimiento', control: 'ultimo_movimiento' },
+        { nombre: 'Sala', control: 'sala' },
 
       ];
     
@@ -516,7 +477,9 @@ calcularMontoUMA() {
           }
         });
 
-        console.log(this.montoUMA);
+        this.actualizarCobrado();
+        const faltantes = this.obtenerCamposRequeridos();
+        console.log(faltantes); // ['Honorario', 'Fecha de sentencia', ...]
       
         const ultimoMovimientoCalculado = this.form.value.ultimo_movimiento?.trim() !== ''
           ? this.form.value.ultimo_movimiento
@@ -557,7 +520,8 @@ calcularMontoUMA() {
             valorUMA: this.form.get('umaSeleccionado')?.value?.valor,
             procurador_id:  this.expediente.procurador_id,
             sala: this.sala,
-
+            requiere_atencion: this.form.value.requiere_atencion,
+            fecha_atencion: this.form.value.fecha_atencion,
 
             // Capital
             estadoCapitalSeleccionado: esSentencia ? this.estadoCapitalSeleccionado ?? null : null,
@@ -620,8 +584,6 @@ calcularMontoUMA() {
         }
       }
       
-    
-
       /*Valida si el caracter ingresado es numerico*/
       validateNumber(event: KeyboardEvent) {
         const char = event.key;
@@ -629,7 +591,7 @@ calcularMontoUMA() {
           event.preventDefault();
         }
       }
-    
+      /* Valida lo que el usuario pega*/
       validatePaste(event: ClipboardEvent) {
         const clipboardData = event.clipboardData || (window as any).clipboardData;
         const pastedData = clipboardData.getData('Text');
@@ -652,10 +614,8 @@ calcularMontoUMA() {
       }
 
         
-        
+ //ver       
 asignarDatos() {
-
-  
   // Honorario
   if (this.expediente.honorario != null) {
     this.honorarioSeleccionado = this.expediente.honorario;
@@ -717,7 +677,8 @@ asignarDatos() {
     subEstadoHonorariosSeleccionado: this.subEstadoHonorariosSeleccionado,
     fechaHonorariosSubestado: this.fechaHonorariosSubestado,
     cantidadUMA: this.cantidadUMA,
-    sala: this.sala
+    sala: this.sala,
+
   });
 
   // Validaciones
@@ -730,7 +691,7 @@ asignarDatos() {
   this.actualizarValidacionesCondicionales();
 }
 
-
+//esta bien
 resetearCamposEstadoYHonorarios() {
   // Capital
   this.estadoCapitalSeleccionado = null;
@@ -745,6 +706,7 @@ resetearCamposEstadoYHonorarios() {
   this.cantidadUMA =  0;
 }
 
+//esta bien
 actualizarHonorario() {
   if (this.honorarioSeleccionado === 'Difiere regulacion 1º instancia') {
     this.estadoHonorariosSeleccionado = 'diferido';
@@ -761,7 +723,7 @@ actualizarHonorario() {
   }
 }
 
-
+//ver
 public actualizarValidacionesCondicionales() {
   
   const subEstadoCapital = this.form.get('subEstadoCapitalSeleccionado');
@@ -816,6 +778,144 @@ Object.keys(this.form.controls).forEach((campo) => {
   this.form.get(campo)?.updateValueAndValidity();
 });
 }
+//esta bien
+actualizarCobrado() {
+  // CAPITAL COBRADO
+  if (this.expediente.capitalCobrado) {
+    const estadoCapital = this.form.get('estadoCapitalSeleccionado');
+    const subEstadoCapital = this.form.get('subEstadoCapitalSeleccionado');
+    const fechaCapital = this.form.get('fechaCapitalSubestado');
+    const montoCapital = this.form.get('montoLiquidacionCapital');
+
+    estadoCapital?.clearValidators();  // ✅ Lo sacás también si querés
+    subEstadoCapital?.clearValidators();
+    fechaCapital?.clearValidators();
+    montoCapital?.clearValidators();
+
+    estadoCapital?.updateValueAndValidity();
+    subEstadoCapital?.updateValueAndValidity();
+    fechaCapital?.updateValueAndValidity();
+    montoCapital?.updateValueAndValidity();
+  }
+
+  // HONORARIO COBRADO
+  if (this.expediente.honorarioCobrado) {
+    const estadoHonorarios = this.form.get('estadoHonorariosSeleccionado');
+    const subEstadoHonorarios = this.form.get('subEstadoHonorariosSeleccionado');
+    const fechaHonorarios = this.form.get('fechaHonorariosSubestado');
+    const cantidadUMA = this.form.get('cantidadUMA');
+    const montoAcuerdo = this.form.get('montoAcuerdo');
+    const valorUMA = this.form.get('valorUMA');
+    const umaSeleccionado = this.form.get('umaSeleccionado');
+
+    estadoHonorarios?.clearValidators();
+    subEstadoHonorarios?.clearValidators();
+    fechaHonorarios?.clearValidators();
+    cantidadUMA?.clearValidators();
+    montoAcuerdo?.clearValidators();
+    valorUMA?.clearValidators();
+    umaSeleccionado?.clearValidators();
+
+    estadoHonorarios?.updateValueAndValidity();
+    subEstadoHonorarios?.updateValueAndValidity();
+    fechaHonorarios?.updateValueAndValidity();
+    cantidadUMA?.updateValueAndValidity();
+
+    montoAcuerdo?.updateValueAndValidity();
+    valorUMA?.updateValueAndValidity();
+    umaSeleccionado?.updateValueAndValidity();
+
+this.form.get('umaSeleccionado')?.clearValidators();
+this.form.get('umaSeleccionado')?.updateValueAndValidity();
+
+
+  }
+}
+//esta bien
+public obtenerCamposRequeridos(): string[] {
+  const camposFaltantes: string[] = [];
+
+  Object.keys(this.form.controls).forEach((clave) => {
+    const control = this.form.get(clave);
+
+    if (control && control.hasValidator(Validators.required) && control.invalid) {
+      const campoLegible = this.convertirNombreCampo(clave);
+      camposFaltantes.push(campoLegible);
+    }
+  });
+
+  return camposFaltantes;
+}
+// esta bien
+private convertirNombreCampo(nombre: string): string {
+  const mapa: { [clave: string]: string } = {
+    honorario: 'Honorario',
+    fecha_sentencia: 'Fecha de sentencia',
+    juez: 'Juez',
+    ultimo_movimiento: 'Último movimiento',
+    tipo: 'Tipo de juzgado',
+    estadoCapitalSeleccionado: 'Estado del Capital',
+    subEstadoCapitalSeleccionado: 'Subestado del Capital',
+    fechaCapitalSubestado: 'Fecha Subestado Capital',
+    montoLiquidacionCapital: 'Monto Capital',
+    estadoHonorariosSeleccionado: 'Estado de Honorarios',
+    subEstadoHonorariosSeleccionado: 'Subestado de Honorarios',
+    fechaHonorariosSubestado: 'Fecha Subestado Honorarios',
+    cantidadUMA: 'Cantidad UMA',
+    requiere_atencion: 'Requiere atención'
+  };
+
+  return mapa[nombre] || nombre;
+}
+//esta bien
+private llenarFormularioConExpediente(expediente: ExpedienteModel) {
+  // 1. Buscás el UMA correspondiente
+  const encontradaUMA = this.uma.find(u => u.valor == expediente.valorUMA) ?? null;
+
+  // 2. Construís el objeto de valores a parchar
+  const valores: any = {
+    honorario: expediente.honorario ?? '',
+    fecha_sentencia: expediente.fecha_sentencia
+      ? new Date(expediente.fecha_sentencia).toISOString().split('T')[0]
+      : '',
+    juez: this.jueces.find(j => j.id === expediente.juez_id) ?? null,
+    //tipo: expediente.tipo ?? '',
+    ultimo_movimiento: expediente.ultimo_movimiento
+      ? new Date(expediente.ultimo_movimiento).toISOString().split('T')[0]
+      : '',
+    estadoCapitalSeleccionado: expediente.estadoCapitalSeleccionado ?? '',
+    subEstadoCapitalSeleccionado: expediente.subEstadoCapitalSeleccionado ?? '',
+    fechaCapitalSubestado: expediente.fechaCapitalSubestado
+      ? new Date(expediente.fechaCapitalSubestado).toISOString().split('T')[0]
+      : '',
+    montoLiquidacionCapital: expediente.montoLiquidacionCapital ?? '',
+    estadoHonorariosSeleccionado: expediente.estadoHonorariosSeleccionado ?? '',
+    subEstadoHonorariosSeleccionado: expediente.subEstadoHonorariosSeleccionado ?? '',
+    fechaHonorariosSubestado: expediente.fechaHonorariosSubestado
+      ? new Date(expediente.fechaHonorariosSubestado).toISOString().split('T')[0]
+      : '',
+    cantidadUMA: expediente.cantidadUMA ?? '',
+    umaSeleccionado: encontradaUMA,
+    requiere_atencion: this.expediente.requiere_atencion
+
+  };
+
+  // 3. Parcheás todo el form de golpe
+  this.form.patchValue(valores);
+
+  // 4. Si querés marcar como touched sólo los que vienen con valor:
+  Object.entries(valores).forEach(([key, value]) => {
+    const control = this.form.get(key);
+    if (control && value !== null && value !== '' && value !== undefined) {
+      control.markAsTouched();
+      control.markAsDirty();
+    }
+  });
+
+  // 5. Y refrescás las validaciones condicionales
+  //this.actualizarValidacionesCondicionales();
+}
+
 
 
 }

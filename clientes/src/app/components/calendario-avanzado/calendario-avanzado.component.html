@@ -1,0 +1,40 @@
+<div class="calendario-avanzado">
+
+  <!-- Encabezado de mes -->
+  <div class="encabezado">
+    <button mat-icon-button (click)="mesAnterior()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <h2>{{ nombreMes[mesActual] }} {{ anioActual }}</h2>
+    <button mat-icon-button (click)="mesSiguiente()">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <!-- Días de la semana -->
+  <div class="dias-semana">
+    <div *ngFor="let d of ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']" class="dia-semana">{{ d }}</div>
+  </div>
+
+  <!-- Días del mes -->
+<!-- Días del mes -->
+<div class="dias-mes">
+  <div *ngFor="let dia of diasDelMes" 
+       [ngClass]="{ 'dia': true, 'evento': dia?.tieneEvento }"
+       (click)="seleccionarDia(dia.dia)">
+    {{ dia?.dia || '' }}
+  </div>
+</div>
+
+
+<div *ngFor="let evento of eventosSeleccionados" 
+     [ngClass]="'evento-seleccionado ' + obtenerColorTipo(evento.tipo_evento)">
+  {{ evento.tipo_evento }} - {{ evento.mediacion?.numero || 'Sin numero' }}
+</div>
+
+
+
+
+
+
+</div>

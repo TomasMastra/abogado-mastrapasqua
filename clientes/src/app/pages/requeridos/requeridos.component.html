@@ -76,10 +76,7 @@
           <th>
             Caratula
           </th>
-            <th (click)="ordenarPor('ultimo_movimiento')" [class.activo]="ordenCampo === 'ultimo_movimiento'">
-            Ultimo movimiento
-            <span class="flecha" *ngIf="ordenCampo === 'ultimo_movimiento'">{{ ordenAscendente ? '↑' : '↓' }}</span>
-          </th>
+
           <th (click)="ordenarPor('estado')" [class.activo]="ordenCampo === 'estado'">
             Estado
             <span class="flecha" *ngIf="ordenCampo === 'estado'">{{ ordenAscendente ? '↑' : '↓' }}</span>
@@ -92,12 +89,13 @@
             Procurador
             <span class="flecha" *ngIf="ordenCampo === 'procurador'">{{ ordenAscendente ? '↑' : '↓' }}</span>
           </th>
-          <th>
-            Juicio
+          <th (click)="ordenarPor('fecha_atencion')" [class.activo]="ordenCampo === 'fecha_atencion'">
+            fecha requerimento
           </th>
           <th>
-            Dias último movimiento
+            Tipo de juicio
           </th>
+
 
         </tr>
       </thead>
@@ -135,16 +133,18 @@
 </ion-label>
 
         </td>
-        <td style="background-color: #07295c;">{{ item.ultimo_movimiento | date:'dd/MM/yyyy' }}</td>
         <td style="background-color: #07295c;">{{ item.estado }}</td>
         <td style="background-color: #07295c;">{{ getNombreAbogado(item.usuario_id) }}</td>
 
         <td style="background-color: #07295c;">{{ getNombreAbogado(item.procurador_id) }}</td>
-        <td >{{ item.juicio }}</td>
-
         <td style="background-color: #07295c;">
-        {{ estadoVencimiento(item) }}
+          {{ item.fecha_atencion | date: 'dd-MM-yyyy' }}
         </td>
+        <td style="background-color: #07295c;">
+          {{item.juicio}}
+        </td>
+
+
 
       </tr>
 

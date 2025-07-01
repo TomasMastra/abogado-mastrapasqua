@@ -57,7 +57,9 @@ export interface ExpedienteModel {
     porcentaje: number | null,
     fecha_cobro: string | null,
     fecha_cobro_capital: string | null,
-    valorUMA: number | null;
+    valorUMA: number | null,
+    requiere_atencion: boolean,
+    fecha_atencion: Date | null;
 
   }
   

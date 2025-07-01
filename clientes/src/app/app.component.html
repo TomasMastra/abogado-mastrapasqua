@@ -44,8 +44,12 @@
             <span>Honorarios</span>
           </button>
           <button mat-menu-item [class.active-route]="isActive('consultas')" (click)="goTo('consultas')">
-            <mat-icon>stacked_inbox</mat-icon>
+            <mat-icon>upcoming</mat-icon>
             <span>Consultas</span>
+          </button>
+          <button mat-menu-item [class.active-route]="isActive('requeridos')" (click)="goTo('requeridos')">
+            <mat-icon>exclamation</mat-icon>
+            <span>Requieren Atención</span>
           </button>
         </mat-menu>
         

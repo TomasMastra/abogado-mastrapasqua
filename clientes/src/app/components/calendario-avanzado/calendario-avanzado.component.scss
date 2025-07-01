@@ -1,0 +1,81 @@
+.calendario-avanzado {
+  padding: 1rem;
+
+  .encabezado {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    gap: 1rem;
+    margin-bottom: 10px;
+  }
+
+  .dias-semana, .dias-mes {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    color: white;
+  }
+
+  .dia-semana {
+    text-align: center;
+    font-weight: bold;
+    color: #b0d0ff;
+  }
+
+  .dia {
+    height: 40px;
+    text-align: center;
+    padding: 5px;
+    background-color: #0e3d75;
+    border-radius: 5px;
+    color: white;
+  }
+
+  .dia.evento {
+    background-color: #2e8ef7; // Color de evento
+    font-weight: bold;
+  }
+}
+
+.evento-seleccionado {
+  width: 80%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  font-size: 14px;
+  padding: 4px 8px;
+  margin-top: 5px;
+  border-radius: 6px;
+  text-align: center;
+
+&.mediacion {
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+&.audienciaVirtual {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+&.audienciaPersonal {
+  color: #f44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+&.notificacion {
+  color: #9c27b0;
+  background: rgba(156, 39, 176, 0.1);
+}
+
+&.vencimiento {
+  color: #2196f3;
+  background: rgba(33, 150, 243, 0.1);
+}
+
+&.otro {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+}

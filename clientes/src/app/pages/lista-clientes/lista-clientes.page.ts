@@ -31,10 +31,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { MatDialog } from '@angular/material/dialog';
 import { DialogClienteComponent } from '../../components/dialog-cliente/dialog-cliente.component'; 
 import { DialogClienteModificarComponent } from '../../components/dialog-cliente-modificar/dialog-cliente-modificar.component'; 
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import Swal from 'sweetalert2'
 
@@ -53,12 +55,12 @@ import { map } from 'rxjs/operators';
     IonItem, IonCardContent, IonCard, IonImg, IonContent, IonHeader, IonTitle, IonToolbar, IonText,
     MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
     MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule, MatPaginatorModule,
-    MatMenuModule, MatButtonModule, MatIconModule
+    MatMenuModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, ScrollingModule
 
  
   ]
 })
-export class ListaClientesPage implements OnInit {
+export class ListaClientesPage implements OnInit, OnDestroy {
 
   private clienteService: ClientesService;
   private cliExpServ: ClientesExpedientesService;
@@ -73,15 +75,13 @@ export class ListaClientesPage implements OnInit {
   busqueda: string = '';
   busquedaAnterior: string = ''; 
   texto: string = '';
+  cargandoClientes: boolean = false;
 
-  /* mostrar x cantidad de clientes por pagina */
-  clientesPaginados: any[] = []; // Clientes filtrados por página
-  pageSize = 5; // Número de clientes por página
-  pageIndex = 0; // Página actual
 
-  private destroy$ = new Subject<void>(); // Subject para gestionar la destrucción
 
-  private timeoutId: any; // Almacenar el ID del timeout
+  private destroy$ = new Subject<void>();
+
+  private timeoutId: any;
 
   //getClientes$: Subscription | null = null; // Asignar null
 
@@ -100,32 +100,27 @@ export class ListaClientesPage implements OnInit {
 
   }
 
-/*
-  ngOnInit() {
-    this.getClientes$ = this.clienteService.getClientes().subscribe(
-      (clientes) => {
-        this.clientes = Array.isArray(clientes) ? clientes : []; // Asegurarse de que es un arreglo
-        this.clientesOriginales = Array.isArray(clientes) ? [...clientes] : Object.values(clientes);
-        this.hayClientes = this.clientes.length > 0;
-      },
-      (error) => {
-        console.error('Error al obtener clientes:', error);
-      }
-    );
-  }*/
-
 
           ngOnInit() {
             if(this.busqueda == ''){
-              this.cargarClientes(); // Cargar clientes al iniciar
+              this.cargarClientes();
             }
+          }
+
+            ngOnDestroy(): void {
+            this.clientes = [];
+            this.clientesOriginales = [];
+            this.busqueda = '';
+            this.texto = '';
           }
         
           cargarClientes() {
+              this.cargandoClientes = true;
+
             this.clienteService.getClientes().subscribe(
               (clientes) => {
-                this.clientes = clientes;
-                this.clientesOriginales = [...clientes];
+                this.clientes = clientes!;
+                this.clientesOriginales = [...clientes!];
                 this.hayClientes = this.clientes.length > 0;
               },
               (error) => {
@@ -133,10 +128,12 @@ export class ListaClientesPage implements OnInit {
               },
               () => {
                 // Programar la próxima ejecución después de 5 segundos
-                this.timeoutId = setTimeout(() => {
+               /* this.timeoutId = setTimeout(() => {
                   this.cargarClientes();
 
-                }, 5000);
+                }, 5000);*/
+                      this.cargandoClientes = false;
+
               }
             );
           }
@@ -148,8 +145,8 @@ export class ListaClientesPage implements OnInit {
           .pipe(takeUntil(this.destroy$)) 
           .subscribe(
             (clientes) => {
-              this.clientes = clientes;
-              this.clientesOriginales = [...clientes];
+              this.clientes = clientes!;
+              this.clientesOriginales = [...clientes!];
               this.hayClientes = this.clientes.length > 0;
             },
             (error) => {
@@ -158,12 +155,12 @@ export class ListaClientesPage implements OnInit {
           );
         
       }
-
+/*
       abrirDialog(): void {
         const dialogRef = this.dialog.open(DialogClienteComponent, {
           width: '500px',
           disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
-          data: { /* datos opcionales */ }
+          data: {  datos opcionales  }
         });
       
         dialogRef.afterClosed().subscribe((cliente: ClienteModel) => {
@@ -175,6 +172,10 @@ export class ListaClientesPage implements OnInit {
       
               console.log('Cliente agregado:', response);
               this.clientes.push(cliente);
+
+              const cache = this.clienteService.clientesSubject.value || [];
+              this.clienteService.clientesSubject.next([...cache, cliente]);
+
       
               // Si la búsqueda está vacía, obtener todos los clientes
               if (this.busqueda == '') {
@@ -201,9 +202,56 @@ export class ListaClientesPage implements OnInit {
             });
           }
         });
+      }*/
+      
+        abrirDialog(): void {
+  const dialogRef = this.dialog.open(DialogClienteComponent, {
+    width: '500px',
+    disableClose: true
+  });
+
+  dialogRef.afterClosed().subscribe((cliente: ClienteModel) => {
+    if (!cliente) return;
+
+    this.clienteService.addCliente(cliente).subscribe(response => {
+      // Asignar ID al cliente
+      cliente.id = response.id;
+      console.log('Cliente agregado:', response);
+
+      // Actualizar cache del servicio
+      const cache = this.clienteService.clientesSubject.value || [];
+      this.clienteService.clientesSubject.next([...cache, cliente]);
+
+      // Agregarlo a la lista actual visible
+      this.clientes.push(cliente);
+
+      // Si hay búsqueda, actualizá resultados
+      if (this.busqueda !== '') {
+        this.buscar(); // llamá directamente a la búsqueda
       }
+
+      // Agregar relaciones cliente-expediente
+      if (cliente.expedientes!.length > 0) {
+        cliente.expedientes!.forEach((expediente: any) => {
+          if (cliente.id) {
+            this.cliExpServ.addClienteExpediente(cliente.id, expediente.id).subscribe({
+              next: res => console.log('Relación cliente-expediente agregada:', res),
+              error: err => console.error('Error al agregar relación cliente-expediente:', err)
+            });
+          }
+        });
+      }
+
+    }, error => {
+      console.error('Error al agregar cliente:', error);
+    });
+  });
+}
+
       
-      
+trackByCliente(index: number, cliente: ClienteModel): string {
+  return cliente.id;
+}
 
       goTo(path: string) {
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
@@ -215,8 +263,8 @@ export class ListaClientesPage implements OnInit {
       obtenerClientes() {
         this.getClientes$ = this.clienteService.getClientes().subscribe(
           (clientes) => {
-            this.clientes = clientes;
-            this.clientesOriginales = [...clientes]; 
+            this.clientes = clientes!;
+            this.clientesOriginales = [...clientes!]; 
             this.hayClientes = this.clientes.length > 0;
           },
           (error) => {
@@ -224,37 +272,6 @@ export class ListaClientesPage implements OnInit {
           }
         );
       }
-     /* 
-      abrirModificar(cliente: ClienteModel) {
-        const dialogRef = this.dialog.open(DialogClienteModificarComponent, {
-          width: '500px',
-          data: cliente
-        });
-      
-        dialogRef.afterClosed().subscribe((clienteModificado: ClienteModel) => {
-          if (clienteModificado) {
-            this.clienteService.actualizarCliente(clienteModificado.id, clienteModificado).subscribe(response => {
-              console.log('Cliente actualizado:', response);
-            }, error => {
-              console.error('Error al actualizar cliente:', error);
-            });      
-            //this.clientes = this.clientes.map(c => c.id === clienteModificado.id ? clienteModificado : c);
-  
-            if(this.busqueda == ''){
-              this.obtenerClientes();
-            }else {
-              this.clienteService.searchClientes(this.busqueda);
-            }
-            
-            // Limpiamos la búsqueda para asegurar que la lista completa se muestre
-            // this.busqueda = ''; // Borra el texto de búsqueda
-          //  this.busquedaAnterior = '';
-           // this.clientes = [...this.clientesOriginales]; // Recupera la lista completa
-           // this.hayClientes = this.clientes.length > 0; // Actualiza el estado de la lista
-      
-          }
-        });
-      }*/
 
         abrirModificar(cliente: ClienteModel) {
           const dialogRef = this.dialog.open(DialogClienteModificarComponent, {
@@ -273,6 +290,10 @@ export class ListaClientesPage implements OnInit {
                 this.clientes = this.clientes.map(c => 
                   c.id === clienteModificado.id ? clienteModificado : c
                 );
+
+                this.clienteService.limpiarClientes();
+                this.cargarClientes();
+
         
               }, error => {
                 console.error('Error al actualizar cliente:', error);
@@ -305,18 +326,7 @@ export class ListaClientesPage implements OnInit {
       }
 
 
-      cambiarPagina(event: PageEvent) {
-        const inicio = event.pageIndex * event.pageSize;
-        const fin = inicio + event.pageSize;
-        this.clientesPaginados = this.clientes.slice(inicio, fin);
-      }
-      
-      
-      actualizarClientesPaginados() {
-        const inicio = this.pageIndex * this.pageSize;
-        const fin = inicio + this.pageSize;
-        this.clientesPaginados = this.clientes.slice(inicio, fin);
-      }
+
 
       // HACER SERVICIO PROPIO
       eliminarCliente(cliente: ClienteModel) {
@@ -365,8 +375,10 @@ export class ListaClientesPage implements OnInit {
                   this.clienteService.actualizarCliente(cliente.id, cliente).subscribe(
                     (response) => {
                       console.log('Cliente actualizado:', response);
+
+                      this.clienteService.limpiarClientes();
                       this.cargarClientes();
-          
+
                       Swal.fire({
                         toast: true,
                         position: "top-end",

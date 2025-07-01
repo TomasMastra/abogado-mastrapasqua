@@ -49,7 +49,7 @@ sql.connect(dbConfig)
                 });
         });
 // VER
-        app.post('/login', async (req, res) => {
+  app.post('/login', async (req, res) => {
   const { email, contraseña } = req.body;
 
   try {
@@ -77,9 +77,11 @@ res.status(200).json({
     nombre: usuario.nombre,
     email: usuario.email,
     rol: usuario.rol,
-    porcentaje: usuario.porcentaje
+    estado: usuario.estado,
+    fecha_creacion: usuario.fecha_creacion
   }
 });
+
 
 
 
@@ -107,7 +109,7 @@ app.get("/clientes", (req, res) => {
   if (rol !== 'admin') {
     request.input('usuario_id', sql.Int, usuario_id);
   }
-
+console.log('aca entra :D');
   request
     .query(query)
     .then(result => {
@@ -306,7 +308,7 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
     app.post('/expedientes/agregar', async (req, res) => {
       try {
           const { titulo, descripcion, demandado_id, juzgado_id, numero, anio, clientes, usuario_id, estado, honorario, monto, ultimo_movimiento, 
-            fecha_inicio, juez_id, juicio, fecha_sentencia, numeroCliente, minutosSinLuz, periodoCorte, demandados, porcentaje, procurador_id  } = req.body;
+            fecha_inicio, juez_id, juicio, requiere_atencion, fecha_sentencia, numeroCliente, minutosSinLuz, periodoCorte, demandados, porcentaje, procurador_id  } = req.body;
   
           if (!numero || !anio || !demandado_id || !juzgado_id || !Array.isArray(clientes)) {
               return res.status(400).json({
@@ -365,13 +367,14 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
           .input('periodoCorte', sql.NVarChar, periodoCorte) 
           .input('porcentaje', sql.Int, porcentaje)
           .input('procurador_id', sql.Int, procurador_id)
+          .input('requiere_atencion', sql.Bit, requiere_atencion)
 
           .query(`
               INSERT INTO expedientes (titulo, descripcion, numero, anio, demandado_id, juzgado_id, fecha_creacion, estado, fecha_inicio, honorario, juez_id, juicio, fecha_sentencia, ultimo_movimiento, monto, usuario_id,         
-              numeroCliente, minutosSinLuz, periodoCorte, porcentaje, procurador_id)
+              numeroCliente, minutosSinLuz, periodoCorte, porcentaje, procurador_id, requiere_atencion)
               OUTPUT INSERTED.id
               VALUES (@titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id, GETDATE(), @estado, @fecha_inicio, @honorario, @juez_id, @juicio, @fecha_sentencia, @fecha_inicio, @monto, @usuario_id,
-              @numeroCliente, @minutosSinLuz, @periodoCorte, @porcentaje, @procurador_id)
+              @numeroCliente, @minutosSinLuz, @periodoCorte, @porcentaje, @procurador_id, @requiere_atencion)
           `);
       
   
@@ -474,6 +477,8 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
             .input('valorUMA', sql.Int, nuevosDatos.valorUMA)
             .input('procurador_id', sql.Int, nuevosDatos.procurador_id)
             .input('sala', sql.NVarChar, nuevosDatos.sala)
+            .input('requiere_atencion', sql.Bit, nuevosDatos.requiere_atencion)
+            .input('fecha_atencion', sql.Date, nuevosDatos.fecha_atencion)
 
  // 🆕 Campos nuevos: Capital
  .input('estadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoCapitalSeleccionado)
@@ -518,6 +523,8 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
      procurador_id = @procurador_id,
      valorUMA = @valorUMA,
      sala = @sala,
+     requiere_atencion = @requiere_atencion,
+     fecha_atencion = @fecha_atencion,
 
 
 
@@ -1344,14 +1351,16 @@ app.post('/eventos/agregar', async (req, res) => {
       fecha_evento,
       hora_evento,
       tipo_evento,
-      ubicacion
+      ubicacion,
+      mediacion_id,
+      clientes = []
     } = req.body;
 
     // Validación de campos obligatorios
-    if (!titulo || !fecha_evento || !tipo_evento) {
+    if (!fecha_evento || !tipo_evento) {
       return res.status(400).json({
         error: 'Faltan campos obligatorios',
-        camposRequeridos: ['titulo', 'fecha_evento', 'tipo_evento']
+        camposRequeridos: ['fecha_evento', 'tipo_evento']
       });
     }
 
@@ -1362,6 +1371,7 @@ app.post('/eventos/agregar', async (req, res) => {
       .input('hora_evento', sql.Time, hora_evento || null)
       .input('tipo_evento', sql.NVarChar, tipo_evento)
       .input('ubicacion', sql.NVarChar, ubicacion || null)
+      .input('mediacion_id', sql.Int, mediacion_id || null)
       .query(`
         INSERT INTO eventos_calendario (
           titulo,
@@ -1369,7 +1379,8 @@ app.post('/eventos/agregar', async (req, res) => {
           fecha_evento,
           hora_evento,
           tipo_evento,
-          ubicacion
+          ubicacion,
+          mediacion_id
         )
         OUTPUT INSERTED.id
         VALUES (
@@ -1378,7 +1389,8 @@ app.post('/eventos/agregar', async (req, res) => {
           @fecha_evento,
           @hora_evento,
           @tipo_evento,
-          @ubicacion
+          @ubicacion,
+          @mediacion_id
         )
       `);
 
@@ -1386,6 +1398,20 @@ app.post('/eventos/agregar', async (req, res) => {
       message: 'Evento agregado exitosamente',
       id: result.recordset[0].id
     });
+
+    const eventoId = result.recordset[0].id;
+
+// Insertar clientes relacionados
+for (const cliente of clientes) {
+  await pool.request()
+    .input('id_evento', sql.Int, eventoId)
+    .input('id_cliente', sql.Int, cliente.id)
+    .query(`
+      INSERT INTO clientes_eventos (id_evento, id_cliente)
+      VALUES (@id_evento, @id_cliente)
+    `);
+}
+
 
   } catch (err) {
     console.error('Error al agregar evento:', err.message);
@@ -1395,6 +1421,7 @@ app.post('/eventos/agregar', async (req, res) => {
     });
   }
 });
+
 
 //AGREGA UN JUEZ A LA DB
 app.post('/juez/agregar', async (req, res) => {
@@ -1539,6 +1566,88 @@ app.get("/expedientes/cobrados", async (req, res) => {
 });
 
 
+app.get('/expedientes/vencimiento', async (req, res) => {
+  const { juicio } = req.query;
+
+  if (!juicio || (juicio !== 'ordinario' && juicio !== 'sumarismo')) {
+    return res.status(400).send("Parámetro 'juicio' inválido. Debe ser 'ordinario' o 'sumarismo'.");
+  }
+
+  const diasLimite = juicio === 'ordinario' ? 160 : 70;
+
+  try {
+    const result = await pool.request().input('juicio', juicio).query(`
+      SELECT *
+      FROM expedientes
+      WHERE juicio = @juicio
+        AND DATEDIFF(DAY, ultimo_movimiento, GETDATE()) <= ${diasLimite}
+        AND estado != 'eliminado'
+    `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error al obtener expedientes por vencimiento:", err);
+    res.status(500).send("Error al obtener expedientes por vencimiento.");
+  }
+});
+app.post('/mediaciones', async (req, res) => {
+  try {
+    const {
+      numero,
+      abogado_id,
+      cliente_id,
+      demandado_id,
+      fecha,
+      mediadora,
+      finalizada
+    } = req.body;
+
+    const result = await pool.request()
+      .input('numero', sql.NVarChar, numero)
+      .input('abogado_id', sql.Int, abogado_id)
+      .input('cliente_id', sql.Int, cliente_id)
+      .input('demandado_id', sql.Int, demandado_id)
+      .input('fecha', sql.Date, null)
+      .input('mediadora', sql.NVarChar, mediadora || null)
+      .input('finalizada', sql.Bit, finalizada)
+      .query(`
+        INSERT INTO mediaciones (
+          numero, abogado_id, cliente_id, demandado_id, fecha, mediadora, finalizada
+        )
+        OUTPUT INSERTED.id
+        VALUES (
+          @numero, @abogado_id, @cliente_id, @demandado_id, @fecha, @mediadora, @finalizada
+        )
+      `);
+
+    res.status(201).json({ id: result.recordset[0].id });
+  } catch (error) {
+    console.error('Error al crear mediación:', error.message);
+    res.status(500).json({ error: 'Error al crear mediación', detalle: error.message });
+  }
+});
+
+app.get('/mediaciones/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`SELECT * FROM mediaciones WHERE id = @id`);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: 'Mediación no encontrada' });
+    }
+
+    res.json(result.recordset[0]);
+  } catch (error) {
+    console.error('Error al obtener mediación por ID:', error.message);
+    res.status(500).json({ error: 'Error interno al buscar la mediación' });
+  }
+});
 
 
 

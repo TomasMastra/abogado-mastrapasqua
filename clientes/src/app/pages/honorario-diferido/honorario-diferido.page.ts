@@ -87,7 +87,7 @@ listaUsuarios: UsuarioModel[] = [];
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (honorarios) => {
-          this.honorariosDiferidos = honorarios;
+          this.honorariosDiferidos = honorarios!;
           this.hayHonorarios = this.honorariosDiferidos.length > 0;
 
       
@@ -116,7 +116,7 @@ listaUsuarios: UsuarioModel[] = [];
       .subscribe(
         (honorarios) => {
           //this.honorariosDiferidos = honorarios;
-          this.honorariosDiferidos = honorarios;
+          this.honorariosDiferidos = honorarios!;
           this.hayHonorarios = this.honorariosDiferidos.length > 0;
   
           this.honorariosDiferidos.forEach(expediente => {
@@ -168,7 +168,7 @@ cambiarEstado(event: Event) {
     this.cargarHonorariosDiferidos();
   } else if (selectedValue === 'cobrado') {
     this.expedienteService.getExpedientesCobrados().subscribe(expedientes => {
-      this.honorariosDiferidos = expedientes;
+      this.honorariosDiferidos = expedientes!;
       //this.ordenar(); // si usás un ordenamiento custom
     });
             console.log(this.honorariosDiferidos);

@@ -27,9 +27,10 @@
 <div class="calendario-container">
   <h1 class="titulo">
     <mat-icon style="color: white" class="titulo-icono">calendar_month</mat-icon>
-    Calendario de Vencimientos y Audiencias
+    Calendario de Mediaciones y Audiencias
   </h1>
 
+<app-calendario-avanzado></app-calendario-avanzado>
 
   <!-- Botón para mostrar el formulario -->
   <div class="toolbar">
@@ -44,17 +45,7 @@
   <mat-card class="calendar-card">
     <mat-card-title>Cargar nuevo evento</mat-card-title>
     <mat-card-content>
-      <form class="formulario-evento">
-        <mat-form-field appearance="outline" style="color: white;">
-          <mat-label style="color: white;">Título</mat-label>
-          <input matInput [(ngModel)]="nuevoEvento.titulo" name="titulo" style="color: white;">
-        </mat-form-field>
-        
-        <mat-form-field appearance="outline" style="color: white;">
-          <mat-label style="color: white;">Descripción</mat-label>
-          <textarea matInput [(ngModel)]="nuevoEvento.descripcion" name="descripcion" style="color: white;"></textarea>
-        </mat-form-field>
-        
+      <form class="formulario-evento">       
         <mat-form-field appearance="outline" style="color: white;">
           <mat-label style="color: white;">Fecha del evento</mat-label>
           <input matInput [matDatepicker]="picker" [(ngModel)]="nuevoEvento.fecha_evento" name="fecha_evento" style="color: white;">
@@ -70,18 +61,100 @@
         <mat-form-field appearance="outline" style="color: white;">
           <mat-label style="color: white;">Tipo</mat-label>
           <mat-select [(ngModel)]="nuevoEvento.tipo_evento" name="tipo_evento" style="color: white;">
-            <mat-option value="Audiencia">Audiencia</mat-option>
-            <mat-option value="Vencimiento">Vencimiento</mat-option>
-            <mat-option value="Sentencia">Sentencia</mat-option>
-            <mat-option value="Notificación">Notificación</mat-option>
+            <mat-option value="Audiencia 360 virtual">Audiencia 360 virtual</mat-option>
+            <mat-option value="Audiencia 360 personal">Audiancia 360 personal</mat-option>
             <mat-option value="Mediación">Mediación</mat-option>
           </mat-select>
         </mat-form-field>
+
+        <!-- Campos adicionales si el tipo es Mediación -->
+        <!-- <div *ngIf="nuevoEvento.tipo_evento == 'Mediación'"> -->
+
+        <mat-form-field *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'" appearance="outline">
+          <mat-label style="color: white;">Número de mediación</mat-label>
+          <input matInput [(ngModel)]="nuevaMediacion.numero" name="numero_mediacion" style="color: white;">
+        </mat-form-field>
+
+        <mat-form-field *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'" appearance="outline">
+          <mat-label style="color: white;">Abogado</mat-label>
+          <mat-select [(ngModel)]="nuevaMediacion.abogado_id" name="abogado_id" style="color: white;">
+            <mat-option *ngFor="let abogado of listaAbogados" [value]="abogado.id">
+              {{ abogado.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+       <!--  <mat-form-field *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'" appearance="outline">
+          <mat-label style="color: white;">Cliente</mat-label>
+          <mat-select [(ngModel)]="nuevaMediacion.cliente_id" (optionSelected)="seleccionarCliente($event.option.value)" name="cliente_id" style="color: white;">
+            <mat-option *ngFor="let cliente of listaClientes" [value]="cliente.id">
+              {{ cliente.nombre }} {{ cliente.apellido }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field> -->
+
+
+
+<mat-form-field appearance="outline" class="full-width" *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'">
+  <mat-label style="color: white;">Clientes</mat-label>
+  <input
+    matInput
+    [formControl]="clienteCtrl"
+    [matAutocomplete]="auto"
+    placeholder="Busca por nombre o apellido"
+    style="color: white;"
+  />
+  <mat-autocomplete
+    #auto="matAutocomplete"
+    [displayWith]="displayCliente"
+    (optionSelected)="seleccionarCliente($event.option.value)">
+    <mat-option *ngFor="let cliente of filteredClientes | async" [value]="cliente">
+      {{ cliente.nombre }} {{ cliente.apellido }}
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>
+
+
+<div class="clientes-agregados" *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'">
+  <h3 style="color:aliceblue">Clientes Agregados</h3>
+  <div *ngFor="let cliente of clientesAgregados" class="cliente-item">
+    {{ cliente.nombre }} {{ cliente.apellido }}
+    <button mat-icon-button color="warn" (click)="eliminarCliente(cliente)">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </div>
+</div>
+
+
+    
+
         
-        <mat-form-field appearance="outline" style="color: white;">
+
+        <mat-form-field *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'" appearance="outline">
+          <mat-label style="color: white;">Demandado</mat-label>
+          <mat-select [(ngModel)]="nuevaMediacion.demandado_id" name="demandado_id" style="color: white;">
+            <mat-option *ngFor="let demandado of listaDemandados" [value]="demandado.id">
+              {{ demandado.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'" appearance="outline">
+          <mat-label style="color: white;">Mediadora</mat-label>
+          <input matInput [(ngModel)]="nuevaMediacion.mediadora" name="mediadora" style="color: white;">
+        </mat-form-field>
+
+        <mat-form-field *ngIf=" nuevoEvento.tipo_evento == 'Audiencia 360 personal'" appearance="outline">
           <mat-label style="color: white;">Ubicación</mat-label>
           <input matInput [(ngModel)]="nuevoEvento.ubicacion" name="ubicacion" style="color: white;">
         </mat-form-field>
+
+        <mat-checkbox *ngIf="nuevoEvento.tipo_evento == 'Mediación' || nuevoEvento.tipo_evento == 'Audiencia 360 personal' || nuevoEvento.tipo_evento == 'Audiencia 360 virtual'" [(ngModel)]="nuevaMediacion.finalizada" name="finalizada" style="color: white;">
+          Finalizada
+        </mat-checkbox>
+
+      <!--  </div> -->
+
         
 
         <button mat-raised-button color="primary" (click)="guardarEvento()">Guardar evento</button>
@@ -90,16 +163,27 @@
   </mat-card>
 </div>
 
+
   <!-- Lista de eventos -->
+
+  <!-- 
   <div class="eventos">
     <mat-card class="evento-card" *ngFor="let evento of eventos">
       <mat-card-title>{{ evento.titulo }}</mat-card-title>
       <mat-card-content>
-        <p><strong>Fecha:</strong> {{ evento.fecha_evento }}</p>
+        <p><strong>Fecha:</strong> {{ evento.fecha_evento ? (evento.fecha_evento | date: 'dd/MM/yyyy') : 'Sin fecha' }}</p>
         <p><strong>Tipo:</strong> {{ evento.tipo_evento }}</p>
-        <p><strong>Ubicación:</strong> {{ evento.ubicacion }}</p>
-        <p><strong>Descripción:</strong> {{ evento.descripcion }}</p>
+        <p *ngIf="evento.ubicacion"><strong>Ubicación:</strong> {{ evento.ubicacion }}</p>
+        <p *ngIf="evento.descripcion"><strong>Descripción:</strong> {{ evento.descripcion }}</p>
+         Mostrar campos solo si hay una mediación asociada 
+        <div *ngIf="evento.mediacion">
+          <p><strong>Número:</strong> {{ evento.mediacion.numero }}</p>
+          <p><strong>Mediadora:</strong> {{ evento.mediacion.mediadora }}</p>
+          <p><strong>Finalizada:</strong> {{ evento.mediacion.finalizada ? 'Sí' : 'No' }}</p>
+        </div> 
+
+
       </mat-card-content>
     </mat-card>
-  </div>
-</div>
+  </div> 
+</div> -->

@@ -272,7 +272,7 @@ cargarJuzgado() {
             .pipe(takeUntil(this.destroy$)) 
             .subscribe(
               (cliente) => {
-                this.clientes = cliente;
+                this.clientes = cliente!;
                 this.clientesAgregados = this.data.clientes;
                 //console.log(this.clientes);
       
@@ -368,6 +368,8 @@ cargarJuzgado() {
           montoLiquidacionHonorarios: this.data?.montoLiquidacionHonorarios ?? null,
           honorarioCobrado: this.data?.honorarioCobrado ??  null,
           cantidadUMA:  this.data?.cantidadUMA ??  null,
+          requiere_atencion: this.data?.requiere_atencion,
+          fecha_atencion: this.data?.fecha_atencion,
 
 
           numeroCliente: this.data?.numeroCliente ??  null,
@@ -443,17 +445,23 @@ cargarJuzgado() {
     }
   }
 
-    seleccionarCliente(cliente: ClienteModel): void {    
-      this.clienteSeleccionado = cliente;
-      const clienteExiste = this.clientesAgregados.some((c) => c.id === cliente.id);
-    
-      if (!clienteExiste) {
-        this.clientesAgregados.push(cliente);
-        console.log("Cliente agregado:", cliente);
-      } else {
-        console.log("Este cliente ya está agregado:", cliente);
-      }
-    }
+seleccionarCliente(cliente: ClienteModel): void { 
+  this.clienteSeleccionado = cliente;
+
+  if (!this.clientesAgregados.includes(cliente)) {
+    this.clientesAgregados.push(cliente);
+  }
+
+  // Limpia el input para que puedas buscar otro cliente
+  this.clienteCtrl.setValue('');
+
+  // 👇 Reasigna el observable para que vuelva a escuchar cambios del input
+  this.filteredClientes = this.clienteCtrl.valueChanges.pipe(
+    startWith(''),
+    map(text => this.filtrarClientes(text!))
+  );
+}
+
     
       
       

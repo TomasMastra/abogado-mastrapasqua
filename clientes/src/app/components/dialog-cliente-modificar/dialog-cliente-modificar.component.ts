@@ -29,12 +29,6 @@ import Swal from 'sweetalert2';
 
 import { UsuarioService } from 'src/app/services/usuario.service';
 
-function fechaMediacionValida(control: AbstractControl): ValidationErrors | null {
-  if (!control.value) return null;
-
-  const hoy = new Date().toISOString().split('T')[0]; // '2024-06-02'
-  return control.value < hoy ? { fechaPasada: true } : null;
-}
 
 function fechaNacimientoValida(control: AbstractControl): ValidationErrors | null {
   if (!control.value) return null;
@@ -80,7 +74,6 @@ export class DialogClienteModificarComponent {
       telefono: new FormControl('', [Validators.minLength(6), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
       fechaNacimiento: new FormControl('', [fechaNacimientoValida]),
       direccion: new FormControl(''),
-      fechaMediacion: new FormControl('', [fechaMediacionValida]),
       
 
     });
@@ -102,7 +95,6 @@ export class DialogClienteModificarComponent {
         direccion: data.direccion || '',
         dni: data.dni || '',
         telefono: data.telefono || '',
-        fechaMediacion: fechaMediacionFormateada,
       });
     }
   }
@@ -127,7 +119,6 @@ export class DialogClienteModificarComponent {
         expedientes: this.data?.expedientes ?? null,
         estado: this.data.estado, 
         usuario_id: this.usuarioService.usuarioLogeado!.id.toString(),
-        fecha_mediacion: this.form.value.fechaMediacion || null,
 
       };
   

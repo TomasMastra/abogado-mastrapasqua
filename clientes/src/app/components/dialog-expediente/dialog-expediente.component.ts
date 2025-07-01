@@ -77,16 +77,28 @@ export class DialogExpedienteComponent {
    tipoSeleccionado: any = 'todos';
 
 
-estados: any[] = [  
+estados: any[] = [
   'Sorteado',
   'Inicio - Previo',
   'Inicio - Plantea Revocatoria',
   'Inicio - Da Cumplimiento',
+  'Inicio - Solicita',
   'Inicio - Apela',
+  'Inicio - Recusa',
   'Inicio - Plantea Nulidad',
+  'Inicio - Se Eleve',
   'Traslado demanda - Se Ordena',
-  'Traslado demanda - Cedula',
+
+  'Traslado demanda - Cedula Confronte',
+  'Traslado demanda - Cedula Liberada',
+  'Traslado demanda - Cedula Notificada',
+  'Traslado demanda - Cedula Sin Notificar',
+
   'Traslado demanda - Notificado',
+  'Traslado demanda - Solicita',
+  'Traslado demanda - Previo Rebeldia',
+  'Traslado demanda - Solicita',
+
   'Contesta demanda - Traslado',
   'Contesta demanda - Cedula',
   'Contesta Traslado',
@@ -116,9 +128,7 @@ estados: any[] = [
   'Defensor Oficial - Ratifica lo actuado',
   'Sentencia - Previo',
   'Sentencia - Solicita',
-  'Sentencia - Pasen autos a Sentencia',
-  'Sentencia',
-  'Cobrado'
+  'Sentencia - Pasen autos a Sentencia'
 ];
    estadoSeleccionado: any = 'inicio';
 
@@ -165,7 +175,7 @@ estados: any[] = [
         tipo: new FormControl('todos', [Validators.required]),
         porcentaje: new FormControl('', [Validators.required]),
         abogado: new FormControl('', [Validators.required]),
-      procurador: new FormControl('', [Validators.required]),       // ← nuevo
+        procurador: new FormControl('', [Validators.required]),
 
         // EDESUR Y EDENOR
         numeroCliente: new FormControl(''),
@@ -275,7 +285,7 @@ cargarJuzgado() {
       .pipe(takeUntil(this.destroy$)) 
       .subscribe(
         (cliente) => {
-          this.clientes = cliente;
+          this.clientes = cliente!;
           //console.log(this.clientes);
 
         },
@@ -356,6 +366,9 @@ cargarJuzgado() {
         valorUMA: null,
         procurador_id:  this.procuradorSeleccionado.id,
         sala: null,
+        requiere_atencion: false,
+        fecha_atencion: null,
+
 
 
         // 📌 Campos nuevos - Capital
@@ -436,13 +449,25 @@ cargarJuzgado() {
     }
   }
 
-  seleccionarCliente(cliente: ClienteModel): void { 
-    this.clienteSeleccionado = cliente;
-  
-    if (this.clientesAgregados.indexOf(cliente) === -1) {
-      this.clientesAgregados.push(cliente);
-    }
+
+seleccionarCliente(cliente: ClienteModel): void { 
+  this.clienteSeleccionado = cliente;
+
+  if (!this.clientesAgregados.includes(cliente)) {
+    this.clientesAgregados.push(cliente);
   }
+
+  // Limpia el input para que puedas buscar otro cliente
+  this.clienteCtrl.setValue('');
+
+  // 👇 Reasigna el observable para que vuelva a escuchar cambios del input
+  this.filteredClientes = this.clienteCtrl.valueChanges.pipe(
+    startWith(''),
+    map(text => this.filtrarClientes(text!))
+  );
+}
+
+
   
   
 

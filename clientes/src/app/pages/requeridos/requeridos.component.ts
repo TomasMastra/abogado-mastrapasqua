@@ -37,8 +37,8 @@ import Swal from 'sweetalert2'
 
 @Component({
   selector: 'app-consultas',
-  templateUrl: './consultas.page.html',
-  styleUrls: ['./consultas.page.scss'],
+  templateUrl: './requeridos.component.html',
+  styleUrls: ['./requeridos.component.scss'],
   standalone: true,
     imports: [IonInput, IonItem, IonLabel, IonItemSliding, IonList, CommonModule, FormsModule,
       MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
@@ -47,7 +47,7 @@ import Swal from 'sweetalert2'
       MatOptionModule,
     ]
 })
-export class ConsultasPage implements OnInit {
+export class RequeridosPage implements OnInit {
 
   cargando: boolean = false;
   expedientes: any[] = [];
@@ -100,18 +100,29 @@ cargarExpedientes() {
       (expedientes) => {
         // Filtrar acá: que NO sean 'Sentencia' ni 'Cobrado'
         const filtrados = expedientes!.filter(expediente => 
-          expediente.estado !== 'Sentencia' && expediente.estado !== 'Cobrado' && expediente.estado !== 'eliminado'
-        );
+  expediente.estado !== 'Sentencia' &&
+  expediente.estado !== 'Cobrado' &&
+  expediente.estado !== 'eliminado' &&
+  expediente.requiere_atencion
+);
 
-        this.expedientes = filtrados;
-        this.expedientesOriginales = [...filtrados]; // Guarda copia original
-        this.hayExpedientes = this.expedientes.length > 0;
+// ORDENAR por fecha_requerido descendente
+      filtrados.sort((a, b) => {
+        const fechaA = new Date(a.fecha_atencion!).getTime();
+        const fechaB = new Date(b.fecha_atencion!).getTime();
+        return fechaA - fechaB; // Más nuevo primero
+      });
 
-        this.expedientes.forEach(expediente => {
-          this.juzgadoService.getJuzgadoPorId(expediente.juzgado_id).subscribe(juzgado => {
-            expediente.juzgadoModel = juzgado;
-          });
+      this.expedientes = filtrados;
+      this.expedientesOriginales = [...filtrados];
+      this.hayExpedientes = this.expedientes.length > 0;
+
+      // Asignar juzgado a cada expediente
+      this.expedientes.forEach(expediente => {
+        this.juzgadoService.getJuzgadoPorId(expediente.juzgado_id).subscribe(juzgado => {
+          expediente.juzgadoModel = juzgado;
         });
+      });
 
         this.cargando = false;
       },
@@ -267,33 +278,28 @@ filtrar() {
   });
 }
 
+async calcularDiasHabilesConFeriados(fechaStr: string, cantidad: number): Promise<string> {
+  const feriados = await this.expedienteService.getFeriadosDesde(fechaStr).toPromise();
 
-diasDesdeUltimoMovimiento(fecha: string): number {
-  const hoy = new Date();
-  const ultimo = new Date(fecha);
-  const diff = Math.floor((hoy.getTime() - ultimo.getTime()) / (1000 * 60 * 60 * 24));
-  return diff;
+  let fecha = new Date(fechaStr);
+  let diasSumados = 0;
+
+  while (diasSumados < cantidad) {
+    fecha.setDate(fecha.getDate() + 1);
+    const diaSemana = fecha.getDay(); // 0 = domingo, 6 = sábado
+    const fechaISO = fecha.toISOString().split('T')[0];
+    const esFeriado = feriados?.includes(fechaISO);
+
+    if (diaSemana !== 0 && diaSemana !== 6 && !esFeriado) {
+      diasSumados++;
+    }
+  }
+
+  return fecha.toLocaleDateString('es-AR');
 }
 
 
-estadoVencimiento(expediente: any): string {
-  if (!expediente.ultimo_movimiento || !expediente.juicio) return 'Sin datos';
 
-  const dias = this.diasDesdeUltimoMovimiento(expediente.ultimo_movimiento);
-  const juicio = expediente.juicio.toLowerCase();
-
-  if (juicio === 'sumarisimo') {
-    return dias > 70 ? `⚠️ ${dias} días` : `✅ ${dias} días`;
-  }
-
-  if (juicio === 'ordinario') {
-    return dias > 160 ? `⚠️ ${dias} días` : `✅ ${dias} días`;
-  }
-
-
-
-  return `${dias} días`;
-}
 
 
 

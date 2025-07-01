@@ -368,3 +368,46 @@ ion-item.cliente ion-label {
 }
 
 
+/* */
+
+.expediente-container {
+  background: #002b5c; // azul oscuro navy
+  color: #f8fafc; // casi blanco
+  padding: 15px 20px;
+
+  transition: background 0.3s ease;
+  border: 1px solid #334155; // gris azulado
+    height: 100px; // forzado
+
+}
+
+.expediente-container:hover {
+  background: #01254e; // más clarito al pasar
+}
+
+.expediente-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.expediente-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #e2e8f0;
+}
+
+.acciones button {
+  color: #94a3b8; // gris clarito
+}
+
+.acciones button:hover {
+  color: #facc15; // amarillo dorado (onda resaltado)
+}
+
+
+.scroll-viewport {
+  height: 75vh;
+  padding: 0 10px;
+}

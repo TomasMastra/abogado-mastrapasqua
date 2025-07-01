@@ -20,7 +20,8 @@ export class ExpedientesService {
   //private apiUrl = 'http://localhost:3000/expedientes';  
   private apiUrl = 'http://192.168.1.36:3000/expedientes';
 
-  private expedientesSubject = new BehaviorSubject<ExpedienteModel[]>([]); // Emite un arreglo vacío inicialmente
+  //private expedientesSubject = new BehaviorSubject<ExpedienteModel[]>([]); // Emite un arreglo vacío inicialmente
+  private expedientesSubject = new BehaviorSubject<ExpedienteModel[] | null>(null);
   clientes$ = this.expedientesSubject.asObservable();  // Expone el observable de clientes
 
   constructor(private http: HttpClient, private usuarioService: UsuarioService) {}
@@ -28,13 +29,16 @@ export class ExpedientesService {
 getExpedientes() {
   const usuario = this.usuarioService.usuarioLogeado;
 
-  const params = {
+    const params = {
     usuario_id: usuario!.id,
     rol: usuario!.rol
   };
 
+console.log('Llamando a getExpedientes()');
+
   this.http.get<ExpedienteModel[]>(this.apiUrl, { params }).subscribe(
     (expedientes) => {
+
       expedientes.forEach((expediente) => {
         this.getClientesPorExpediente(expediente.id).subscribe((clientes) => {
           expediente.clientes = clientes;
@@ -44,10 +48,11 @@ getExpedientes() {
           expediente.demandados = demandados;
         });
 
-     /*   this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
-          expediente.demandadoModel = demandado;
-        });*/
+     //  this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
+    //      expediente.demandadoModel = demandado;
+       // });
       });
+    console.log('Expedientes cargados:', expedientes); // 👈 Agregá esto
 
       this.expedientesSubject.next(expedientes);
     },
@@ -58,6 +63,8 @@ getExpedientes() {
 
   return this.clientes$;
 }
+
+
 
 
       getHonorarios() {
@@ -304,10 +311,14 @@ getClientePorNumeroYAnio(numero: string, anio: string, tipo: string) {
               expediente.clientes = clientes;
             });
     
-              this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
-                expediente.demandadoModel = demandado
+            this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
+              expediente.demandadoModel = demandado;
+            });
 
-              });
+            this.getDemandadosPorExpediente(expediente.id).subscribe((demandados) => {
+            expediente.demandados = demandados;
+          });
+
           });
     
           this.expedientesSubject.next(expedientes);
@@ -339,10 +350,14 @@ getExpedientesCobrados() {
           expediente.clientes = clientes;
         });
 
-              this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
-                expediente.demandadoModel = demandado
+        this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
+          expediente.demandadoModel = demandado;
+        });
 
-              });
+        this.getDemandadosPorExpediente(expediente.id).subscribe((demandados) => {
+          expediente.demandados = demandados;
+        });
+
       });
 
       this.expedientesSubject.next(expedientes);
@@ -353,6 +368,39 @@ getExpedientesCobrados() {
   );
 
   return this.clientes$;
+}
+
+getExpedientesVencimiento(juicio: string): Observable<ExpedienteModel[]> {
+  const url = `${this.apiUrl}/vencimiento?juicio=${juicio}`;
+
+  return this.http.get<ExpedienteModel[]>(url).pipe(
+    switchMap(expedientes => {
+      if (expedientes.length === 0) return of([]);
+
+      const requests = expedientes.map(expediente => {
+        const clientes$ = this.getClientesPorExpediente(expediente.id);
+        const demandados$ = this.getDemandadosPorExpediente(expediente.id);
+
+        return forkJoin({ clientes: clientes$, demandados: demandados$ }).pipe(
+          map(({ clientes, demandados }) => {
+            expediente.clientes = clientes;
+            expediente.demandados = demandados;
+            return expediente;
+          })
+        );
+      });
+
+      return forkJoin(requests);
+    }),
+    catchError(err => {
+      console.error('Error al obtener expedientes con vencimiento:', err);
+      return of([]);
+    })
+  );
+}
+
+getFeriadosDesde(fecha: string) {
+  return this.http.get<string[]>(`/api/feriados?fecha=${fecha}`);
 }
 
 

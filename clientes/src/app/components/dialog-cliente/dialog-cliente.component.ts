@@ -117,7 +117,7 @@ this.form = new FormGroup({
       .pipe(takeUntil(this.destroy$)) // Cancela la suscripción cuando destroy$ emita
       .subscribe(
         (expedientes) => {
-          this.listaExpedientes = expedientes;
+          this.listaExpedientes = expedientes!;
           //this.expedientesOriginales = [...expedientes];
           this.hayExpedientes = this.listaExpedientes.length > 0;
         },

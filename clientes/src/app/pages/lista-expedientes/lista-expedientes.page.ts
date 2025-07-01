@@ -34,6 +34,7 @@ import { DialogExpedienteModificarComponent } from '../../components/dialog-expe
 import Swal from 'sweetalert2'
 
 import { ViewWillEnter } from '@ionic/angular';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 
 @Component({
@@ -47,7 +48,7 @@ import { ViewWillEnter } from '@ionic/angular';
     IonButtons, IonButton, IonIcon, IonList, IonItemSliding, IonLabel, IonItemOptions, IonItemOption, 
     IonItem, IonCardContent, IonCard, IonImg, IonContent, IonHeader, IonTitle, IonToolbar, IonText,
     MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
-    MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule, MatMenuModule
+    MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule, MatMenuModule, ScrollingModule
   ]
 })
 export class ListaExpedientesPage implements OnInit, OnDestroy {
@@ -86,9 +87,10 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (expedientes) => {
-          this.expedientes = expedientes;
-          this.expedientesOriginales = [...expedientes];
+          this.expedientes = expedientes!;
+          this.expedientesOriginales = [...expedientes!];
           this.hayExpedientes = this.expedientes.length > 0;
+
         },
         (error) => {
           console.error('Error al obtener expedientes:', error);
@@ -104,8 +106,8 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
   obtenerExpedientes() {
     this.getClientes$ = this.expedienteService.getExpedientes().subscribe(
       (expedientes) => {
-        this.expedientes = expedientes;
-        this.expedientesOriginales = [...expedientes]; 
+        this.expedientes = expedientes!;
+        this.expedientesOriginales = [...expedientes!]; 
         this.hayExpedientes = this.expedientes.length > 0;
       },
       (error) => {
@@ -349,5 +351,9 @@ export class ListaExpedientesPage implements OnInit, OnDestroy {
             }
             
 
+trackByExpedientes(index: number, expediente: ExpedienteModel): string {
+  return expediente.id;
+}
+   
 
 }

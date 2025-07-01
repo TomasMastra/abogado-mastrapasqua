@@ -20,12 +20,16 @@ export class ClientesService {
   };
   private apiUrl = 'http://192.168.1.36:3000/clientes';
   //private apiUrl = 'http://localhost:3000/clientes';  
-  private clientesSubject = new BehaviorSubject<ClienteModel[]>([]); // Emite un arreglo vacío inicialmente
+  public clientesSubject = new BehaviorSubject<ClienteModel[] | null>(null);
   clientes$ = this.clientesSubject.asObservable();  // Expone el observable de clientes
+
 
   constructor(private http: HttpClient, private usuarioService: UsuarioService  // ✅ Agregá esto
 ) {}
 
+  limpiarClientes() {
+    this.clientesSubject.next(null);
+  }
   // Método para obtener los clientes desde el servidor y emitir los datos
 getClientes() {
   const usuario = this.usuarioService.usuarioLogeado;
@@ -33,6 +37,11 @@ getClientes() {
     usuario_id: usuario!.id,
     rol: usuario!.rol
   };
+
+  if(this.clientesSubject.value && this.clientesSubject.value.length > 0){
+    //alert('ya estan cargados');
+     //return of(this.clientesSubject.value);
+  }
 
   this.http.get<ClienteModel[]>(this.apiUrl, { params }).subscribe(
     (clientes) => {
@@ -87,13 +96,11 @@ searchClientes(texto: string): Observable<ClienteModel[]> {
 
   getExpedientesPorCliente(clienteId: string) {
     const url = `http://192.168.1.36:3000/expedientes/clientes?id=${clienteId}`;
-    console.log("URL de la petición:", url); // 🔹 Muestra la URL en la consola
     return this.http.get<any[]>(url);
   }
   
   ObtenerExpedientesPorCliente(clienteId: string) {
     const url = `http://192.168.1.36:3000/clientes/expedientesPorCliente?id=${clienteId}`;
-    console.log("URL de la petición:", url); // 🔹 Muestra la URL en la consola
     return this.http.get<any[]>(url);
   }
   

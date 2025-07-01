@@ -384,7 +384,50 @@ overflow-y: auto;  /* Permite la barra de desplazamiento vertical cuando sea nec
 
 
 
+.cliente-container {
+  background: #002b5c; // azul oscuro navy
+  color: #f8fafc; // casi blanco
+  padding: 15px 20px;
+  //border-radius: 12px;
+  //margin: 10px 0;
+  transition: background 0.3s ease;
+  border: 1px solid #334155; // gris azulado
+}
 
+.cliente-container:hover {
+  background: #01254e; // más clarito al pasar
+}
 
+.cliente-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
+.cliente-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #e2e8f0;
+}
 
+.acciones button {
+  color: #94a3b8; // gris clarito
+}
+
+.acciones button:hover {
+  color: #facc15; // amarillo dorado (onda resaltado)
+}
+/*
+.detalles-cliente {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #334155;
+  font-size: 14px;
+  color: #cbd5e1;
+}*/
+
+.scroll-viewport {
+  height: 75vh;
+  padding: 0 10px;
+}

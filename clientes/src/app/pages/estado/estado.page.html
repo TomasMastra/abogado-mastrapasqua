@@ -58,17 +58,23 @@
 @if(expediente.estado != 'Cobrado')
 {
 
-            <div class="toolbar">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label style="color: white">Estado del expediente</mat-label>
-                <mat-select style="color: white" [(ngModel)]="estadoSeleccionado">
-                  <mat-option *ngFor="let estado of estados" [value]="estado">
-                    {{ estado }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
+<div
+  class="flex"
+  style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px;">
+  
+  <mat-form-field appearance="outline" style="width: 250px;">
+    <mat-label style="color: white">Estado del expediente</mat-label>
+    <mat-select style="color: white" [(ngModel)]="estadoSeleccionado">
+      <mat-option *ngFor="let estado of estados" [value]="estado">
+        {{ estado }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 
-            </div>
+  <span style="color: rgb(255, 0, 0); font-weight: bold;">{{ expediente?.juicio }}</span>
+</div>
+
+
           
             <div style="padding: 16px;">              
               <form [formGroup]="form">
@@ -85,6 +91,28 @@
               name="ultimo_movimiento"
               id="ultimo_movimiento">
             </ion-input>
+
+      <mat-checkbox formControlName="requiere_atencion" style="color: white; margin-top: 10px;">
+        <span style="color: white;">Requiere atención</span>
+      </mat-checkbox>
+
+      <div *ngIf="form.get('requiere_atencion')?.value" class="divider-container" style="margin-top: 10px;">
+        <mat-divider class="white-divider"></mat-divider>
+        <span class="divider-text">Fecha atención</span>
+        <mat-divider class="white-divider"></mat-divider>
+
+        <ion-input
+          placeholder="Fecha atención"
+          type="date"
+          class="input-busqueda"
+          formControlName="fecha_atencion"
+          name="fecha_atencion"
+          id="fecha_atencion">
+        </ion-input>
+      </div>
+
+
+
               </form>
               
               <!-- Formulario reactivo -->
@@ -509,7 +537,7 @@
           }
 
           @if(expediente.estado == 'Cobrado'){
-            <h1>EXPEIENTE COBRADO</h1>
+            <h1>EXPEDIENTE COBRADO</h1>
           }
           </div>
 
