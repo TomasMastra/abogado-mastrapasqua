@@ -6,6 +6,7 @@ import { Observable, throwError, of, firstValueFrom, BehaviorSubject, forkJoin }
 import { catchError, tap } from 'rxjs/operators';
 import { MediacionModel } from '../models/mediacion/mediacion.component';
 import { MediacionesService } from 'src/app/services/mediaciones.service';
+import { ExpedientesService } from 'src/app/services/expedientes.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,49 +18,57 @@ export class EventosService {
 
   constructor(
     private http: HttpClient,
-    private mediacionesService: MediacionesService
+    private mediacionesService: MediacionesService,
+    private expedientesService: ExpedientesService
+
   ) {}
-/*
-  getEventos() {
-    this.http.get<EventoModel[]>(this.apiUrl).subscribe(
-      (eventos) => {
-        this.eventosSubject.next(eventos);
-      },
-      (error) => {
-        console.error('Error al obtener eventos:', error);
-      }
-    );
-    return this.eventos$;
-  }*/
 
-  getEventos() {
-    this.http.get<EventoModel[]>(this.apiUrl).subscribe(
-      async (eventos) => {
-        const eventosConMediacion = await Promise.all(
-          eventos.map(async (evento) => {
-            if (evento.tipo_evento && evento.mediacion_id) {
-              try {
-                const mediacion = await firstValueFrom(
-                  this.mediacionesService.getMediacionPorId(evento.mediacion_id)
-                );
-                (evento as any).mediacion = mediacion;
-              } catch (error) {
-                console.warn('No se pudo obtener mediación para evento con ID', evento.id);
-              }
+getEventos() {
+  this.http.get<EventoModel[]>(this.apiUrl).subscribe(
+    async (eventos) => {
+      const eventosConTodo = await Promise.all(
+        eventos.map(async (evento) => {
+          // Cargar mediación si tiene
+          if (evento.tipo_evento && evento.mediacion_id) {
+            try {
+              const mediacion = await firstValueFrom(
+                this.mediacionesService.getMediacionPorId(evento.mediacion_id)
+              );
+              (evento as any).mediacion = mediacion;
+            } catch (error) {
+              console.warn('No se pudo obtener mediación para evento con ID', evento.id);
             }
-            return evento;
-          })
-        );
+          }
 
-        this.eventosSubject.next(eventosConMediacion);
-      },
-      (error) => {
-        console.error('Error al obtener eventos:', error);
-      }
+          // Cargar expediente si tiene
+         if (evento.expediente_id) {
+  try {
+    const expediente = await firstValueFrom(
+      this.expedientesService.getExpedientePorId(evento.expediente_id)
     );
+    console.log('Expediente cargado:', expediente);
 
-    return this.eventos$;
+    (evento as any).expediente = expediente;
+  } catch (error) {
+    console.warn('No se pudo obtener expediente para evento con ID', evento.id);
   }
+}
+
+
+          return evento;
+        })
+      );
+
+      this.eventosSubject.next(eventosConTodo);
+    },
+    (error) => {
+      console.error('Error al obtener eventos:', error);
+    }
+  );
+
+  return this.eventos$;
+}
+
 
 
   addEvento(evento: EventoModel): Observable<any> {
@@ -69,34 +78,16 @@ export class EventosService {
     return this.http.post(`${this.apiUrl}/agregar`, evento);
   }
 
+editarEvento(evento: EventoModel): Observable<any> {
+  const url = `${this.apiUrl}/editar/${evento.id}`;
+  return this.http.put(url, evento); // ✅ Clientes incluidos
+}
 
 
-/*
-    getDemandadoPorId(id: number) {
-      return this.http.get<DemandadoModel>(`${this.apiUrl}/${id}`);
-    }
-
-
-    actualizarDemandado(id: string, demandado: DemandadoModel): Observable<DemandadoModel> {
-    const url = `${this.apiUrl}/modificar/${id}`;
-      return this.http.put<DemandadoModel>(url, demandado);
-    }
-   
-
-  
-  addDemandado(demandado: DemandadoModel): Observable<any> {
-    const url = `${this.apiUrl}/agregar`;
-    console.log('URL de búsqueda:', url);
-    console.log('Datos enviados:', demandado);
-    return this.http.post(`${this.apiUrl}/agregar`, demandado);
-  }*/
-
-/*
-  actualizarExpediente(id: string, expediente: ExpedienteModel): Observable<ExpedienteModel> {
-    const url = `${this.apiUrl}/modificar/${id}`;   
-      return this.http.put<ExpedienteModel>(url, expediente);
-    }
-*/
+eliminarEvento(id: number): Observable<any> {
+  const url = `${this.apiUrl}/eliminar/${id}`;
+  return this.http.put(url, { estado: 'eliminado' });
+}
 
 
 }

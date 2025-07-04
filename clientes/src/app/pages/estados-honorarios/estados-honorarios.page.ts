@@ -39,8 +39,8 @@ import { UmaService } from 'src/app/services/uma.service';
 
 @Component({
   selector: 'app-estado',
-  templateUrl: './estado.page.html',
-  styleUrls: ['./estado.page.scss'],
+  templateUrl: './estados-honorarios.page.html',
+  styleUrls: ['./estados-honorarios.page.scss'],
   standalone: true,
   imports: [FormsModule, IonItemSliding, IonList, IonContent, IonHeader, IonTitle, IonToolbar, IonInput, CommonModule, FormsModule,
         MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
@@ -49,7 +49,7 @@ import { UmaService } from 'src/app/services/uma.service';
         MatFormFieldModule, MatInputModule, MatProgressSpinnerModule, MatCheckboxModule
   ]
 })
-export class EstadoPage implements OnInit {
+export class EstadosHonorariosPage implements OnInit {
 
   protected form: FormGroup;
 
@@ -463,7 +463,6 @@ deshabilitarApeladoOFirme = false;
     } 
     
       actualizarEstado() {
-
         if (this.estadoSeleccionado == 'Sentencia') {
           const hoy = new Date().toISOString().split('T')[0];
          // this.form.get('ultimo_movimiento')?.setValue(hoy);
@@ -856,8 +855,8 @@ actualizarCobrado() {
     valorUMA?.updateValueAndValidity();
     umaSeleccionado?.updateValueAndValidity();
 
-    this.form.get('umaSeleccionado')?.clearValidators();
-    this.form.get('umaSeleccionado')?.updateValueAndValidity();
+this.form.get('umaSeleccionado')?.clearValidators();
+this.form.get('umaSeleccionado')?.updateValueAndValidity();
 
 
   }
@@ -951,62 +950,25 @@ fecha_atencion: expediente.fecha_atencion
   // 5. Y refrescás las validaciones condicionales
   //this.actualizarValidacionesCondicionales();
 }
+
+
 cambiarEstado(tipo: 'honorario' | 'capital') {
   if (tipo === 'honorario') {
     this.subEstadoHonorariosSeleccionado = null;
     this.form.get('subEstadoHonorariosSeleccionado')?.setValue(null);
   } else {
-    //this.estadoCapitalSeleccionado = null;
-    //this.form.get('estadoCapitalSeleccionado')?.setValue(null);
-    
     this.subEstadoCapitalSeleccionado = null;
     this.form.get('subEstadoCapitalSeleccionado')?.setValue(null);
-
-    // 🔁 Forzamos la validación del campo estadoCapitalSeleccionado
-    const estadoCtrl = this.form.get('estadoCapitalSeleccionado');
-    estadoCtrl?.markAsTouched();
-    estadoCtrl?.markAsDirty();
-    estadoCtrl?.updateValueAndValidity();
   }
 
-  this.actualizarValidacionesCondicionales();
+  this.actualizarValidacionesCondicionales(); // si querés que se vuelvan a aplicar los requeridos
 }
 
+cambiarValidaciones(validacion: string){
 
-
-obtenerResumenExpediente(expediente: ExpedienteModel): string {
-  const num = `${expediente.numero}/${expediente.anio}`;
-  const cliente = expediente.clientes?.[0];
-  const demandado = expediente.demandados?.[0];
-  const hayClientes = expediente.clientes?.length;
-  const hayDemandados = expediente.demandados?.length;
-
-  if (!hayClientes && hayDemandados === 1) {
-    return `${num} (sin actora) contra ${demandado?.nombre}`;
-  }
-
-  if (!hayClientes && hayDemandados! > 1) {
-    return `${num} (sin actora) contra ${demandado?.nombre} y otros`;
-  }
-
-  if (hayClientes === 1 && hayDemandados === 1) {
-    return `${num} ${cliente?.nombre} ${cliente?.apellido} contra ${demandado?.nombre}`;
-  }
-
-  if (hayClientes === 1 && hayDemandados! > 1) {
-    return `${num} ${cliente?.nombre} ${cliente?.apellido} contra ${demandado?.nombre} y otros`;
-  }
-
-  if (hayClientes! > 1 && hayDemandados === 1) {
-    return `${num} ${cliente?.nombre} ${cliente?.apellido} y otros contra ${demandado?.nombre}`;
-  }
-
-  if (hayClientes! > 1 && hayDemandados! > 1) {
-    return `${num} ${cliente?.nombre} ${cliente?.apellido} y otros contra ${demandado?.nombre} y otros`;
-  }
-
-  return `${num}`; // fallback
+  
 }
+
 
 
 }

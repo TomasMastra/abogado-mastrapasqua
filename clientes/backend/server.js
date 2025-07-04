@@ -109,7 +109,6 @@ app.get("/clientes", (req, res) => {
   if (rol !== 'admin') {
     request.input('usuario_id', sql.Int, usuario_id);
   }
-console.log('aca entra :D');
   request
     .query(query)
     .then(result => {
@@ -285,6 +284,32 @@ app.get('/clientes/buscar', async (req, res) => {
             res.status(500).json({ error: 'Error al obtener clientes del expediente' });
         }
       });
+
+app.get("/expedientes/obtener/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+
+  if (isNaN(id)) {
+    console.log(id);
+    return res.status(400).json({ error: "ID inválido" });
+  }
+
+  try {
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query("SELECT * FROM expedientes WHERE id = @id AND estado != 'eliminado'");
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "Expediente no encontrado" });
+    }
+
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error("Error al obtener expediente:", err);
+    res.status(500).send("Error al obtener expediente");
+  }
+});
+
+
 
 app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) => {
   const { id_expediente } = req.params;
@@ -478,7 +503,7 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
             .input('procurador_id', sql.Int, nuevosDatos.procurador_id)
             .input('sala', sql.NVarChar, nuevosDatos.sala)
             .input('requiere_atencion', sql.Bit, nuevosDatos.requiere_atencion)
-            .input('fecha_atencion', sql.Date, nuevosDatos.fecha_atencion)
+.input('fecha_atencion', sql.Date, nuevosDatos.fecha_atencion && nuevosDatos.fecha_atencion !== '' ? new Date(nuevosDatos.fecha_atencion) : null)
 
  // 🆕 Campos nuevos: Capital
  .input('estadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoCapitalSeleccionado)
@@ -1243,7 +1268,7 @@ app.get("/expedientes/buscarPorNumeroyAnio", async (req, res) => {
   }
 });*/
 
-// BUSCAR EXPEDIENTES POR NUMERO, AÑO Y TIPO DE JUZGADO (JOIN)
+// BUSCAR EXPEDIENTES POR NUMERO, AÑO Y TIPO DE JUZGADO (JOIN)/*
 app.get("/expedientes/buscarPorNumeroAnioTipo", async (req, res) => {
   try {
     const { numero, anio, tipo, usuario_id, rol } = req.query;
@@ -1331,16 +1356,37 @@ app.get('/juzgados/:id', async (req, res) => {
 });
 
 //TRAE LOS EVENTOS
-app.get("/eventos", (req, res) => {
-  pool.request()
-      .query("SELECT * FROM eventos_calendario")  // Consulta SQL
-      .then(result => {
-          res.json(result.recordset);  // Devuelve los resultados
+app.get("/eventos", async (req, res) => {
+  try {
+    const eventosResult = await pool.request().query("SELECT * FROM eventos_calendario WHERE estado != 'eliminado'");
+    const eventos = eventosResult.recordset;
+
+    const eventosConClientes = await Promise.all(
+      eventos.map(async evento => {
+        const clientesResult = await pool.request()
+          .input("evento_id", sql.Int, evento.id)
+          .query(`
+            SELECT c.*
+            FROM clientes c
+            JOIN clientes_eventos ce ON ce.id_cliente = c.id
+            WHERE ce.id_evento = @evento_id
+          `);
+        
+        return {
+          ...evento,
+          clientes: clientesResult.recordset
+        };
       })
-      .catch(err => {
-          res.status(500).send(err);  // En caso de error, devuelve 500
-      });
+    );
+
+    res.json(eventosConClientes);
+  } catch (err) {
+    console.error('Error al obtener eventos:', err);
+    res.status(500).send('Error al obtener eventos');
+  }
 });
+
+
 
 //AGREGA UN EVENTO A LA DB
 app.post('/eventos/agregar', async (req, res) => {
@@ -1353,7 +1399,9 @@ app.post('/eventos/agregar', async (req, res) => {
       tipo_evento,
       ubicacion,
       mediacion_id,
-      clientes = []
+      clientes = [],
+      expediente_id,
+      link_virtual
     } = req.body;
 
     // Validación de campos obligatorios
@@ -1367,11 +1415,14 @@ app.post('/eventos/agregar', async (req, res) => {
     const result = await pool.request()
       .input('titulo', sql.NVarChar, titulo)
       .input('descripcion', sql.NVarChar, descripcion || null)
-      .input('fecha_evento', sql.Date, fecha_evento)
+      .input('fecha_evento', sql.DateTime2, new Date(fecha_evento))
       .input('hora_evento', sql.Time, hora_evento || null)
       .input('tipo_evento', sql.NVarChar, tipo_evento)
       .input('ubicacion', sql.NVarChar, ubicacion || null)
       .input('mediacion_id', sql.Int, mediacion_id || null)
+      .input('expediente_id', sql.Int, expediente_id || null)
+      .input('link_virtual', sql.NVarChar, link_virtual || null)
+
       .query(`
         INSERT INTO eventos_calendario (
           titulo,
@@ -1380,7 +1431,9 @@ app.post('/eventos/agregar', async (req, res) => {
           hora_evento,
           tipo_evento,
           ubicacion,
-          mediacion_id
+          mediacion_id,
+          expediente_id,
+          link_virtual
         )
         OUTPUT INSERTED.id
         VALUES (
@@ -1390,7 +1443,9 @@ app.post('/eventos/agregar', async (req, res) => {
           @hora_evento,
           @tipo_evento,
           @ubicacion,
-          @mediacion_id
+          @mediacion_id,
+          @expediente_id,
+          @link_virtual
         )
       `);
 
@@ -1647,8 +1702,66 @@ app.get('/mediaciones/:id', async (req, res) => {
     console.error('Error al obtener mediación por ID:', error.message);
     res.status(500).json({ error: 'Error interno al buscar la mediación' });
   }
+});app.put("/eventos/editar/:id", async (req, res) => {
+  const id = req.params.id;
+  const evento = req.body;
+
+  try {
+    // Actualizar evento principal
+    await pool.request().query(`
+      UPDATE eventos_calendario SET 
+        titulo = '${evento.titulo}',
+        descripcion = '${evento.descripcion}',
+        fecha_evento = '${evento.fecha_evento}',
+        tipo_evento = '${evento.tipo_evento}',
+        ubicacion = '${evento.ubicacion}',
+        estado = '${evento.estado}',
+        mediacion_id = ${evento.mediacion_id || 'NULL'}
+      WHERE id = ${id}
+    `);
+
+    // Eliminar clientes anteriores
+    await pool.request().query(`
+      DELETE FROM clientes_eventos WHERE id_evento = ${id}
+    `);
+
+    // Insertar los nuevos
+    for (let cliente of evento.clientes) {
+      await pool.request().query(`
+        INSERT INTO clientes_eventos (id_evento, id_cliente) 
+        VALUES (${id}, ${cliente.id})
+      `);
+    }
+
+    res.send({ message: 'Evento actualizado con éxito' });
+  } catch (err) {
+    console.error('Error actualizando evento:', err);
+    res.status(500).send(err);
+  }
 });
 
+
+
+
+
+app.put('/eventos/eliminar/:id', async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        UPDATE eventos_calendario
+        SET estado = 'eliminado'
+        WHERE id = @id
+      `);
+
+    res.status(200).json({ message: 'Evento marcado como eliminado' });
+  } catch (error) {
+    console.error('Error al eliminar evento:', error);
+    res.status(500).json({ error: 'Error al eliminar evento', message: error.message });
+  }
+});
 
 
              // Iniciar el servidor

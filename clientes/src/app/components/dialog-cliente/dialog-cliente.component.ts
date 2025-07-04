@@ -89,7 +89,6 @@ this.form = new FormGroup({
   telefono: new FormControl('', [Validators.minLength(5), Validators.maxLength(14), Validators.pattern("^[0-9]+$")]),
   fechaNacimiento: new FormControl('', [fechaNacimientoValida]), // ✅ ahora con validador
   direccion: new FormControl(''),
-  fechaMediacion: new FormControl('', [fechaMediacionValida]),   // ✅ ahora con validador
 });
 
     
@@ -102,7 +101,6 @@ this.form = new FormGroup({
         direccion: data.direccion || '',
         dni: data.dni || '',
         telefono: data.telefono || '',
-        fechaMediacion: data.fecha_mediacion || '',
       });
     }
     this.cargarExpedientes();
@@ -163,7 +161,7 @@ this.form = new FormGroup({
       expedientes: this.expedientesSeleccionados,
       estado: 'en gestión',
       usuario_id: this.usuarioService.usuarioLogeado!.id.toString(),
-      fecha_mediacion: this.form.value.fechaMediacion || null,
+      fecha_mediacion: null,
     };
 
     this.dialogRef.close(cliente);

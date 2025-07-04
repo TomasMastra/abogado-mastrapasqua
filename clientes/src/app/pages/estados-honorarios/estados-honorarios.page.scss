@@ -149,7 +149,7 @@ mat-toolbar {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    width: 100%; 
+    width: calc(100% - 270px); /* 250px del menú lateral y 20px de margen */
     height: 80vh;
     //margin: 20px 20px 0 270px; /* Margen izquierdo para separar del menú y margen derecho */
     border-radius: 15px;
@@ -450,10 +450,6 @@ mat-toolbar {
   border-radius: 8px;
 }
 
-.flex {
-  display: flex;
-  flex-direction: column;
-}
 
   
-
+  

@@ -53,9 +53,10 @@ export class JuzgadosService {
   
   
   // NO ESTA EN EL SERVER
-  getJuzgadoPorId(id: string) {
-    return this.http.get<JuzgadoModel>(`${this.apiUrl}/${id}`);
-  }
+getJuzgadoPorId(id: number) {
+  return this.http.get<JuzgadoModel>(`${this.apiUrl}/${id}`);
+}
+
 
   addJuzgado(juzgado: JuzgadoModel): Observable<any> {
     const url = `${this.apiUrl}/agregar`;

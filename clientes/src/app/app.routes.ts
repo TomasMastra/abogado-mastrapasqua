@@ -74,5 +74,9 @@ export const routes: Routes = [
     {
     path: 'requeridos',
     loadComponent: () => import('./pages/requeridos/requeridos.component').then( m => m.RequeridosPage)
+  },
+  {
+    path: 'estados-honorarios',
+    loadComponent: () => import('./pages/estados-honorarios/estados-honorarios.page').then( m => m.EstadosHonorariosPage)
   }
 ];

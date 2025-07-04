@@ -1,8 +1,4 @@
 <div> 
-
-  
-
-<!-- -->
     <mat-sidenav-content>
       <div class="content mat-elevation-z8">
         <ion-list class="lista-clientes">
@@ -58,10 +54,17 @@
 @if(expediente.estado != 'Cobrado')
 {
 
+  
 <div
   class="flex"
   style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px;">
-  
+  <h5>{{expediente?.numero}}/{{expediente.anio}} ({{expediente.juzgadoModel.nombre}})</h5>
+
+<h2>{{ obtenerResumenExpediente(expediente) }}</h2>
+
+
+    <span style="color: rgb(255, 0, 0); font-weight: bold;">{{ expediente?.juicio }}</span>
+
   <mat-form-field appearance="outline" style="width: 250px;">
     <mat-label style="color: white">Estado del expediente</mat-label>
     <mat-select style="color: white" [(ngModel)]="estadoSeleccionado">
@@ -71,7 +74,6 @@
     </mat-select>
   </mat-form-field>
 
-  <span style="color: rgb(255, 0, 0); font-weight: bold;">{{ expediente?.juicio }}</span>
 </div>
 
 
@@ -79,6 +81,7 @@
             <div style="padding: 16px;">              
               <form [formGroup]="form">
               <div class="divider-container">
+
                 <mat-divider class="white-divider"></mat-divider>
                 <span class="divider-text">Ultimo movimiento</span>
                 <mat-divider class="white-divider"></mat-divider>
@@ -92,11 +95,7 @@
               id="ultimo_movimiento">
             </ion-input>
 
-      <mat-checkbox formControlName="requiere_atencion" style="color: white; margin-top: 10px;">
-        <span style="color: white;">Requiere atención</span>
-      </mat-checkbox>
-
-      <div *ngIf="form.get('requiere_atencion')?.value" class="divider-container" style="margin-top: 10px;">
+      <div  class="divider-container" style="margin-top: 10px;">
         <mat-divider class="white-divider"></mat-divider>
         <span class="divider-text">Fecha atención</span>
         <mat-divider class="white-divider"></mat-divider>
@@ -109,6 +108,7 @@
           name="fecha_atencion"
           id="fecha_atencion">
         </ion-input>
+
       </div>
 
 
@@ -267,7 +267,7 @@
     <!-- Estado del Capital -->
     <mat-form-field appearance="outline" style="flex: 1;">
       <mat-label style="color: white">Estado del Capital</mat-label>
-      <mat-select style="color: white" [(ngModel)]="estadoCapitalSeleccionado" name="estadoCapitalSeleccionado" (selectionChange)="actualizarValidacionesCondicionales()">
+      <mat-select style="color: white" [(ngModel)]="estadoCapitalSeleccionado" name="estadoCapitalSeleccionado" (selectionChange)="actualizarValidacionesCondicionales(); cambiarEstado('capital')">
         <mat-option value="apelado">Apelado</mat-option>
         <mat-option value="firme">Firme</mat-option>
         <mat-option value="pendiente">Pendiente</mat-option>
@@ -386,11 +386,10 @@
     <!-- CASO REGULACION Y COSTAS POR SU ORDEN-->
     <mat-form-field appearance="outline" style="flex: 1;" *ngIf="honorarioSeleccionado != 'Difiere regulacion 1º instancia'">
       <mat-label style="color: white">Estado de Honorarios</mat-label>
-      <mat-select style="color: white" [(ngModel)]="estadoHonorariosSeleccionado" name="estadoHonorariosSeleccionado" (selectionChange)="actualizarValidacionesCondicionales();">
+      <mat-select style="color: white" [(ngModel)]="estadoHonorariosSeleccionado" name="estadoHonorariosSeleccionado" (selectionChange)="actualizarValidacionesCondicionales(); cambiarEstado('honorario')">
         <mat-option [value]="'apelado'" [disabled]="deshabilitarApeladoOFirme">Apelado</mat-option>
         <mat-option [value]="'firme'" [disabled]="deshabilitarApeladoOFirme">Firme</mat-option>
         <mat-option [value]="'pendiente'" [disabled]="deshabilitarApeladoOFirme">Pendiente</mat-option>
-
       </mat-select>
     </mat-form-field>
 

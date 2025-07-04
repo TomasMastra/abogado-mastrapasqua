@@ -312,6 +312,7 @@ cargarJuzgado() {
           }
 
     acceptDialog(): void {
+
       if (this.form.valid) {
         const expediente: ExpedienteModel = {
           id: this.data?.id ?? '0',  
@@ -338,7 +339,7 @@ cargarJuzgado() {
           // modificar
           juez_id: null,
           juezModel: { id: '', nombre: '', apellido: '', estado: '' },
-          juicio: this.juicioSeleccionado,
+          juicio: this.form.value.juicio,
           ultimo_movimiento: this.data?.ultimo_movimiento,
           monto: this.data?.monto,
           apela: this.data?.apela,
