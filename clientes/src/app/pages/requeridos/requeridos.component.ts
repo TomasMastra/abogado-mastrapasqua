@@ -100,8 +100,8 @@ cargarExpedientes() {
       (expedientes) => {
         // Filtrar acá: que NO sean 'Sentencia' ni 'Cobrado'
         const filtrados = expedientes!.filter(expediente => 
-        expediente.estado !== 'Sentencia' &&
-        expediente.estado !== 'Cobrado' &&
+        //expediente.estado !== 'Sentencia' &&
+        //expediente.estado !== 'Cobrado' &&
         expediente.estado !== 'eliminado' &&
         expediente.fecha_atencion
 );

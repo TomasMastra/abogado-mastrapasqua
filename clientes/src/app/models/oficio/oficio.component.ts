@@ -1,3 +1,7 @@
+import { DemandadoModel } from '../demandado/demandado.component';
+import { ExpedienteModel } from '../expediente/expediente.component';
+
+
 export interface OficioModel {
   id?: number;
   expediente_id: number;
@@ -5,8 +9,6 @@ export interface OficioModel {
   parte: 'actora' | 'demanda' | 'tercero';
   estado: 'diligenciado' | 'pendiente' | 'pedir reiteratorio' | 'diligenciar' | 'solicita reiteratorio' | 'eliminado';
   fecha_diligenciado?: string | null;
-
-  // Referencias opcionales para mostrar más info si querés expandir en el futuro
-  expedienteModel?: any;
-  demandadoModel?: any;
+  expedienteModel?: ExpedienteModel;
+  demandadoModel?: DemandadoModel;
 }

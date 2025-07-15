@@ -173,6 +173,24 @@ sala: string | null = null;
 
 deshabilitarApeladoOFirme = false;
 
+honorariosExtrasSeleccionados: string[] = [];
+
+estadosHonorariosExtras: { [tipo: string]: string } = {};
+subestadosHonorariosExtras: { [tipo: string]: string } = {};
+fechasHonorariosExtras: { [tipo: string]: string } = {}; // ✅ nuevo
+
+estadosPorTipo: { [tipo: string]: string[] } = {
+  alzada: ['apelado', 'firme'],
+  ejecucion: ['pendiente', 'firme'],
+  diferencia: ['diferido', 'firme']
+};
+
+subestadosPorTipo: { [tipo: string]: string[] } = {
+  alzada: ['en sala', 'resuelto'],
+  ejecucion: ['en tramite', 'finalizado'],
+  diferencia: ['diferido por juez', 'esperando regulación']
+};
+
 
   constructor(
     private router: Router,
@@ -214,6 +232,19 @@ deshabilitarApeladoOFirme = false;
           montoAcuerdo: new FormControl(''),
           fecha_atencion: new FormControl(''),
 
+          honorariosExtrasSeleccionados: new FormControl([]),  
+
+            estado_alzada: new FormControl(''),
+            subestado_alzada: new FormControl(''),
+
+            estado_ejecucion: new FormControl(''),
+            subestado_ejecucion: new FormControl(''),
+
+            estado_diferencia: new FormControl(''),
+            subestado_diferencia: new FormControl(''),
+
+
+
 
         }
       );    
@@ -237,11 +268,7 @@ deshabilitarApeladoOFirme = false;
 
       }
 
-
-
     }
-
-
 
   //calcula los valores para el uma meiante cantidad de uma y valor de uma
   calcularMontoUMA() {
@@ -273,6 +300,33 @@ deshabilitarApeladoOFirme = false;
   }
 
   }
+cambioTipoHonorarioExtra(valores: string[]) {
+  this.honorariosExtrasSeleccionados = valores;
+
+  const todosTipos = ['alzada', 'ejecucion', 'diferencia'];
+
+  todosTipos.forEach(tipo => {
+    const estadoControl = this.form.get(`estado_${tipo}`);
+    const subestadoControl = this.form.get(`subestado_${tipo}`);
+
+    if (valores.includes(tipo)) {
+      estadoControl?.setValidators(Validators.required);
+      subestadoControl?.setValidators(Validators.required);
+    } else {
+      estadoControl?.clearValidators();
+      subestadoControl?.clearValidators();
+      estadoControl?.setValue('');
+      subestadoControl?.setValue('');
+    }
+
+    estadoControl?.updateValueAndValidity();
+    subestadoControl?.updateValueAndValidity();
+  });
+}
+
+
+
+
 
 
   goTo(path: string) {
@@ -559,6 +613,10 @@ deshabilitarApeladoOFirme = false;
             numeroCliente: this.expediente?.numeroCliente ??  null,
             minutosSinLuz: this.expediente?.minutosSinLuz ??  null,
             periodoCorte: this.expediente?.periodoCorte ??  null,
+
+            estadoHonorariosAlzadaSeleccionado: this.form.get('estado_alzada')?.value ?? null,
+            subEstadoHonorariosAlzadaSeleccionado: this.form.get('subestado_alzada')?.value ?? null,
+            fechaHonorariosAlzada: this.form.get('fecha_alzada')?.value ?? null,
           };
       
           console.log('EXPEDIENTE: ', expediente);
@@ -860,6 +918,7 @@ actualizarCobrado() {
   }
 }
 //esta bien
+/*
 public obtenerCamposRequeridos(): string[] {
   const camposFaltantes: string[] = [];
 
@@ -873,7 +932,32 @@ public obtenerCamposRequeridos(): string[] {
   });
 
   return camposFaltantes;
+}*/
+public obtenerCamposRequeridos(): string[] {
+  const camposFaltantes: string[] = [];
+
+  Object.keys(this.form.controls).forEach((clave) => {
+    const control = this.form.get(clave);
+
+    if (control && control.hasValidator(Validators.required) && control.invalid) {
+      let campoLegible = this.convertirNombreCampo(clave);
+
+      // Si es estado/subestado dinámico de honorarios extra
+      if (clave.startsWith('estado_')) {
+        const tipo = clave.split('_')[1];
+        campoLegible = `Estado - ${this.obtenerNombreHonorario(tipo)}`;
+      } else if (clave.startsWith('subestado_')) {
+        const tipo = clave.split('_')[1];
+        campoLegible = `Subestado - ${this.obtenerNombreHonorario(tipo)}`;
+      }
+
+      camposFaltantes.push(campoLegible);
+    }
+  });
+
+  return camposFaltantes;
 }
+
 // esta bien
 private convertirNombreCampo(nombre: string): string {
   const mapa: { [clave: string]: string } = {
@@ -896,7 +980,19 @@ private convertirNombreCampo(nombre: string): string {
 
   return mapa[nombre] || nombre;
 }
+
+private obtenerNombreHonorario(tipo: string): string {
+  switch (tipo) {
+    case 'alzada': return 'Alzada';
+    case 'ejecucion': return 'Ejecución';
+    case 'diferencia': return 'Diferencia';
+    case 'primera_instancia': return 'Primera Instancia';
+    default: return tipo;
+  }
+}
+
 //esta bien
+/*
 private llenarFormularioConExpediente(expediente: ExpedienteModel) {
   // 1. Buscás el UMA correspondiente
   const encontradaUMA = this.uma.find(u => u.valor == expediente.valorUMA) ?? null;
@@ -947,7 +1043,73 @@ fecha_atencion: expediente.fecha_atencion
 
   // 5. Y refrescás las validaciones condicionales
   //this.actualizarValidacionesCondicionales();
+}*/
+private llenarFormularioConExpediente(expediente: ExpedienteModel) {
+  const encontradaUMA = this.uma.find(u => u.valor == expediente.valorUMA) ?? null;
+
+  const valores: any = {
+    honorario: expediente.honorario ?? '',
+    fecha_sentencia: expediente.fecha_sentencia
+      ? new Date(expediente.fecha_sentencia).toISOString().split('T')[0]
+      : '',
+    juez: this.jueces.find(j => j.id === expediente.juez_id) ?? null,
+    ultimo_movimiento: expediente.ultimo_movimiento
+      ? new Date(expediente.ultimo_movimiento).toISOString().split('T')[0]
+      : '',
+    estadoCapitalSeleccionado: expediente.estadoCapitalSeleccionado ?? '',
+    subEstadoCapitalSeleccionado: expediente.subEstadoCapitalSeleccionado ?? '',
+    fechaCapitalSubestado: expediente.fechaCapitalSubestado
+      ? new Date(expediente.fechaCapitalSubestado).toISOString().split('T')[0]
+      : '',
+    montoLiquidacionCapital: expediente.montoLiquidacionCapital ?? '',
+    estadoHonorariosSeleccionado: expediente.estadoHonorariosSeleccionado ?? '',
+    subEstadoHonorariosSeleccionado: expediente.subEstadoHonorariosSeleccionado ?? '',
+    fechaHonorariosSubestado: expediente.fechaHonorariosSubestado
+      ? new Date(expediente.fechaHonorariosSubestado).toISOString().split('T')[0]
+      : '',
+    cantidadUMA: expediente.cantidadUMA ?? '',
+    umaSeleccionado: encontradaUMA,
+    requiere_atencion: this.expediente.requiere_atencion,
+    fecha_atencion: expediente.fecha_atencion
+      ? new Date(expediente.fecha_atencion).toISOString().split('T')[0]
+      : '',
+  };
+
+  // Carga de tipos extras (ej. alzada)
+  const tiposExtras = [
+    { tipo: 'alzada', estado: expediente.estadoHonorariosAlzadaSeleccionado, subestado: expediente.subEstadoHonorariosAlzadaSeleccionado, fecha: expediente.fechaHonorariosAlzada }
+    // podés agregar los demás tipos luego
+  ];
+
+  tiposExtras.forEach(({ tipo, estado, subestado, fecha }) => {
+    if (estado || subestado || fecha) {
+      this.honorariosExtrasSeleccionados.push(tipo);
+      this.estadosHonorariosExtras[tipo] = estado ?? '';
+      this.subestadosHonorariosExtras[tipo] = subestado ?? '';
+      this.fechasHonorariosExtras[tipo] = fecha
+        ? new Date(fecha).toISOString().split('T')[0]
+        : '';
+
+      this.form.addControl(`estado_${tipo}`, new FormControl(estado ?? '', Validators.required));
+      this.form.addControl(`subestado_${tipo}`, new FormControl(subestado ?? '', Validators.required));
+      this.form.addControl(`fecha_${tipo}`, new FormControl(this.fechasHonorariosExtras[tipo], Validators.required));
+    }
+  });
+
+  this.form.patchValue(valores);
+
+  Object.entries(valores).forEach(([key, value]) => {
+    const control = this.form.get(key);
+    if (control && value !== null && value !== '' && value !== undefined) {
+      control.markAsTouched();
+      control.markAsDirty();
+    }
+  });
 }
+
+
+
+
 cambiarEstado(tipo: 'honorario' | 'capital') {
   if (tipo === 'honorario') {
     this.subEstadoHonorariosSeleccionado = null;

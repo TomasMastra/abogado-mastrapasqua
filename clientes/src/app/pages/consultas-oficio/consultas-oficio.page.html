@@ -42,7 +42,23 @@
       </thead>
       <tbody>
         <tr *ngFor="let oficio of oficiosOrdenados">
-          <td>{{ oficio.expedienteModel?.numero }}/{{ oficio.expedienteModel?.anio }}</td>
+        <td>
+          {{ oficio.expedienteModel!.numero }}/{{ oficio.expedienteModel!.anio }}
+          {{ oficio.expedienteModel!.clientes.length > 1 
+              ? oficio.expedienteModel!.clientes[0].nombre + ' ' + oficio.expedienteModel!.clientes[0].apellido + ' y otros' 
+              : oficio.expedienteModel!.clientes.length === 1 
+                ? oficio.expedienteModel!.clientes[0].nombre + ' ' + oficio.expedienteModel!.clientes[0].apellido 
+                : '(sin actora)' 
+          }}
+          contra
+          {{ oficio.expedienteModel!.demandados.length > 1 
+              ? oficio.expedienteModel!.demandados[0].nombre + ' y otros' 
+              : oficio.expedienteModel!.demandados.length === 1 
+                ? oficio.expedienteModel!.demandados[0].nombre 
+                : '(sin demandado)' 
+          }}
+        </td>
+
           <td>{{ oficio.demandadoModel?.nombre }}</td>
           <td>{{ oficio.parte }}</td>
           <td>{{ oficio.estado }}</td>

@@ -46,55 +46,10 @@ mat-toolbar {
     }
   }
   
-  .avatar {
-    margin-top: 16px;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-  }
-  
-  .name {
-    margin-top: 8px;
-    font-weight: normal;
-  }
-  
-  .designation {
-    margin-top: 2px;
-    font-size: 0.7rem;
-    color: lightgrey;
-  }
-  
-  mat-divider {
-    margin-top: 16px;
-    margin-bottom: 16px;
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-  
-  
-  /////////
-  /// 
-  /// 
-  /// 
-  /// 
-  
+
   
   /* Estilos generales */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  th, td {
-    border: 1px solid #ebd248;
-    padding: 8px;
-    text-align: left;
-    background-color: #030303;
-  }
-  
-  th {
-    background-color: #030303;
-  }
-  
+
   .icon-back {
     margin-right: 10px;
     margin-left: 10px;
@@ -138,11 +93,6 @@ mat-toolbar {
   
   }
   
-  .btn-eliminar {
-    background-size: 20px;
-    padding-left: 30px; /* Espacio para el icono */
-  }
-  
   
   .lista-clientes {
     display: flex;
@@ -178,9 +128,6 @@ mat-toolbar {
   }
   
   
-  
-  
-  
   .toolbar {
     display: flex;
     align-items: center;
@@ -212,16 +159,21 @@ mat-toolbar {
     width: 100%; /* Ocupa todo el ancho */
     padding: 15px; /* Agrega espacio alrededor de los inputs */
   }
-  
-  .input-busqueda {
-    width: 100%; /* Ocupa todo el ancho */
-    padding: 12px; /* Ajusta el relleno interno */
-    background-color: #015dbb;
-    border-radius: 15px;
-    box-sizing: border-box; /* Evita que el padding afecte el tamaño */
-    color: white;
-    border: none; /* Elimina el borde por defecto */
-  }
+  //se usa
+.input-busqueda {
+  display: block;
+  margin: 0 auto; // 👈 centra el input
+  width: 60vw;     // 👈 60% del ancho de pantalla
+  max-width: 800px;
+  padding: 12px;
+  background-color: #015dbb;
+  border-radius: 15px;
+  box-sizing: border-box;
+  color: white;
+  border: none;
+  text-align: center; // opcional, para centrar el texto dentro del input
+}
+
   
   
   
@@ -451,5 +403,30 @@ mat-toolbar {
 }
 
 
-  
-  
+.flex-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  > * {
+    flex: 1 1 300px; // Se ajusta a mínimo 300px, pero puede crecer
+  }
+}
+
+.centrado-total {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 16px;
+}
+
+
+::ng-deep .mat-select-value {
+  color: white !important;
+}
+
+.espaciado-vertical {
+  margin-top: 16px;
+}
+

@@ -81,128 +81,72 @@ export class JuecesPage implements OnInit {
   ) {}
   
 
-/*
   ngOnInit() {
-    this.getClientes$ = this.clienteService.getClientes().subscribe(
-      (clientes) => {
-        this.clientes = Array.isArray(clientes) ? clientes : []; // Asegurarse de que es un arreglo
-        this.clientesOriginales = Array.isArray(clientes) ? [...clientes] : Object.values(clientes);
-        this.hayClientes = this.clientes.length > 0;
+    if(this.busqueda == ''){
+      this.cargarJueces(); 
+    }
+  }
+
+  cargarJueces() {
+    this.juezService.getJuez().subscribe(
+      (jueces) => {
+        this.jueces = jueces;
+        this.juecesOriginales = [...jueces];
+        this.hayJueces = this.jueces.length > 0;
       },
       (error) => {
-        console.error('Error al obtener clientes:', error);
+        console.error('Error al obtener jueces:', error);
+      },
+      () => {
+        this.timeoutId = setTimeout(() => {
+          this.cargarJueces();
+
+        }, 5000);
       }
     );
-  }*/
+  }
 
 
-          ngOnInit() {
-            if(this.busqueda == ''){
-              this.cargarJueces(); 
-            }
-          }
-        
-          cargarJueces() {
-            this.juezService.getJuez().subscribe(
-              (jueces) => {
-                this.jueces = jueces;
-                this.juecesOriginales = [...jueces];
-                this.hayJueces = this.jueces.length > 0;
-              },
-              (error) => {
-                console.error('Error al obtener jueces:', error);
-              },
-              () => {
-                this.timeoutId = setTimeout(() => {
-                  this.cargarJueces();
+  goTo(path: string) {
+    this.router.navigate([path]);
+  }
 
-                }, 5000);
-              }
-            );
-          }
-        
-
-/*
-      obtenerLista(){
-        this.juzgadosService.getJuzgados()
-          .pipe(takeUntil(this.destroy$)) 
-          .subscribe(
-            (juzgados) => {
-              this.juzgados = juzgados;
-              this.juzgadosOriginales = [...juzgados];
-              this.hayJuzgados = this.juzgados.length > 0;
-            },
-            (error) => {
-              console.error('Error al obtener localidades:', error);
-            }
-          );
-        
-      }*/
-/*
-      abrirDialog(): void {
-        const dialogRef = this.dialog.open(DialogJuzgadoComponent, {
-          width: '500px',
-          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
-
-        });*/
-
-        /*
-        const dialogRef = this.dialog.open(DialogClienteComponent, {
-          width: '500px',
-          disableClose: true, // 🔹 Evita que se cierre al hacer clic afuera
-          data: { }
-        });
-
-        */
-      /*
-        dialogRef.afterClosed().subscribe((juzgado: JuzgadoModel) => {
-          if (juzgado) {
-            // Primero, agregar el cliente a la base de datos
-            console.log('localidadElegida.id', juzgado.localidad_id);
-            console.log('Tipo de localidadElegida.id', typeof juzgado.localidad_id);
-
-            this.juzgadosService.addJuzgado(juzgado).subscribe(juzgado => {
-              // El cliente agregado tendrá ahora el ID asignado     
-              this.juzgados.push(juzgado);
-      
-              // Si la búsqueda está vacía, obtener todos los clientes
-              if (this.busqueda == '') {
-                this.obtenerJuzgados();
-              } else {
-                //this.localidadesService.sea(this.busqueda);
-              }
-      
-      
-            }, error => {
-              console.error('Error al agregar cliente:', error);
-            });
-          }
-        });
-      }*/
-
-      
-
-      goTo(path: string) {
-        this.router.navigate([path]);
+  obtenerJueces() {
+    this.getJueces$ = this.juezService.getJuez().subscribe(
+      (jueces) => {
+        this.jueces = jueces;
+        this.juecesOriginales = [...jueces]; 
+        this.hayJueces = this.jueces.length > 0;
+      },
+      (error) => {
+        console.error('Error al obtener jueces:', error);
       }
-
-      obtenerJueces() {
-        this.getJueces$ = this.juezService.getJuez().subscribe(
-          (jueces) => {
-            this.jueces = jueces;
-            this.juecesOriginales = [...jueces]; 
-            this.hayJueces = this.jueces.length > 0;
-          },
-          (error) => {
-            console.error('Error al obtener jueces:', error);
-          }
-        );
-      }
+    );
+  }
 
 
-      buscar(){
-        alert('Todavia no la implemente');
-      }
+buscar() {
+  const texto = this.busqueda.trim().toLowerCase();
+
+  if (!texto) {
+    this.cargarJueces(); // Mostrar todos si no hay texto
+    return;
+  }
+
+  this.jueces = this.jueces.filter(juez => {
+    const nombre = juez.nombre?.toLowerCase() || '';
+    const apellido = juez.apellido?.toLowerCase() || '';
+    const nombreCompleto = `${nombre} ${apellido}`;
+
+    return (
+      nombre.includes(texto) ||
+      apellido.includes(texto) ||
+      nombreCompleto.includes(texto)
+    );
+  });
+}
+
+
 
 
 /*

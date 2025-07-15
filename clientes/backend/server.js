@@ -503,76 +503,82 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
             .input('procurador_id', sql.Int, nuevosDatos.procurador_id)
             .input('sala', sql.NVarChar, nuevosDatos.sala)
             .input('requiere_atencion', sql.Bit, nuevosDatos.requiere_atencion)
-.input('fecha_atencion', sql.Date, nuevosDatos.fecha_atencion && nuevosDatos.fecha_atencion !== '' ? new Date(nuevosDatos.fecha_atencion) : null)
+            .input('fecha_atencion', sql.Date, nuevosDatos.fecha_atencion && nuevosDatos.fecha_atencion !== '' ? new Date(nuevosDatos.fecha_atencion) : null)
+            .input('estadoHonorariosAlzadaSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosAlzadaSeleccionado)
+            .input('subEstadoHonorariosAlzadaSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosAlzadaSeleccionado)
+            .input('fechaHonorariosAlzada', sql.DateTime, nuevosDatos.fechaHonorariosAlzada)
 
- // 🆕 Campos nuevos: Capital
- .input('estadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoCapitalSeleccionado)
- .input('subEstadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.subEstadoCapitalSeleccionado)
- .input('fechaCapitalSubestado', sql.DateTime, nuevosDatos.fechaCapitalSubestado)
- .input('estadoLiquidacionCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoLiquidacionCapitalSeleccionado)
- .input('fechaLiquidacionCapital', sql.DateTime, nuevosDatos.fechaLiquidacionCapital)
- .input('montoLiquidacionCapital', sql.Decimal(15, 2), nuevosDatos.montoLiquidacionCapital)
- .input('capitalCobrado', sql.Bit, nuevosDatos.capitalCobrado)
+            .input('estadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoCapitalSeleccionado)
+            .input('subEstadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.subEstadoCapitalSeleccionado)
+            .input('fechaCapitalSubestado', sql.DateTime, nuevosDatos.fechaCapitalSubestado)
+            .input('estadoLiquidacionCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoLiquidacionCapitalSeleccionado)
+            .input('fechaLiquidacionCapital', sql.DateTime, nuevosDatos.fechaLiquidacionCapital)
+            .input('montoLiquidacionCapital', sql.Decimal(15, 2), nuevosDatos.montoLiquidacionCapital)
+            .input('capitalCobrado', sql.Bit, nuevosDatos.capitalCobrado)
 
- // 🆕 Campos nuevos: Honorarios
- .input('estadoHonorariosSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosSeleccionado)
- .input('subEstadoHonorariosSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosSeleccionado)
- .input('fechaHonorariosSubestado', sql.DateTime, nuevosDatos.fechaHonorariosSubestado)
- .input('estadoLiquidacionHonorariosSeleccionado', sql.NVarChar, nuevosDatos.estadoLiquidacionHonorariosSeleccionado)
- .input('fechaLiquidacionHonorarios', sql.DateTime, nuevosDatos.fechaLiquidacionHonorarios)
- .input('montoLiquidacionHonorarios', sql.Decimal(15, 2), nuevosDatos.montoLiquidacionHonorarios)
- .input('honorarioCobrado', sql.Bit, nuevosDatos.honorarioCobrado)
- .input('cantidadUMA', sql.Decimal(15, 2), nuevosDatos.cantidadUMA)
+            .input('estadoHonorariosSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosSeleccionado)
+            .input('subEstadoHonorariosSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosSeleccionado)
+            .input('fechaHonorariosSubestado', sql.DateTime, nuevosDatos.fechaHonorariosSubestado)
+            .input('estadoLiquidacionHonorariosSeleccionado', sql.NVarChar, nuevosDatos.estadoLiquidacionHonorariosSeleccionado)
+            .input('fechaLiquidacionHonorarios', sql.DateTime, nuevosDatos.fechaLiquidacionHonorarios)
+            .input('montoLiquidacionHonorarios', sql.Decimal(15, 2), nuevosDatos.montoLiquidacionHonorarios)
+            .input('honorarioCobrado', sql.Bit, nuevosDatos.honorarioCobrado)
+            .input('cantidadUMA', sql.Decimal(15, 2), nuevosDatos.cantidadUMA)
 
- .query(`
-   UPDATE expedientes
-   SET 
-     titulo = @titulo,
-     descripcion = @descripcion,
-     numero = @numero,
-     anio = @anio,
-     juzgado_id = @juzgado_id,
-     estado = @estado,
-     juez_id = @juez_id,
-     honorario = @honorario,
-     fecha_inicio = @fecha_inicio,
-     juicio = @juicio,
-     fecha_sentencia = @fecha_sentencia,
-     monto = @monto,
-     apela = @apela,
-     ultimo_movimiento = @ultimo_movimiento,
-     porcentaje = @porcentaje,
-     usuario_id = @usuario_id,
-     fecha_cobro = @fecha_cobro,
-     fecha_cobro_capital = @fecha_cobro_capital,
-     procurador_id = @procurador_id,
-     valorUMA = @valorUMA,
-     sala = @sala,
-     requiere_atencion = @requiere_atencion,
-     fecha_atencion = @fecha_atencion,
+            .query(`
+              UPDATE expedientes
+              SET 
+                titulo = @titulo,
+                descripcion = @descripcion,
+                numero = @numero,
+                anio = @anio,
+                juzgado_id = @juzgado_id,
+                estado = @estado,
+                juez_id = @juez_id,
+                honorario = @honorario,
+                fecha_inicio = @fecha_inicio,
+                juicio = @juicio,
+                fecha_sentencia = @fecha_sentencia,
+                monto = @monto,
+                apela = @apela,
+                ultimo_movimiento = @ultimo_movimiento,
+                porcentaje = @porcentaje,
+                usuario_id = @usuario_id,
+                fecha_cobro = @fecha_cobro,
+                fecha_cobro_capital = @fecha_cobro_capital,
+                procurador_id = @procurador_id,
+                valorUMA = @valorUMA,
+                sala = @sala,
+                requiere_atencion = @requiere_atencion,
+                fecha_atencion = @fecha_atencion,
 
 
 
-     -- 🚀 Actualización de campos nuevos (capital)
-     estadoCapitalSeleccionado = @estadoCapitalSeleccionado,
-     subEstadoCapitalSeleccionado = @subEstadoCapitalSeleccionado,
-     fechaCapitalSubestado = @fechaCapitalSubestado,
-     estadoLiquidacionCapitalSeleccionado = @estadoLiquidacionCapitalSeleccionado,
-     fechaLiquidacionCapital = @fechaLiquidacionCapital,
-     montoLiquidacionCapital = @montoLiquidacionCapital,
-     capitalCobrado = @capitalCobrado,
-     -- 🚀 Actualización de campos nuevos (honorarios)
-     estadoHonorariosSeleccionado = @estadoHonorariosSeleccionado,
-     subEstadoHonorariosSeleccionado = @subEstadoHonorariosSeleccionado,
-     fechaHonorariosSubestado = @fechaHonorariosSubestado,
-     estadoLiquidacionHonorariosSeleccionado = @estadoLiquidacionHonorariosSeleccionado,
-     fechaLiquidacionHonorarios = @fechaLiquidacionHonorarios,
-     montoLiquidacionHonorarios = @montoLiquidacionHonorarios,
-     honorarioCobrado = @honorarioCobrado,
-     cantidadUMA = @cantidadUMA
+                -- 🚀 Actualización de campos nuevos (capital)
+                estadoCapitalSeleccionado = @estadoCapitalSeleccionado,
+                subEstadoCapitalSeleccionado = @subEstadoCapitalSeleccionado,
+                fechaCapitalSubestado = @fechaCapitalSubestado,
+                estadoLiquidacionCapitalSeleccionado = @estadoLiquidacionCapitalSeleccionado,
+                fechaLiquidacionCapital = @fechaLiquidacionCapital,
+                montoLiquidacionCapital = @montoLiquidacionCapital,
+                capitalCobrado = @capitalCobrado,
+                -- 🚀 Actualización de campos nuevos (honorarios)
+                estadoHonorariosSeleccionado = @estadoHonorariosSeleccionado,
+                subEstadoHonorariosSeleccionado = @subEstadoHonorariosSeleccionado,
+                fechaHonorariosSubestado = @fechaHonorariosSubestado,
+                estadoLiquidacionHonorariosSeleccionado = @estadoLiquidacionHonorariosSeleccionado,
+                fechaLiquidacionHonorarios = @fechaLiquidacionHonorarios,
+                montoLiquidacionHonorarios = @montoLiquidacionHonorarios,
+                honorarioCobrado = @honorarioCobrado,
+                cantidadUMA = @cantidadUMA,
 
-   WHERE id = @id
- `);
+                estadoHonorariosAlzadaSeleccionado = @estadoHonorariosAlzadaSeleccionado,
+                subEstadoHonorariosAlzadaSeleccionado = @subEstadoHonorariosAlzadaSeleccionado,
+                fechaHonorariosAlzada = @fechaHonorariosAlzada
+
+
+              WHERE id = @id
+            `);
 
             //const expedienteId = resultado.recordset[0].id;
   
@@ -995,7 +1001,7 @@ app.put('/localidades/modificar/:id', async (req, res) => {
   }
 });
 
-
+/*
 app.put('/localidades/modificar/:id', async (req, res) => {
   const { id } = req.params;
   const nuevosDatos = req.body;
@@ -1026,7 +1032,7 @@ app.put('/localidades/modificar/:id', async (req, res) => {
       res.status(500).json({ mensaje: 'Error al actualizar localidad' });
   }
 });
-
+*/
 
 app.put('/juzgados/modificar/:id', async (req, res) => {
   const { id } = req.params;

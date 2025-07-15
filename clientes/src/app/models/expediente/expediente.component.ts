@@ -61,5 +61,10 @@ export interface ExpedienteModel {
     requiere_atencion: boolean,
     fecha_atencion: Date | null;
 
+    estadoHonorariosAlzadaSeleccionado?: string | null;
+    subEstadoHonorariosAlzadaSeleccionado?: string | null;
+    fechaHonorariosAlzada?: string | null;
+
+
   }
   
