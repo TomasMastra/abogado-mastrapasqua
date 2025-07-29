@@ -14,7 +14,7 @@
         <mat-icon>folder_open</mat-icon> Expedientes
       </button>
   
-      <button mat-raised-button color="warn" (click)="goTo('estados-honorarios')">
+      <button mat-raised-button color="warn" (click)="goTo('estados')">
         <mat-icon>location_on</mat-icon> Estados.
       </button>
   
@@ -31,22 +31,22 @@
     <div class="summary-cards">
       <mat-card class="summary-card">
         <mat-card-title>Expedientes activos</mat-card-title>
-        <mat-card-content>544 en total</mat-card-content>
+        <mat-card-content>{{expedientesActivos}}</mat-card-content>
       </mat-card>
   
       <mat-card class="summary-card">
         <mat-card-title>Clientes registrados</mat-card-title>
-        <mat-card-content>554 en total</mat-card-content>
+        <mat-card-content>{{clientesRegistrados}}</mat-card-content>
       </mat-card>
   
       <mat-card class="summary-card">
         <mat-card-title>Sentencias emitidas</mat-card-title>
-        <mat-card-content>44 registradas</mat-card-content>
+        <mat-card-content>{{sentenciasEmitidas}}</mat-card-content>
       </mat-card>
   
       <mat-card class="summary-card">
         <mat-card-title>Honorarios pendientes</mat-card-title>
-        <mat-card-content>44 pendientes</mat-card-content>
+        <mat-card-content>{{honorariosPendientes | currency:'$' }}</mat-card-content>
       </mat-card>
     </div>
   

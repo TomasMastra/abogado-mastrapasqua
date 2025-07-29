@@ -191,6 +191,10 @@ subestadosPorTipo: { [tipo: string]: string[] } = {
   diferencia: ['diferido por juez', 'esperando regulación']
 };
 
+umaAlzadaSeleccionado: any = null;
+cantidadUMA_alzada: number = 0;
+montoUMA_alzada: number = 0;
+
 
   constructor(
     private router: Router,
@@ -234,18 +238,24 @@ subestadosPorTipo: { [tipo: string]: string[] } = {
 
           honorariosExtrasSeleccionados: new FormControl([]),  
 
-            estado_alzada: new FormControl(''),
-            subestado_alzada: new FormControl(''),
+          // Alzada
+          estado_alzada: new FormControl(''),
+          subestado_alzada: new FormControl(''),
+          fecha_alzada: new FormControl(''),
+          uma_alzada: new FormControl(''),
+          valorUMA_alzada: new FormControl(''),
 
-            estado_ejecucion: new FormControl(''),
-            subestado_ejecucion: new FormControl(''),
+          // Ejecución
+          estado_ejecucion: new FormControl(''),
+          subestado_ejecucion: new FormControl(''),
+          fecha_ejecucion: new FormControl(''),
+          monto_ejecucion: new FormControl(''),
 
-            estado_diferencia: new FormControl(''),
-            subestado_diferencia: new FormControl(''),
-
-
-
-
+          // Diferencia
+          estado_diferencia: new FormControl(''),
+          subestado_diferencia: new FormControl(''),
+          fecha_diferencia: new FormControl(''),
+          monto_diferencia: new FormControl(''),
         }
       );    
 
@@ -300,6 +310,7 @@ subestadosPorTipo: { [tipo: string]: string[] } = {
   }
 
   }
+
 cambioTipoHonorarioExtra(valores: string[]) {
   this.honorariosExtrasSeleccionados = valores;
 
@@ -330,10 +341,11 @@ cambioTipoHonorarioExtra(valores: string[]) {
   });
 }
 
-
-
-
-
+calcularMontoUMA_Alzada() {
+  if (this.umaAlzadaSeleccionado && this.umaAlzadaSeleccionado.valor && this.cantidadUMA_alzada) {
+    this.montoUMA_alzada = this.umaAlzadaSeleccionado.valor * this.cantidadUMA_alzada;
+  }
+}
 
   goTo(path: string) {
     this.menu = '1';
@@ -629,6 +641,33 @@ cambiarMenu(menu: string) {
             estadoHonorariosAlzadaSeleccionado: this.form.get('estado_alzada')?.value ?? null,
             subEstadoHonorariosAlzadaSeleccionado: this.form.get('subestado_alzada')?.value ?? null,
             fechaHonorariosAlzada: this.form.get('fecha_alzada')?.value ?? null,
+            umaSeleccionado_alzada: this.form.get('uma_alzada')?.value ?? null,
+            cantidadUMA_alzada: this.form.get('cantidadUMA_alzada')?.value ?? null,
+            montoAcuerdo_alzada: this.form.get('montoAcuerdo_alzada')?.value ?? null,
+
+            // EJECUCIÓN
+            estadoHonorariosEjecucionSeleccionado: this.form.get('estado_ejecucion')?.value ?? null,
+            subEstadoHonorariosEjecucionSeleccionado: this.form.get('subestado_ejecucion')?.value ?? null,
+            fechaHonorariosEjecucion: this.form.get('fecha_ejecucion')?.value ?? null,
+            montoHonorariosEjecucion: this.form.get('monto_ejecucion')?.value ?? null,
+
+            // DIFERENCIA
+            estadoHonorariosDiferenciaSeleccionado: this.form.get('estado_diferencia')?.value ?? null,
+            subEstadoHonorariosDiferenciaSeleccionado: this.form.get('subestado_diferencia')?.value ?? null,
+            fechaHonorariosDiferencia: this.form.get('fecha_diferencia')?.value ?? null,
+            montoHonorariosDiferencia: this.form.get('monto_diferencia')?.value ?? null,
+
+            honorarioAlzadaCobrado: this.expediente?.honorarioAlzadaCobrado ?? null,
+            fechaCobroAlzada: this.expediente?.fechaCobroAlzada ?? null,
+
+            honorarioEjecucionCobrado: this.expediente?.honorarioEjecucionCobrado ?? null,
+            fechaCobroEjecucion: this.expediente?.fechaCobroEjecucion ?? null,
+
+            honorarioDiferenciaCobrado: this.expediente?.honorarioDiferenciaCobrado ?? null,
+            fechaCobroDiferencia: this.expediente?.fechaCobroDiferencia ?? null,
+            capitalPagoParcial: this.expediente?.capitalPagoParcial
+
+            
           };
       
           console.log('EXPEDIENTE: ', expediente);
@@ -1178,6 +1217,49 @@ obtenerResumenExpediente(expediente: ExpedienteModel): string {
 
   return `${num}`; // fallback
 }
+
+getSubestadosPorEstado(tipo: string): string[] {
+  const estado = this.form.get(`estado_${tipo}`)?.value;
+
+  if (!estado) return [];
+
+  if (estado === 'apelado') {
+    return [
+      'pendiente de elevacion',
+      'elevacion',
+      'en sala',
+      'resolucion sala - confirma',
+      'resolucion sala - se elevan',
+      'resolucion sala - se reducen',
+    ];
+  } else if (estado === 'pendiente') {
+    return [
+      'a elevar',
+      'solicita se eleve',
+      'en sala',
+      'autor a resolver',
+    ];
+  } else if (estado === 'firme') {
+    return [
+      'espera que vuelva',
+      'honorario se intima',
+      'honorario cedula',
+      'honorario solicita embargo',
+      'honorario embargo',
+      'da en pago parcial',
+      'da en pago total',
+      'giro - solicita',
+      'giro - previo',
+      'giro - consiente',
+      'giro',
+    ];
+  } else if (estado === 'diferido') {
+    return ['diferido'];
+  }
+
+  return [];
+}
+
 
 
 }

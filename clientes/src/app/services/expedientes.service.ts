@@ -79,7 +79,6 @@ getExpedientes() {
 
               });
       
-
               this.getDemandadoPorId(expediente.demandado_id!).subscribe((demandado) => {
                 expediente.demandadoModel = demandado
 
@@ -397,6 +396,33 @@ getExpedientesVencimiento(juicio: string): Observable<ExpedienteModel[]> {
 getFeriadosDesde(fecha: string) {
   return this.http.get<string[]>(`/api/feriados?fecha=${fecha}`);
 }
+
+  obtenerCobrosPorMes(anio: number, mes: number) {
+    const params = { anio: anio.toString(), mes: mes.toString() };
+    return this.http.get<any[]>(`${this.apiUrl}/cobrados-por-mes`, { params });
+  }
+
+
+  obtenerCantidadExpedientesActivos() {
+    console.log(`${this.apiUrl}/expedientes-activos`)
+  return this.http.get<number>(`${this.apiUrl}/expedientes-activos`);
+}
+
+obtenerCantidadClientesRegistrados() {
+  return this.http.get<number>(`${this.apiUrl}/clientes-registrados`);
+}
+
+obtenerCantidadSentenciasEmitidas() {
+  return this.http.get<number>(`${this.apiUrl}/sentencias-emitidas`);
+}
+
+obtenerCantidadHonorariosPendientes() {
+  return this.http.get<number>(`${this.apiUrl}/honorarios-pendientes`);
+}
+
+
+
+
 
 
 }

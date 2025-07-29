@@ -482,10 +482,13 @@
 
                 <mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('alzada')">
                   <mat-label>Subestado - Alzada</mat-label>
-                  <mat-select formControlName="subestado_alzada" [(ngModel)]="subestadosHonorariosExtras['alzada']">
-                    <mat-option *ngFor="let sub of subestadosPorTipo['alzada']" [value]="sub">{{ sub }}</mat-option>
+                  <mat-select formControlName="subestado_alzada">
+                    <mat-option *ngFor="let sub of getSubestadosPorEstado('alzada')" [value]="sub">
+                      {{ sub }}
+                    </mat-option>
                   </mat-select>
                 </mat-form-field>
+
                 </div>
 
                 <ion-input
@@ -497,6 +500,43 @@
                   id="fecha_alzada">
                 </ion-input>
 
+                <!-- UMA para Honorarios de Alzada -->
+          <ng-container *ngIf="honorariosExtrasSeleccionados.includes('alzada')">
+            
+            <ion-input
+              placeholder="Cantidad de UMA (Alzada)" 
+              formControlName="cantidadUMA_alzada"
+              class="input-busqueda"
+              type="text"
+              [(ngModel)]="cantidadUMA_alzada"
+              (ngModelChange)="calcularMontoUMA_Alzada()">
+            </ion-input>
+
+            <div class="centrado-total">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label style="color: white">Seleccioná UMA (Alzada)</mat-label>
+                <mat-select
+                  formControlName="umaSeleccionado_alzada"
+                  [compareWith]="compararUMA"
+                  (selectionChange)="calcularMontoUMA_Alzada()"
+                  style="color: white">
+                  
+                  <mat-option value="acuerdo">Acuerdo</mat-option>
+                  <mat-option *ngFor="let umas of uma" [value]="umas">
+                    {{ umas.valor }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+          <h2 *ngIf="montoUMA_alzada && montoUMA_alzada > 0" class="centrado-total" style="color: white;">
+            MONTO ALZADA: ${{ montoUMA_alzada | number:'1.0-0' }}
+          </h2>
+
+
+          </ng-container>
+
+          <div class="flex-responsive">
               <mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('ejecucion')">
                 <mat-label>Estado - Ejecución</mat-label>
                 <mat-select formControlName="estado_ejecucion" [(ngModel)]="estadosHonorariosExtras['ejecucion']">
@@ -504,12 +544,17 @@
                 </mat-select>
               </mat-form-field>
 
-              <mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('ejecucion')">
-                <mat-label>Subestado - Ejecución</mat-label>
-                <mat-select formControlName="subestado_ejecucion" [(ngModel)]="subestadosHonorariosExtras['ejecucion']">
-                  <mat-option *ngFor="let sub of subestadosPorTipo['ejecucion']" [value]="sub">{{ sub }}</mat-option>
-                </mat-select>
-              </mat-form-field>
+            <mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('ejecucion')">
+              <mat-label>Subestado - Ejecución</mat-label>
+              <mat-select formControlName="subestado_ejecucion">
+                <mat-option *ngFor="let sub of getSubestadosPorEstado('ejecucion')" [value]="sub">
+                  {{ sub }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+                </div>
+              
 
               <ion-input
                 *ngIf="honorariosExtrasSeleccionados.includes('ejecucion')"
@@ -520,6 +565,15 @@
                 id="fecha_ejecucion">
               </ion-input>
 
+              <ion-input
+              *ngIf="honorariosExtrasSeleccionados.includes('ejecucion')"
+              type="number"
+              placeholder="Monto ejecución"
+              class="input-busqueda"
+              formControlName="monto_ejecucion">
+            </ion-input>
+
+          <div class="flex-responsive">
 
                 <mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('diferencia')">
                   <mat-label>Estado - Diferencia</mat-label>
@@ -528,12 +582,27 @@
                   </mat-select>
                 </mat-form-field>
 
+<mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('diferencia')">
+  <mat-label>Subestado - Diferencia</mat-label>
+  <mat-select formControlName="subestado_diferencia">
+    <mat-option *ngFor="let sub of getSubestadosPorEstado('diferencia')" [value]="sub">
+      {{ sub }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
+          </div>
+
+                
                 <mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('diferencia')">
                   <mat-label>Subestado - Diferencia</mat-label>
-                  <mat-select formControlName="subestado_diferencia" [(ngModel)]="subestadosHonorariosExtras['diferencia']">
-                    <mat-option *ngFor="let sub of subestadosPorTipo['diferencia']" [value]="sub">{{ sub }}</mat-option>
+                  <mat-select formControlName="subestado_diferencia">
+                    <mat-option *ngFor="let sub of getSubestadosPorEstado('diferencia')" [value]="sub">
+                      {{ sub }}
+                    </mat-option>
                   </mat-select>
                 </mat-form-field>
+                
 
                 <ion-input
                 *ngIf="honorariosExtrasSeleccionados.includes('diferencia')"
@@ -543,6 +612,15 @@
                   name="fecha_diferencia"
                   id="fecha_diferencia">
                 </ion-input>
+
+                <ion-input
+                *ngIf="honorariosExtrasSeleccionados.includes('diferencia')"
+                type="number"
+                placeholder="Monto diferencia"
+                class="input-busqueda"
+                formControlName="monto_diferencia">
+              </ion-input>
+
 
 
 

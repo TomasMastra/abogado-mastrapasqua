@@ -15,19 +15,28 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { Router } from '@angular/router';
 import { UmaService } from 'src/app/services/uma.service';
+import { ExpedienteModel } from 'src/app/models/expediente/expediente.component';
+import { ExpedientesService } from 'src/app/services/expedientes.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent,
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, CommonModule, 
           MatSidenavModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
           MatFormFieldModule, MatToolbarModule, MatIconModule, MatDividerModule,
           MatMenuModule, MatButtonModule, MatIconModule, MatSelectModule,     
           MatFormFieldModule, MatInputModule, MatCardModule],
 })
 export class HomePage {
-  constructor(private router: Router, private umaService: UmaService,
+  
+  expedientesActivos: number = 0;
+  clientesRegistrados: number = 0;
+  sentenciasEmitidas: number = 0;
+  honorariosPendientes: number = 0;
+
+  constructor(private router: Router, private umaService: UmaService, private expedienteService: ExpedientesService
   ) {}
 
   goTo(path: string) {
@@ -35,4 +44,12 @@ export class HomePage {
       this.router.navigate([path]); // Esto forzará la recarga del componente
     });
   }
+
+  ngOnInit() {
+  this.expedienteService.obtenerCantidadExpedientesActivos().subscribe(d => this.expedientesActivos = d);
+  this.expedienteService.obtenerCantidadClientesRegistrados().subscribe(d => this.clientesRegistrados = d);
+  this.expedienteService.obtenerCantidadSentenciasEmitidas().subscribe(d => this.sentenciasEmitidas = d);
+  this.expedienteService.obtenerCantidadHonorariosPendientes().subscribe(d => this.honorariosPendientes = d);
+}
+
 }

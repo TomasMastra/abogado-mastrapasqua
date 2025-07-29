@@ -355,7 +355,7 @@ cargarJuzgado() {
           fecha_cobro_capital: this.data?.fecha_cobro_capital ?? null,
           valorUMA: this.data?.valorUMA ?? null,
           // modificar
-          juez_id: null,
+          juez_id: this.data?.juez_id ?? null,
           juezModel: { id: '', nombre: '', apellido: '', estado: '' },
           juicio: this.form.value.juicio,
           ultimo_movimiento: this.data?.ultimo_movimiento,
@@ -386,7 +386,7 @@ cargarJuzgado() {
           fechaLiquidacionHonorarios: this.data?.fechaLiquidacionHonorarios ?? null,
           montoLiquidacionHonorarios: this.data?.montoLiquidacionHonorarios ?? null,
           honorarioCobrado: this.data?.honorarioCobrado ??  null,
-          cantidadUMA:  this.data?.cantidadUMA ??  null,
+          cantidadUMA:  this.data?.cantidadUMA ?? null,
           requiere_atencion: this.data?.requiere_atencion,
           fecha_atencion: this.data?.fecha_atencion,
 
@@ -394,6 +394,35 @@ cargarJuzgado() {
           numeroCliente: this.data?.numeroCliente ??  null,
           minutosSinLuz: this.data?.minutosSinLuz ??  null,
           periodoCorte: this.data?.periodoCorte ??  null,
+
+              // 📌 Extras
+          estadoHonorariosAlzadaSeleccionado: this.data?.estadoHonorariosAlzadaSeleccionado ?? null,
+          subEstadoHonorariosAlzadaSeleccionado: this.data?.subEstadoHonorariosAlzadaSeleccionado ?? null,
+          fechaHonorariosAlzada: this.data?.fechaHonorariosAlzada ?? null,
+          umaSeleccionado_alzada: this.data?.umaSeleccionado_alzada ?? null,
+          cantidadUMA_alzada: this.data?.cantidadUMA_alzada ?? null,
+          montoAcuerdo_alzada: this.data?.montoAcuerdo_alzada ?? null,
+
+          estadoHonorariosEjecucionSeleccionado: this.data?.estadoHonorariosEjecucionSeleccionado ?? null,
+          subEstadoHonorariosEjecucionSeleccionado: this.data?.subEstadoHonorariosEjecucionSeleccionado ?? null,
+          fechaHonorariosEjecucion: this.data?.fechaHonorariosEjecucion ?? null,
+          montoHonorariosEjecucion: this.data?.montoHonorariosEjecucion ?? null,
+
+          estadoHonorariosDiferenciaSeleccionado: this.data?.estadoHonorariosDiferenciaSeleccionado ?? null,
+          subEstadoHonorariosDiferenciaSeleccionado: this.data?.subEstadoHonorariosDiferenciaSeleccionado ?? null,
+          fechaHonorariosDiferencia: this.data?.fechaHonorariosDiferencia ?? null,
+          montoHonorariosDiferencia: this.data?.montoHonorariosDiferencia ?? null,
+
+            honorarioAlzadaCobrado: this.data?.honorarioAlzadaCobrado ?? null,
+            fechaCobroAlzada: this.data?.fechaCobroAlzada ?? null,
+
+            honorarioEjecucionCobrado: this.data?.honorarioEjecucionCobrado ?? null,
+            fechaCobroEjecucion: this.data?.fechaCobroEjecucion ?? null,
+
+            honorarioDiferenciaCobrado: this.data?.honorarioDiferenciaCobrado ?? null,
+            fechaCobroDiferencia: this.data?.fechaCobroDiferencia ?? null,
+            capitalPagoParcial: this.data?.capitalPagoParcial
+
 
 
         };

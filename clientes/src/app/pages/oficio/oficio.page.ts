@@ -56,7 +56,7 @@ export class OficiosPage implements OnInit {
   demandadoSeleccionado: any;
 
   partes: string[] = ['actora', 'demanda', 'tercero'];
-  estadosOficio: string[] = ['diligenciado', 'pendiente', 'pedir reiteratorio', 'reiteratorio solicitado','diligenciar'];
+  estadosOficio: string[] = ['Ordenado', 'Diligenciado', 'Pedir reiteratorio / ampliatorio', 'Reiteratorio solicitado'];
   busqueda: string = '';
   expedienteCtrl = new FormControl('');
   filteredExpedientes: Observable<ExpedienteModel[]> = of([]);
@@ -104,17 +104,27 @@ seleccionarExpediente(expediente: ExpedienteModel) {
 
 
 
-filtrarExpedientes(texto: string): ExpedienteModel[] {
+
+
+filtrarExpedientes(valor: string | ExpedienteModel): ExpedienteModel[] {
   if (!this.expedientes || !Array.isArray(this.expedientes)) return [];
 
-  const term = texto.toLowerCase();
+  let termino: string;
+
+  // Si viene un objeto, lo forzamos a texto
+  if (typeof valor === 'object' && valor !== null) {
+    termino = this.displayExpediente(valor).toLowerCase();
+  } else {
+    termino = valor?.toLowerCase?.() ?? '';
+  }
 
   return this.expedientes.filter(exp => {
     const numeroAnio = `${exp.numero}/${exp.anio}`.toLowerCase();
     const clientes = exp.clientes?.map(c => `${c.nombre} ${c.apellido}`.toLowerCase()).join(' ') || '';
-    return numeroAnio.includes(term) || clientes.includes(term);
+    return numeroAnio.includes(termino) || clientes.includes(termino);
   });
 }
+
 
 
 
@@ -212,6 +222,13 @@ onEstadoChange(estado: string) {
 
 
 
+/*
+displayExpediente(expediente: ExpedienteModel): string {
+  if (!expediente) return '';
+  const cliente = expediente.clientes?.[0];
+  const demandado = expediente.demandados?.[0];
+  return `${expediente.numero}/${expediente.anio} ${cliente ? cliente.nombre + ' ' + cliente.apellido : '(sin actora)'} contra ${demandado?.nombre || '(sin demandado)'}`;
+}*/
 
 displayExpediente(expediente: ExpedienteModel): string {
   if (!expediente) return '';
@@ -220,5 +237,10 @@ displayExpediente(expediente: ExpedienteModel): string {
   return `${expediente.numero}/${expediente.anio} ${cliente ? cliente.nombre + ' ' + cliente.apellido : '(sin actora)'} contra ${demandado?.nombre || '(sin demandado)'}`;
 }
 
+limpiarBusqueda() {
+  this.expedienteCtrl.setValue('');
+  this.expedienteSeleccionado = null;
+  this.form.get('expediente')?.setValue(null);
+}
 
 }

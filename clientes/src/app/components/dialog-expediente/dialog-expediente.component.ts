@@ -400,7 +400,18 @@ cargarJuzgado() {
         cantidadUMA: null,
         numeroCliente: this.form.value.numeroCliente || null,
         minutosSinLuz: this.form.value.minutosSinLuz || null,
-        periodoCorte: this.form.value.periodoCorte || null
+        periodoCorte: this.form.value.periodoCorte || null,
+
+            honorarioAlzadaCobrado: this.data?.honorarioAlzadaCobrado ?? null,
+            fechaCobroAlzada: this.data?.fechaCobroAlzada ?? null,
+
+            honorarioEjecucionCobrado: this.data?.honorarioEjecucionCobrado ?? null,
+            fechaCobroEjecucion: this.data?.fechaCobroEjecucion ?? null,
+
+            honorarioDiferenciaCobrado: this.data?.honorarioDiferenciaCobrado ?? null,
+            fechaCobroDiferencia: this.data?.fechaCobroDiferencia ?? null,
+            capitalPagoParcial: this.data?.capitalPagoParcial ?? null
+
         
 
       };

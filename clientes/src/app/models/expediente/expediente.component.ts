@@ -64,6 +64,34 @@ export interface ExpedienteModel {
     estadoHonorariosAlzadaSeleccionado?: string | null;
     subEstadoHonorariosAlzadaSeleccionado?: string | null;
     fechaHonorariosAlzada?: string | null;
+    umaSeleccionado_alzada?: number | null;
+    cantidadUMA_alzada?: number | null;
+    montoAcuerdo_alzada?: number | null;
+
+    // Honorarios Ejecución
+    estadoHonorariosEjecucionSeleccionado?: string | null;
+    subEstadoHonorariosEjecucionSeleccionado?: string | null;
+    fechaHonorariosEjecucion?: string | null;
+    montoHonorariosEjecucion?: number | null;
+
+    // Honorarios Diferencia
+    estadoHonorariosDiferenciaSeleccionado?: string | null;
+    subEstadoHonorariosDiferenciaSeleccionado?: string | null;
+    fechaHonorariosDiferencia?: string | null;
+    montoHonorariosDiferencia?: number | null;
+
+    // Cobro honorarios extra
+    honorarioAlzadaCobrado: boolean;
+    fechaCobroAlzada: string | null;
+
+    honorarioEjecucionCobrado: boolean;
+    fechaCobroEjecucion: string | null;
+
+    honorarioDiferenciaCobrado: boolean;
+    fechaCobroDiferencia: string | null;
+
+    capitalPagoParcial: number | null;
+
 
 
   }

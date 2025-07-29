@@ -59,6 +59,11 @@
             <mat-icon>exclamation</mat-icon>
             <span>Oficios</span>
           </button>
+
+          <button mat-menu-item [class.active-route]="isActive('cobranzas')" (click)="goTo('cobranzas')">
+            <mat-icon>exclamation</mat-icon>
+            <span>Cobranzas</span>
+          </button>
         </mat-menu>
         
         <!-- General -->

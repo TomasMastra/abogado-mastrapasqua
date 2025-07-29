@@ -17,7 +17,6 @@
 
     <label for="styledSelect1" class="custom-select">
       <select id="styledSelect1" name="options" (change)="cambiarEstado($event)">
-        <option value="">Seleccionar estado</option>
         <option value="sentencia" selected>Sentencia</option>
         <option value="cobrado">Cobrado</option>
 
@@ -61,7 +60,9 @@
           </th>
           <th *ngIf="estado == 'sentencia'">Porcentaje total a cobrar</th>
           <th>Porcentaje final a cobrar</th>
-
+          <th *ngIf="estado == 'cobrado'">
+            Cobrado
+          </th>
         </tr>
       </thead>
    <tbody>
@@ -72,37 +73,37 @@
     <ng-container *ngIf="esVisible(item)">
       
       <tr [class.hover]="item.hover">
-        <td rowspan="2" style="background-color: #07295c;">{{ item.numero }}/{{ item.anio }}</td>
-        <td rowspan="2" style="background-color: #07295c;">
-<div *ngIf="item.clientes && item.clientes.length === 1 && item.demandados && item.demandados?.length === 1">
-  {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} contra {{ item.demandados[0].nombre }}
-</div>
+        <td [attr.rowspan]="5" style="background-color: #07295c;">{{ item.numero }}/{{ item.anio }}</td>
+        <td [attr.rowspan]="5" style="background-color: #07295c;">
+        <div *ngIf="item.clientes && item.clientes.length === 1 && item.demandados && item.demandados?.length === 1">
+          {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} contra {{ item.demandados[0].nombre }}
+        </div>
 
-<div *ngIf="item.clientes && item.clientes.length === 1 && item.demandados && item.demandados?.length > 1">
-  {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} contra {{ item.demandados[0].nombre }} y otros
-</div>
+        <div *ngIf="item.clientes && item.clientes.length === 1 && item.demandados && item.demandados?.length > 1">
+          {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} contra {{ item.demandados[0].nombre }} y otros
+        </div>
 
-<div *ngIf="item.clientes && item.clientes.length > 1 && item.demandados && item.demandados?.length === 1">
-  {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} y otros contra {{ item.demandados[0].nombre }}
-</div>
+        <div *ngIf="item.clientes && item.clientes.length > 1 && item.demandados && item.demandados?.length === 1">
+          {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} y otros contra {{ item.demandados[0].nombre }}
+        </div>
 
-<div *ngIf="item.clientes && item.clientes.length > 1 && item.demandados && item.demandados?.length > 1">
-  {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} y otros contra {{ item.demandados[0].nombre }} y otros
-</div>
+        <div *ngIf="item.clientes && item.clientes.length > 1 && item.demandados && item.demandados?.length > 1">
+          {{ item.clientes[0]?.nombre }} {{ item.clientes[0]?.apellido }} y otros contra {{ item.demandados[0].nombre }} y otros
+        </div>
 
-<div *ngIf="item.clientes && item.clientes.length === 0 && item.demandados && item.demandados?.length === 1">
-  (sin actora) contra {{ item.demandados[0].nombre }}
-</div>
+        <div *ngIf="item.clientes && item.clientes.length === 0 && item.demandados && item.demandados?.length === 1">
+          (sin actora) contra {{ item.demandados[0].nombre }}
+        </div>
 
-<div *ngIf="item.clientes && item.clientes.length === 0 && item.demandados && item.demandados?.length > 1">
-  (sin actora) contra {{ item.demandados[0].nombre }} y otros
-</div>
+        <div *ngIf="item.clientes && item.clientes.length === 0 && item.demandados && item.demandados?.length > 1">
+          (sin actora) contra {{ item.demandados[0].nombre }} y otros
+        </div>
 
         </td>
-        <td rowspan="2" *ngIf="estado == 'sentencia'" style="background-color: #07295c;">{{ item.juzgadoModel?.tipo }}</td>
+        <td [attr.rowspan]="5" *ngIf="estado == 'sentencia'" style="background-color: #07295c;">{{ item.juzgadoModel?.tipo }}</td>
 
         <!-- CAPITAL -->
-        <td *ngIf="mostrarCapital(item)">Capital</td>
+        <td >Capital</td>
         <td *ngIf="mostrarCapital(item) && estado == 'sentencia'">
           {{ item.subEstadoCapitalSeleccionado || item.estadoLiquidacionCapitalSeleccionado }}
         </td>
@@ -111,34 +112,41 @@
         </td>
         <td *ngIf="mostrarCapital(item) && estado == 'sentencia'">
           <span *ngIf="item.montoLiquidacionCapital">
-            ${{ item.montoLiquidacionCapital | number:'1.0-0' }} 
+            {{ item.montoLiquidacionCapital | currency:'$' }} 
           </span>
           <span *ngIf="!item.montoLiquidacionCapital">-</span>
         </td>
         <td style="background-color: #07295c;" *ngIf="mostrarCapital(item) && estado == 'sentencia'">
           {{ calcularCobro(item.montoLiquidacionCapital, item.porcentaje) | currency:'$' }}
         </td>
-        <!-- <td style="background-color: #07295c;" *ngIf="mostrarCapital(item)">
-{{ calcularCobroFinal(item.montoLiquidacionCapital, item.porcentaje, item.usuario_id) | currency:'$' }}
-        </td> -->
-        <td *ngIf="estado == 'cobrado' && mostrarCapital(item)" style="background-color: #07295c;">          
+        <td *ngIf="estado == 'cobrado' &&  item.capitalPagoParcial > 0" style="background-color: #07295c;">          
           {{ item.fecha_cobro_capital?.split('T')[0]}}
         </td>
-
         <td style="background-color: #07295c;" *ngIf="mostrarCapital(item)">
-  {{ calcularCobroFinal(item.montoLiquidacionCapital, item.porcentaje, item.usuario_id) | currency:'$' }}
-  <button *ngIf="!item.capitalCobrado" mat-icon-button color="primary" (click)="cobrar('capital', item)">
-    <mat-icon style="color: limegreen">attach_money</mat-icon>
-  </button>
-  <mat-icon *ngIf="item.capitalCobrado" style="color: limegreen">check_circle</mat-icon>
-</td>
+          {{ calcularCobroFinal(item.montoLiquidacionCapital, item.porcentaje, item.usuario_id) | currency:'$' }}
+          <button *ngIf="!item.capitalCobrado" mat-icon-button color="primary" (click)="cobrar('capital', item)">
+            <mat-icon style="color: limegreen">attach_money</mat-icon>
+          </button>
+          <mat-icon *ngIf="item.capitalCobrado" style="color: limegreen">check_circle</mat-icon>
+        </td>
 
 
+         <td *ngIf="estado == 'cobrado' && mostrarCapital(item)" style="background-color: #07295c;">          
+          {{item.capitalPagoParcial | currency:'$'}}
+        </td>
+
+      <td *ngIf="item.capitalCobrado && estado == 'sentencia'" [attr.colspan]="5" style="text-align: center; color: limegreen;">
+        Ya está todo cobrado
+      </td>
+
+        <td *ngIf="!item.capitalCobrado && item.capitalPagoParcial == null && estado == 'cobrado'" [attr.colspan]="5" style="text-align: center; color: yellow;">
+        Pendiente a cobrar
+      </td>
       </tr>
 
       <!-- HONORARIO -->
       <tr [class.hover]="item.hover">
-        <td *ngIf="mostrarHonorario(item)">Honorarios</td>
+        <td>Honorarios</td>
         <td *ngIf="mostrarHonorario(item) && estado == 'sentencia'">
           {{ item.subEstadoHonorariosSeleccionado || item.estadoLiquidacionHonorariosSeleccionado }}
         </td>
@@ -146,25 +154,158 @@
           {{ item.fechaHonorariosSubestado?.split('T')[0] || item.fechaLiquidacionHonorarios?.split('T')[0] }}
         </td>
         <td *ngIf="mostrarHonorario(item) && estado == 'sentencia'">
-          <span *ngIf="item.cantidadUMA">
-            ${{ item.montoLiquidacionHonorarios | number:'1.0-0' }}
+          <span *ngIf="item.cantidadUMA || item.montoLiquidacionHonorarios">
+            {{ item.montoLiquidacionHonorarios | currency:'$' }}
           </span>
         </td>
         <td  style="background-color: #07295c;" *ngIf="mostrarHonorario(item) && estado == 'sentencia'">{{ item.montoLiquidacionHonorarios | currency:'$' }}</td>
-       <!--  <td style="background-color: #07295c;" *ngIf="mostrarHonorario(item)">
+        <!--  <td style="background-color: #07295c;" *ngIf="mostrarHonorario(item)">
           {{ calcularCobroFinalHonorario(item.montoLiquidacionHonorarios, item.usuario_id) | currency:'$' }}
         </td> -->
         <td *ngIf="estado == 'cobrado' " style="background-color: #07295c;">          
           {{ item.fecha_cobro?.split('T')[0]}}
         </td>
         <td style="background-color: #07295c;" *ngIf="mostrarHonorario(item)">
-  {{ calcularCobroFinalHonorario(item.montoLiquidacionHonorarios, item.usuario_id) | currency:'$' }}
-  <button *ngIf="!item.honorarioCobrado" mat-icon-button color="primary" (click)="cobrar('honorario', item)">
-    <mat-icon style="color: limegreen">attach_money</mat-icon>
-  </button>
-  <mat-icon *ngIf="item.honorarioCobrado" style="color: limegreen">check_circle</mat-icon>
-</td>
+          <span *ngIf="item.montoLiquidacionHonorarios">
+          {{ calcularCobroFinalHonorario(item.montoLiquidacionHonorarios, item.usuario_id) | currency:'$' }}
+          <button *ngIf="!item.honorarioCobrado" mat-icon-button color="primary" (click)="cobrar('honorario', item)">
+            <mat-icon style="color: limegreen">attach_money</mat-icon>
+          </button>
+          <mat-icon *ngIf="item.honorarioCobrado" style="color: limegreen">check_circle</mat-icon>
+          </span>
 
+          <span *ngIf="!item.montoLiquidacionHonorarios">-</span>
+        </td>
+        <td *ngIf="estado == 'cobrado' && mostrarHonorario(item) && item.honorarioCobrado == 1" style="background-color: #07295c;">          
+          Todo pago
+        </td>
+
+        <td *ngIf="item.honorarioCobrado && estado == 'sentencia'" [attr.colspan]="5" style="text-align: center; color: limegreen;">
+        Ya está todo cobrado
+      </td>
+
+      <td *ngIf="!item.honorarioCobrado && estado == 'cobrado'" [attr.colspan]="5" style="text-align: center; color: yellow;">
+        Pendiente a cobrar
+      </td>
+      </tr>
+
+
+      <!-- ALZADA -->
+      <tr >
+        <td *ngIf="item.estadoHonorariosAlzadaSeleccionado">Alzada</td>
+        <td *ngIf="mostrarAlzada(item) && estado == 'sentencia'">{{ item.subEstadoHonorariosAlzadaSeleccionado || '-' }}</td>
+        <td *ngIf="mostrarAlzada(item) && estado == 'sentencia'">{{ item.fechaHonorariosAlzada?.split('T')[0] || '-' }}</td>
+        <!--<td>{{ item.montoAcuerdo_alzada | currency:'$' }}</td>-->
+        <td *ngIf=" mostrarAlzada(item) && estado == 'sentencia'">
+          <span *ngIf="item.montoAcuerdo_alzada">
+            {{ item.montoAcuerdo_alzada | currency:'$' }} 
+          </span>
+          <span *ngIf="!item.montoAcuerdo_alzada">-</span>
+        </td>
+        <td style="background-color: #07295c;" *ngIf="mostrarAlzada(item) && estado == 'sentencia'">
+          {{ item.montoAcuerdo_alzada | currency:'$' }}
+        </td>
+        <td *ngIf=" mostrarAlzada(item) && estado == 'cobrado' " style="background-color: #07295c;">          
+          {{ item.fechaHonorariosAlzada.split('T')[0]}}
+        </td>
+        <td style="background-color: #075c34;" *ngIf="mostrarAlzada(item)">
+            {{ calcularCobroFinalHonorario(item.montoAcuerdo_alzada, item.usuario_id) | currency:'$' }}
+          <button *ngIf="!item.honorarioAlzadaCobrado" mat-icon-button color="primary" (click)="cobrar('alzada', item)">
+            <mat-icon style="color: limegreen">attach_money</mat-icon>
+          </button>
+          <mat-icon *ngIf="item.honorarioAlzadaCobrado" style="color: limegreen">check_circle</mat-icon> 
+        </td>
+       <!-- -- -->
+        <td *ngIf="estado == 'cobrado' && mostrarAlzada(item) && item.honorarioAlzadaCobrado== 1" style="background-color: #07295c;">          
+          Todo pago
+        </td>
+
+        <td *ngIf="item.honorarioAlzadaCobrado && estado == 'sentencia'" [attr.colspan]="5" style="text-align: center; color: limegreen;">
+        Ya está todo cobrado
+      </td>
+
+      <td *ngIf="!item.honorarioAlzadaCobrado && estado == 'cobrado' && item.estadoHonorariosAlzadaSeleccionado" [attr.colspan]="2" style="text-align: center; color: yellow;">
+        Pendiente a cobrar
+      </td>
+      </tr>
+
+      <!-- EJECUCIÓN -->
+      <tr>
+        <td *ngIf="item.estadoHonorariosEjecucionSeleccionado">Ejecución</td>
+        <td *ngIf="mostrarEjecucion(item) && estado == 'sentencia'">{{ item.subEstadoHonorariosEjecucionSeleccionado || '-' }}</td>
+        <td *ngIf="mostrarEjecucion(item) && estado == 'sentencia'">{{ item.fechaHonorariosEjecucion?.split('T')[0] || '-' }}</td>
+        <!-- <td>{{ item.montoHonorariosEjecucion | currency:'$' }}</td> -->
+        <td *ngIf="mostrarEjecucion(item) && estado == 'sentencia'">
+          <span *ngIf="item.montoHonorariosEjecucion">
+            {{ item.montoHonorariosEjecucion | currency:'$' }} 
+          </span>
+          <span *ngIf="!item.montoHonorariosEjecucion">-</span>
+        </td>
+        <td style="background-color: #07295c;" *ngIf="mostrarEjecucion(item) && estado == 'sentencia'">
+          {{ item.montoHonorariosEjecucion | currency:'$' }}
+        </td>
+        <td *ngIf="mostrarEjecucion(item) && estado == 'cobrado' " style="background-color: #07295c;">          
+          {{ item.fechaHonorariosEjecucion.split('T')[0]}}
+        </td>
+        <td style="background-color: #075c34;" *ngIf="mostrarEjecucion(item)">
+            {{ calcularCobroFinalHonorario(item.montoHonorariosEjecucion, item.usuario_id) | currency:'$' }}
+          <button *ngIf="!item.honorarioEjecucionCobrado" mat-icon-button color="primary" (click)="cobrar('ejecucion', item)">
+            <mat-icon style="color: limegreen">attach_money</mat-icon>
+          </button>
+          <mat-icon *ngIf="item.honorarioEjecucionCobrado" style="color: limegreen">check_circle</mat-icon> 
+        </td>
+        <td *ngIf="estado == 'cobrado' && mostrarEjecucion(item) && item.honorarioEjecucionCobrado == 1" style="background-color: #07295c;">          
+          Todo pago
+        </td>
+
+
+      <td *ngIf="item.honorarioEjecucionCobrado && estado == 'sentencia'" [attr.colspan]="5" style="text-align: center; color: limegreen;">
+        Ya está todo cobrado
+      </td>
+
+      <td *ngIf="!item.honorarioEjecucionCobrado && estado == 'cobrado' && item.estadoHonorariosEjecucionSeleccionado" [attr.colspan]="2" style="text-align: center; color: yellow;">
+        Pendiente a cobrar
+      </td>
+      </tr>
+
+      <!-- DIFERENCIA -->
+      <tr >
+        <td *ngIf="item.estadoHonorariosDiferenciaSeleccionado">Diferencia</td>
+        <td *ngIf="mostrarDiferencia(item) && estado == 'sentencia'">{{ item.subEstadoHonorariosDiferenciaSeleccionado || '-' }}</td>
+        <td *ngIf="mostrarDiferencia(item) && estado == 'sentencia'">{{ item.fechaHonorariosDiferencia?.split('T')[0] || '-' }}</td>
+        <td *ngIf="mostrarDiferencia(item) && estado == 'sentencia'">
+          <span *ngIf="item.montoHonorariosDiferencia">
+            {{ item.montoHonorariosDiferencia | currency:'$' }} 
+          </span>
+          <span *ngIf="!item.montoHonorariosDiferencia">-</span>
+        </td>
+        <td style="background-color: #07295c;" *ngIf="mostrarDiferencia(item) && estado == 'sentencia'">
+          {{ item.montoHonorariosDiferencia | currency:'$'}}
+        </td>
+        <td *ngIf="mostrarDiferencia(item) && estado == 'cobrado' " style="background-color: #07295c;">          
+          {{ item.fechaHonorariosDiferencia.split('T')[0]}}
+        </td>
+
+        <td style="background-color: #075c34;" *ngIf="mostrarDiferencia(item)">
+        {{ calcularCobroFinalHonorario(item.montoHonorariosDiferencia, item.usuario_id) | currency:'$' }}
+
+          <button *ngIf="!item.honorarioDiferenciaCobrado" mat-icon-button color="primary" (click)="cobrar('diferencia', item)">
+            <mat-icon style="color: limegreen">attach_money</mat-icon>
+          </button>
+          <mat-icon *ngIf="item.honorarioDiferenciaCobrado" style="color: limegreen">check_circle</mat-icon> 
+        </td>
+        <td *ngIf="estado == 'cobrado' && mostrarDiferencia(item) && item.honorarioDiferenciaCobrado== 1" style="background-color: #07295c;">          
+          Todo pago
+        </td>
+        <!-- -->
+      <td *ngIf="item.honorarioDiferenciaCobrado && estado == 'sentencia'" [attr.colspan]="5" style="text-align: center; color: limegreen;">
+        Ya está todo cobrado
+      </td>
+
+      <td *ngIf="!item.honorarioDiferenciaCobrado && estado == 'cobrado' && item.estadoHonorariosDiferenciaSeleccionado" [attr.colspan]="2" style="text-align: center; color: yellow;">
+        Pendiente a cobrar
+      </td>
+        
       </tr>
 
     </ng-container>

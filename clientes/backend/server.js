@@ -504,9 +504,7 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
             .input('sala', sql.NVarChar, nuevosDatos.sala)
             .input('requiere_atencion', sql.Bit, nuevosDatos.requiere_atencion)
             .input('fecha_atencion', sql.Date, nuevosDatos.fecha_atencion && nuevosDatos.fecha_atencion !== '' ? new Date(nuevosDatos.fecha_atencion) : null)
-            .input('estadoHonorariosAlzadaSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosAlzadaSeleccionado)
-            .input('subEstadoHonorariosAlzadaSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosAlzadaSeleccionado)
-            .input('fechaHonorariosAlzada', sql.DateTime, nuevosDatos.fechaHonorariosAlzada)
+
 
             .input('estadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.estadoCapitalSeleccionado)
             .input('subEstadoCapitalSeleccionado', sql.NVarChar, nuevosDatos.subEstadoCapitalSeleccionado)
@@ -524,6 +522,34 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
             .input('montoLiquidacionHonorarios', sql.Decimal(15, 2), nuevosDatos.montoLiquidacionHonorarios)
             .input('honorarioCobrado', sql.Bit, nuevosDatos.honorarioCobrado)
             .input('cantidadUMA', sql.Decimal(15, 2), nuevosDatos.cantidadUMA)
+
+            .input('estadoHonorariosAlzadaSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosAlzadaSeleccionado)
+            .input('subEstadoHonorariosAlzadaSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosAlzadaSeleccionado)
+            .input('fechaHonorariosAlzada', sql.DateTime, nuevosDatos.fechaHonorariosAlzada)
+            .input('estadoHonorariosEjecucionSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosEjecucionSeleccionado)
+            .input('subEstadoHonorariosEjecucionSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosEjecucionSeleccionado)
+            .input('fechaHonorariosEjecucion', sql.DateTime, nuevosDatos.fechaHonorariosEjecucion)
+            .input('montoHonorariosEjecucion', sql.Decimal(15, 2), nuevosDatos.montoHonorariosEjecucion)
+
+            .input('estadoHonorariosDiferenciaSeleccionado', sql.NVarChar, nuevosDatos.estadoHonorariosDiferenciaSeleccionado)
+            .input('subEstadoHonorariosDiferenciaSeleccionado', sql.NVarChar, nuevosDatos.subEstadoHonorariosDiferenciaSeleccionado)
+            .input('fechaHonorariosDiferencia', sql.DateTime, nuevosDatos.fechaHonorariosDiferencia)
+            .input('montoHonorariosDiferencia', sql.Decimal(15, 2), nuevosDatos.montoHonorariosDiferencia)
+
+            .input('umaSeleccionado_alzada', sql.Int, nuevosDatos.umaSeleccionado_alzada ?? null)
+
+            .input('cantidadUMA_alzada', sql.Decimal(15, 2), nuevosDatos.cantidadUMA_alzada)
+            .input('montoAcuerdo_alzada', sql.Decimal(15, 2), nuevosDatos.montoAcuerdo_alzada)
+
+            .input('honorarioAlzadaCobrado', sql.Bit, nuevosDatos.honorarioAlzadaCobrado ?? false)
+            .input('fechaCobroAlzada', sql.DateTime, nuevosDatos.fechaCobroAlzada ?? null)
+
+            .input('honorarioEjecucionCobrado', sql.Bit, nuevosDatos.honorarioEjecucionCobrado ?? false)
+            .input('fechaCobroEjecucion', sql.DateTime, nuevosDatos.fechaCobroEjecucion ?? null)
+
+            .input('honorarioDiferenciaCobrado', sql.Bit, nuevosDatos.honorarioDiferenciaCobrado ?? false)
+            .input('fechaCobroDiferencia', sql.DateTime, nuevosDatos.fechaCobroDiferencia ?? null)
+            .input('capitalPagoParcial', sql.Int, nuevosDatos.capitalPagoParcial ?? null)
 
             .query(`
               UPDATE expedientes
@@ -552,8 +578,6 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
                 requiere_atencion = @requiere_atencion,
                 fecha_atencion = @fecha_atencion,
 
-
-
                 -- 🚀 Actualización de campos nuevos (capital)
                 estadoCapitalSeleccionado = @estadoCapitalSeleccionado,
                 subEstadoCapitalSeleccionado = @subEstadoCapitalSeleccionado,
@@ -571,14 +595,53 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
                 montoLiquidacionHonorarios = @montoLiquidacionHonorarios,
                 honorarioCobrado = @honorarioCobrado,
                 cantidadUMA = @cantidadUMA,
-
                 estadoHonorariosAlzadaSeleccionado = @estadoHonorariosAlzadaSeleccionado,
                 subEstadoHonorariosAlzadaSeleccionado = @subEstadoHonorariosAlzadaSeleccionado,
-                fechaHonorariosAlzada = @fechaHonorariosAlzada
+                fechaHonorariosAlzada = @fechaHonorariosAlzada,
 
+                estadoHonorariosEjecucionSeleccionado = @estadoHonorariosEjecucionSeleccionado,
+                subEstadoHonorariosEjecucionSeleccionado = @subEstadoHonorariosEjecucionSeleccionado,
+                fechaHonorariosEjecucion = @fechaHonorariosEjecucion,
+                montoHonorariosEjecucion = @montoHonorariosEjecucion,
+
+                estadoHonorariosDiferenciaSeleccionado = @estadoHonorariosDiferenciaSeleccionado,
+                subEstadoHonorariosDiferenciaSeleccionado = @subEstadoHonorariosDiferenciaSeleccionado,
+                fechaHonorariosDiferencia = @fechaHonorariosDiferencia,
+                montoHonorariosDiferencia = @montoHonorariosDiferencia,
+
+                umaSeleccionado_alzada = @umaSeleccionado_alzada,
+                cantidadUMA_alzada = @cantidadUMA_alzada,
+                montoAcuerdo_alzada = @montoAcuerdo_alzada,
+
+                honorarioAlzadaCobrado = @honorarioAlzadaCobrado,
+                fechaCobroAlzada = @fechaCobroAlzada,
+                honorarioEjecucionCobrado = @honorarioEjecucionCobrado,
+                fechaCobroEjecucion = @fechaCobroEjecucion,
+                honorarioDiferenciaCobrado = @honorarioDiferenciaCobrado,
+                fechaCobroDiferencia = @fechaCobroDiferencia,
+                capitalPagoParcial = @capitalPagoParcial
 
               WHERE id = @id
             `);
+
+            /*
+                            estadoHonorariosAlzadaSeleccionado = @estadoHonorariosAlzadaSeleccionado,
+                subEstadoHonorariosAlzadaSeleccionado = @subEstadoHonorariosAlzadaSeleccionado,
+                fechaHonorariosAlzada = @fechaHonorariosAlzada
+
+                estadoHonorariosEjecucionSeleccionado = @estadoHonorariosEjecucionSeleccionado,
+                subEstadoHonorariosEjecucionSeleccionado = @subEstadoHonorariosEjecucionSeleccionado,
+                fechaHonorariosEjecucion = @fechaHonorariosEjecucion,
+                montoHonorariosEjecucion = @montoHonorariosEjecucion,
+
+                estadoHonorariosDiferenciaSeleccionado = @estadoHonorariosDiferenciaSeleccionado,
+                subEstadoHonorariosDiferenciaSeleccionado = @subEstadoHonorariosDiferenciaSeleccionado,
+                fechaHonorariosDiferencia = @fechaHonorariosDiferencia,
+                montoHonorariosDiferencia = @montoHonorariosDiferencia,
+
+                umaSeleccionado_alzada = @umaSeleccionado_alzada,
+                cantidadUMA_alzada = @cantidadUMA_alzada,
+                montoUMA_alzada = @montoUMA_alzada*/ 
 
             //const expedienteId = resultado.recordset[0].id;
   
@@ -1635,7 +1698,7 @@ app.get("/expedientes/cobrados", async (req, res) => {
         SELECT *
         FROM expedientes
         WHERE estado != 'eliminado'
-          AND (capitalCobrado = 1 OR honorarioCobrado = 1)
+          AND (capitalCobrado = 1 OR honorarioCobrado = 1 OR honorarioAlzadaCobrado = 1 OR honorarioEjecucionCobrado = 1 OR honorarioDiferenciaCobrado = 1)
       `);
 
     res.json(result.recordset);
@@ -1869,6 +1932,132 @@ app.put('/oficios/modificar/:id', async (req, res) => {
   }
 });
 
+app.get("/expedientes/cobrados-por-mes", async (req, res) => {
+  const { anio, mes } = req.query;
+
+  try {
+    const result = await pool.request()
+      .input("anio", sql.Int, parseInt(anio))
+      .input("mes", sql.Int, parseInt(mes))
+      .query(`
+       SELECT 
+        id, 
+        numero, 
+        anio, 
+        -- Capital
+        ISNULL(capitalPagoParcial, montoLiquidacionCapital) AS montoCapital,
+        fecha_cobro_capital,
+
+        -- Honorarios principales
+        ISNULL(montoLiquidacionHonorarios, 0) AS montoHonorarios,
+        fecha_cobro,
+
+        -- Alzada
+        ISNULL(montoAcuerdo_alzada, 0) AS montoAlzada,
+        fechaCobroAlzada,
+
+        -- Ejecución
+        ISNULL(montoHonorariosEjecucion, 0) AS montoEjecucion,
+        fechaCobroEjecucion,
+
+        -- Diferencia
+        ISNULL(montoHonorariosDiferencia, 0) AS montoDiferencia,
+        fechaCobroDiferencia
+
+      FROM expedientes
+WHERE (estado = 'sentencia' OR estado = 'cobrado')
+  AND (
+    (MONTH(fecha_cobro_capital) = @mes AND YEAR(fecha_cobro_capital) = @anio)
+    OR (MONTH(fecha_cobro) = @mes AND YEAR(fecha_cobro) = @anio)
+    OR (MONTH(fechaCobroAlzada) = @mes AND YEAR(fechaCobroAlzada) = @anio)
+    OR (MONTH(fechaCobroEjecucion) = @mes AND YEAR(fechaCobroEjecucion) = @anio)
+    OR (MONTH(fechaCobroDiferencia) = @mes AND YEAR(fechaCobroDiferencia) = @anio)
+  )
+      `);
+
+
+  app.get("/expedientes/expedientes-activos", async (req, res) => {
+  try {
+    const result = await pool.request().query(`
+      SELECT COUNT(*) AS cantidad
+      FROM expedientes
+      WHERE estado != 'eliminado'
+    `);
+    res.json(result.recordset[0].cantidad);
+  } catch (err) {
+    console.error("Error al contar expedientes activos:", err);
+    res.status(500).send("Error en expedientes-activos");
+  }
+});
+
+
+app.get("/expedientes/clientes-registrados", async (req, res) => {
+  try {
+    const result = await pool.request().query(`
+      SELECT COUNT(*) AS cantidad
+      FROM clientes
+      WHERE estado != 'eliminado' AND estado != 'cobrado'
+    `);
+    res.json(result.recordset[0].cantidad);
+  } catch (err) {
+    console.error("Error al contar clientes:", err);
+    res.status(500).send("Error en clientes-registrados");
+  }
+});
+
+
+app.get("/expedientes/sentencias-emitidas", async (req, res) => {
+  try {
+    const result = await pool.request().query(`
+      SELECT COUNT(*) AS cantidad
+      FROM expedientes
+      WHERE estado = 'sentencia'
+    `);
+    res.json(result.recordset[0].cantidad);
+  } catch (err) {
+    console.error("Error al contar sentencias emitidas:", err);
+    res.status(500).send("Error en sentencias-emitidas");
+  }
+});
+
+
+app.get("/expedientes/honorarios-pendientes", async (req, res) => {
+  try {
+    const result = await pool.request().query(`
+      SELECT
+        SUM(CASE WHEN fecha_cobro IS NULL THEN ISNULL(montoLiquidacionHonorarios, 0) ELSE 0 END) AS pendienteHonorarios,
+        SUM(CASE WHEN fechaCobroAlzada IS NULL THEN ISNULL(montoAcuerdo_alzada, 0) ELSE 0 END) AS pendienteAlzada,
+        SUM(CASE WHEN fechaCobroEjecucion IS NULL THEN ISNULL(montoHonorariosEjecucion, 0) ELSE 0 END) AS pendienteEjecucion,
+        SUM(CASE WHEN fechaCobroDiferencia IS NULL THEN ISNULL(montoHonorariosDiferencia, 0) ELSE 0 END) AS pendienteDiferencia
+      FROM expedientes
+      WHERE estado != 'eliminado'
+    `);
+
+    const row = result.recordset[0];
+    const total =
+      (row.pendienteHonorarios ?? 0) +
+      (row.pendienteAlzada ?? 0) +
+      (row.pendienteEjecucion ?? 0) +
+      (row.pendienteDiferencia ?? 0);
+
+    res.json(total);
+  } catch (err) {
+    console.error("Error al calcular honorarios pendientes:", err);
+    res.status(500).send("Error en honorarios-pendientes");
+  }
+});
+
+
+
+
+
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error al obtener expedientes cobrados:", err);
+    res.status(500).send(err);
+  }
+});
 
 
              // Iniciar el servidor

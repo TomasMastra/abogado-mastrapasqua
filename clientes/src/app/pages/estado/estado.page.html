@@ -296,26 +296,41 @@
     style="color: white"
     [(ngModel)]="subEstadoCapitalSeleccionado"
     name="subEstadoCapitalSeleccionado"
-    (selectionChange)="actualizarValidacionesCondicionales()"
-  >
-      <mat-option value="esperar a que baje de sala">Esperar a que baje de sala</mat-option>
+    (selectionChange)="actualizarValidacionesCondicionales()">
+    <mat-option value="esperar a que baje de sala">Esperar a que baje de sala</mat-option>
     <mat-option value="liquidacion pendiente">Liquidación pendiente</mat-option>
     <mat-option value="liquidacion practicada">Liquidación practicada</mat-option>
-    <mat-option value="liquidacion traslado - solicita">Liquidación traslado - solicite</mat-option>
-    <mat-option value="liquidacion - se aprueba">Liquidación - se aprueba</mat-option>
-    <mat-option value="liquidacion aprobada - se intima">Liquidación aprobada - se intima</mat-option>
+    <mat-option value="liquidacion traslado - cedula">Liquidación traslado - cédula</mat-option>
+
+    <!-- IMPUGNACION -->
+    <mat-option value="liquidacion impugnada">Liquidación impugnada</mat-option>
+      <mat-option value="liquidacion contesta impugnacion">Contesta impugnación</mat-option>
+      <mat-option value="liquidacion se resuelve impugnacion">Se resuelve impugnación</mat-option>
+
+    <!-- APROBACION -->
+    <mat-option value="liquidacion - se apruebe">Liquidación - se apruebe</mat-option>
+    <mat-option value="liquidacion aprobada - se intime">Liquidación aprobada - se intima</mat-option>
     <mat-option value="liquidacion aprobada - cedula">Liquidación aprobada - cédula</mat-option>
-    <mat-option value="liquidacion embarga">Liquidación embarga</mat-option>
-    <mat-option value="embarga deox">Embarga deox</mat-option>
-    <mat-option value="embargo citese de venta">Embargo citese de venta</mat-option>
+
+    <!-- EMBARGO -->
+    <mat-option value="embargo solicita">Embargo solicita</mat-option>
+      <mat-option value="embarga deox">Embargo se ordena DEOX</mat-option>
+      <mat-option value="embargo deox librado">Embargo DEOX librado</mat-option>
+      <mat-option value="embargo ejecutado">Embargo ejecutado</mat-option>
+      <mat-option value="embargo citese de venta">Embargo cítese de venta</mat-option>
+
+    <!-- GESTIONES POSTERIORES -->
     <mat-option value="da en pago total">Da en pago total</mat-option>
     <mat-option value="da en pago parcial">Da en pago parcial</mat-option>
+
+    <!-- GIROS -->
     <mat-option value="giro - solicita">Giro - solicita</mat-option>
     <mat-option value="giro - previo">Giro - previo</mat-option>
     <mat-option value="giro - consentido">Giro - consentido</mat-option>
     <mat-option value="giro">Giro</mat-option>
   </mat-select>
 </mat-form-field>
+
 
 
   </div>
@@ -497,98 +512,28 @@
   </div>
 
 
-
-<mat-form-field appearance="outline" style="flex: 1;">
-  <mat-label style="color: white">Tipo de Honorarios</mat-label>
-  <mat-select multiple style="color: white"   formControlName="honorariosExtrasSeleccionados" 
-  [(ngModel)]="honorariosExtrasSeleccionados" (selectionChange)="cambioTipoHonorarioExtra($event.value)">
-    <mat-option value="primera_instancia">Honorario 1º Instancia</mat-option>
-    <mat-option value="ejecucion">Honorario Ejecución</mat-option>
-    <mat-option value="alzada">Honorario Alzada</mat-option>
-    <mat-option value="diferencia">Honorario Diferencia</mat-option>
-  </mat-select>
-</mat-form-field>
-
-
-<mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('alzada')">
-  <mat-label>Estado - Alzada</mat-label>
-  <mat-select formControlName="estado_alzada" [(ngModel)]="estadosHonorariosExtras['alzada']">
-    <mat-option *ngFor="let est of estadosPorTipo['alzada']" [value]="est">{{ est }}</mat-option>
-  </mat-select>
-</mat-form-field>
-
-<mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('alzada')">
-  <mat-label>Subestado - Alzada</mat-label>
-  <mat-select formControlName="subestado_alzada" [(ngModel)]="subestadosHonorariosExtras['alzada']">
-    <mat-option *ngFor="let sub of subestadosPorTipo['alzada']" [value]="sub">{{ sub }}</mat-option>
-  </mat-select>
-</mat-form-field>
-
-<ion-input
-  *ngIf="form.get('fecha_alzada')"
-  type="date"
-  class="input-busqueda"
-  formControlName="fecha_alzada"
-  name="fecha_alzada"
-  id="fecha_alzada">
-</ion-input>
-
-<!-- EJECUCION-->
-
-<mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('ejecucion')">
-  <mat-label>Estado - Ejecución</mat-label>
-  <mat-select formControlName="estado_ejecucion" [(ngModel)]="estadosHonorariosExtras['ejecucion']">
-    <mat-option *ngFor="let est of estadosPorTipo['ejecucion']" [value]="est">{{ est }}</mat-option>
-  </mat-select>
-</mat-form-field>
-
-<mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('ejecucion')">
-  <mat-label>Subestado - Ejecución</mat-label>
-  <mat-select formControlName="subestado_ejecucion" [(ngModel)]="subestadosHonorariosExtras['ejecucion']">
-    <mat-option *ngFor="let sub of subestadosPorTipo['ejecucion']" [value]="sub">{{ sub }}</mat-option>
-  </mat-select>
-</mat-form-field>
-
-<ion-input
-  *ngIf="form.get('fecha_ejecucion')"
-  type="date"
-  class="input-busqueda"
-  formControlName="fecha_ejecucion"
-  name="fecha_ejecucion"
-  id="fecha_ejecucion">
-</ion-input>
-
-<!-- DIFEENCIA -->
-
-<mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('diferencia')">
-  <mat-label>Estado - Diferencia</mat-label>
-  <mat-select formControlName="estado_diferencia" [(ngModel)]="estadosHonorariosExtras['diferencia']">
-    <mat-option *ngFor="let est of estadosPorTipo['diferencia']" [value]="est">{{ est }}</mat-option>
-  </mat-select>
-</mat-form-field>
-
-<mat-form-field *ngIf="honorariosExtrasSeleccionados.includes('diferencia')">
-  <mat-label>Subestado - Diferencia</mat-label>
-  <mat-select formControlName="subestado_diferencia" [(ngModel)]="subestadosHonorariosExtras['diferencia']">
-    <mat-option *ngFor="let sub of subestadosPorTipo['diferencia']" [value]="sub">{{ sub }}</mat-option>
-  </mat-select>
-</mat-form-field>
-
-<ion-input
-  *ngIf="form.get('fecha_diferencia')"
-  type="date"
-  class="input-busqueda"
-  formControlName="fecha_diferencia"
-  name="fecha_diferencia"
-  id="fecha_diferencia">
-</ion-input>
-
+<!-- 
+<button mat-button (click)="abrirModalHonorarioDiferencia()">
+  {{ expediente.estadoHonorariosDiferenciaSeleccionado ? 'Editar Diferencia' : 'Agregar Diferencia' }}
+</button> -->
 
 </div>
 
 <div style="display: flex; flex-direction: column; gap: 16px;" *ngIf="expediente.honorarioCobrado!= 0">
   HONORARIO COBRADO.
 </div>
+
+    <button mat-button (click)="abrirModalAlzada()">
+      {{ expediente.estadoHonorariosAlzadaSeleccionado ? 'Editar Alzada' : 'Agregar Alzada' }}
+    </button>
+
+<button mat-button (click)="abrirModalEjecucion()">
+  {{ expediente.estadoHonorariosEjecucionSeleccionado ? 'Editar Ejecución' : 'Agregar Ejecución' }}
+</button>
+
+<button mat-button (click)="abrirModalDiferencia()">
+  {{ expediente.estadoHonorariosDiferenciaSeleccionado ? 'Editar Diferencia' : 'Agregar Diferencia' }}
+</button>
                 </form>
               </form>
 

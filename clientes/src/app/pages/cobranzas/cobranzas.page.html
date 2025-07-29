@@ -1,0 +1,48 @@
+<div class="content mat-elevation-z8" [class.blur-content]="cargando">
+
+  <div class="toolbar">
+    <ion-input style="color: white; font-weight: bold;"
+      placeholder="Buscar por número o año"
+      class="input-busqueda"
+      [(ngModel)]="busqueda">
+    </ion-input>
+
+    <button mat-button class="list-button">
+      <mat-icon style="color: #ffffff">download</mat-icon>
+    </button>
+    <button mat-button class="list-button">
+      <mat-icon style="color: #ffffff">more_vert</mat-icon>
+    </button>
+  </div>
+
+  <div *ngIf="cargando" class="fullscreen-loader">
+    <mat-progress-spinner mode="indeterminate" color="accent"></mat-progress-spinner>
+  </div>
+
+  <div class="table-container" *ngIf="!cargando">
+    <table>
+      <thead>
+        <tr>
+          <th>Mes / Año</th>
+          <th>Total Cobrado</th>
+        </tr>
+      </thead>
+<tbody>
+  <ng-container *ngFor="let mes of mesesDisponibles">
+    <tr *ngIf="cobrosPorMes[mes]?.[0]?.monto > 0">
+      <td>{{ convertirMes(mes) }} / {{ mes.split('-')[0] }}</td>
+      <td>${{ cobrosPorMes[mes][0].monto | number:'1.0-0' }}</td>
+    </tr>
+  </ng-container>
+</tbody>
+
+    </table>
+  </div>
+
+</div>
+
+
+<div>
+  <canvas id="grafico-cobranzas"></canvas>
+</div>
+

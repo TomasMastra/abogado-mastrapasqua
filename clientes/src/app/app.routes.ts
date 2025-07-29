@@ -86,5 +86,9 @@ export const routes: Routes = [
   {
     path: 'consultas-oficio',
     loadComponent: () => import('./pages/consultas-oficio/consultas-oficio.page').then( m => m.ConsultasOficioPage)
+  },
+  {
+    path: 'cobranzas',
+    loadComponent: () => import('./pages/cobranzas/cobranzas.page').then( m => m.CobranzasPage)
   }
 ];

@@ -15,6 +15,10 @@
     placeholder="Buscar por número, año o cliente"
     style="color: rgb(0, 0, 0);" />
 
+    <button mat-icon-button *ngIf="expedienteCtrl.value" matSuffix (click)="limpiarBusqueda()">
+  <mat-icon>close</mat-icon>
+</button>
+
   <mat-autocomplete 
     #autoExp="matAutocomplete" 
     [displayWith]="displayExpediente"
@@ -63,7 +67,7 @@
       </mat-form-field>
 
       <!-- Fecha diligenciado -->
-  <mat-form-field appearance="outline" class="full-width"   *ngIf="['diligenciado', 'reiteratorio solicitado'].includes(form.get('estado')?.value)">
+  <mat-form-field appearance="outline" class="full-width"   *ngIf="['Ordenado', 'Diligenciado', 'Reiteratorio solicitado'].includes(form.get('estado')?.value)">
     <mat-label style="color: black;">Fecha diligenciado</mat-label>
     <input matInput [matDatepicker]="picker" formControlName="fecha_diligenciado" style="color: black; background-color: white;" />
     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
