@@ -476,6 +476,109 @@ app.get('/expedientes/demandadosPorExpediente/:id_expediente', async (req, res) 
   }
 });
 
+/*
+async function recalcularCaratula(pool, expedienteId) {
+  // === ACTORAS (clientes_expedientes) ===
+  const rsAct = await pool.request()
+    .input('id', sql.Int, expedienteId)
+    .query(`
+      SELECT ce.id, ce.tipo,
+             cli.nombre  AS c_nombre, cli.apellido AS c_apellido,
+             emp.nombre  AS e_nombre
+      FROM clientes_expedientes ce
+      LEFT JOIN clientes   cli ON cli.id = ce.id_cliente
+      LEFT JOIN demandados emp ON emp.id = ce.id_empresa
+      WHERE ce.id_expediente = @id
+      ORDER BY ce.id ASC
+    `);
+
+  const actoras = rsAct.recordset.map(r => {
+    const tipo = (r.tipo || '').toLowerCase();
+    if (tipo === 'cliente') {
+      const nombre = (r.c_nombre || '').trim();
+      const apellido = (r.c_apellido || '').trim();
+      return (nombre || apellido) ? `${nombre} ${apellido}`.trim() : 'Cliente';
+    } else if (tipo === 'empresa') {
+      return (r.e_nombre || '').trim() || 'Empresa';
+    }
+    return '(sin actora)';
+  }).filter(Boolean);
+
+  let actoraStr = '(sin actora)';
+  if (actoras.length === 1) actoraStr = actoras[0];
+  else if (actoras.length > 1) actoraStr = `${actoras[0]} y otros`;
+
+  // === DEMANDADOS (expedientes_demandados) ===
+  const rsDem = await pool.request()
+    .input('id', sql.Int, expedienteId)
+    .query(`
+      SELECT ed.id, ed.tipo,
+             cli.nombre  AS c_nombre, cli.apellido AS c_apellido,
+             emp.nombre  AS e_nombre
+      FROM expedientes_demandados ed
+      LEFT JOIN clientes   cli ON cli.id = ed.id_cliente
+      LEFT JOIN demandados emp ON emp.id = ed.id_demandado
+      WHERE ed.id_expediente = @id
+      ORDER BY ed.id ASC
+    `);
+
+  const demandados = rsDem.recordset.map(r => {
+    const tipo = (r.tipo || '').toLowerCase();
+    if (tipo === 'cliente') {
+      const nombre = (r.c_nombre || '').trim();
+      const apellido = (r.c_apellido || '').trim();
+      return (nombre || apellido) ? `${nombre} ${apellido}`.trim() : 'Cliente';
+    } else if (tipo === 'empresa') {
+      return (r.e_nombre || '').trim() || 'Empresa';
+    }
+    return '(sin demandado)';
+  }).filter(Boolean);
+
+  let demandadoStr = '(sin demandado)';
+  if (demandados.length === 1) demandadoStr = demandados[0];
+  else if (demandados.length > 1) demandadoStr = `${demandados[0]} y otros`;
+
+  // === Materia: prioridad descripción de codigo > juicio ===
+  const rsExp = await pool.request()
+    .input('id', sql.Int, expedienteId)
+    .query(`
+      SELECT 
+        e.juicio,
+        e.titulo,
+        j.descripcion AS codigo_descripcion,
+        COALESCE(NULLIF(LTRIM(RTRIM(j.descripcion)), ''), NULLIF(LTRIM(RTRIM(e.juicio)), '')) AS materia
+      FROM expedientes e
+      LEFT JOIN dbo.codigos j
+             ON j.id = e.codigo_id
+      WHERE e.id = @id
+    `);
+
+  const row = rsExp.recordset[0] || {};
+  const materia = (row.materia || '').toString().trim();
+  const tituloActual = row.titulo ? row.titulo.toString().trim() : null;
+
+  // Carátula final: "Actora c/ Demandado s/ Materia"
+  const caratula = materia
+    ? `${actoraStr} c/ ${demandadoStr} s/ ${materia}`
+    : `${actoraStr} c/ ${demandadoStr}`;
+
+  const tituloNuevo = tituloActual ?? caratula;
+
+  // === Actualización ===
+  await pool.request()
+    .input('id', sql.Int, expedienteId)
+    .input('caratula', sql.NVarChar, caratula)
+    .input('titulo', sql.NVarChar, tituloNuevo)
+    .query(`
+      UPDATE expedientes
+         SET caratula = @caratula,
+             titulo   = @titulo
+       WHERE id = @id
+    `);
+
+  console.log(`Carátula recalculada: ${caratula}`);
+  return caratula;
+}*/
 
 async function recalcularCaratula(pool, expedienteId) {
   // === ACTORAS (clientes_expedientes) ===
@@ -580,158 +683,6 @@ async function recalcularCaratula(pool, expedienteId) {
   return caratula;
 }
 
-
-
-
-
-/*** ============================================================
- *  AGREGAR EXPEDIENTE  (POST /expedientes/agregar)
- *  - Inserta expediente
- *  - Inserta relaciones con demandados y clientes
- *  - Recalcula y persiste carátula
- *  ============================================================ */
-/*app.post('/expedientes/agregar', async (req, res) => {
-  try {
-    const {
-      titulo, descripcion, demandado_id, juzgado_id, numero, anio,
-      usuario_id, estado, honorario, monto, ultimo_movimiento,
-      fecha_inicio, juez_id, juicio, requiere_atencion, fecha_sentencia,
-      numeroCliente, minutosSinLuz, periodoCorte,
-      actoras, demandados, porcentaje, procurador_id
-    } = req.body;
-
-    if (!numero || !anio || !juzgado_id) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios', camposRequeridos: ['numero','anio','juzgado'] });
-    }
-
-    // Tipo juzgado para unicidad
-    const tipoJuzgadoResult = await pool.request()
-      .input('juzgado_id', sql.Int, juzgado_id)
-      .query(`SELECT tipo FROM juzgados WHERE id = @juzgado_id`);
-    if (!tipoJuzgadoResult.recordset.length) {
-      return res.status(400).json({ error: 'No se encontró el tipo del juzgado especificado.' });
-    }
-    const tipoJ = tipoJuzgadoResult.recordset[0].tipo;
-
-    // Unicidad nro/año/tipo
-    const resultExiste = await pool.request()
-      .input('numero', sql.Int, numero)
-      .input('anio', sql.Int, anio)
-      .input('tipo', sql.NVarChar, tipoJ)
-      .query(`
-        SELECT COUNT(*) AS count
-        FROM expedientes e
-        JOIN juzgados j ON e.juzgado_id = j.id
-        WHERE e.numero=@numero AND e.anio=@anio AND j.tipo=@tipo AND e.estado!='eliminado'
-      `);
-    if (resultExiste.recordset[0].count > 0) {
-      return res.status(400).json({ error: 'Ya existe un expediente con el mismo número, año y juzgado.' });
-    }
-
-    // Insert expediente
-    const result = await pool.request()
-      .input('titulo', sql.NVarChar, (titulo ?? '').toString())
-      .input('descripcion', sql.NVarChar, (descripcion ?? '').toString())
-      .input('numero', sql.Int, numero)
-      .input('anio', sql.Int, anio)
-      .input('demandado_id', sql.Int, demandado_id ?? null)
-      .input('juzgado_id', sql.Int, juzgado_id)
-      .input('estado', sql.NVarChar, estado)
-      .input('fecha_inicio', sql.DateTime, fecha_inicio ?? null)
-      .input('fecha_sentencia', sql.DateTime, fecha_sentencia ?? null)
-      .input('honorario', sql.NVarChar, honorario ?? null)
-      .input('juez_id', sql.Int, juez_id ?? null)
-      .input('juicio', sql.NVarChar, juicio ?? null)
-      .input('monto', sql.NVarChar, monto ?? null)
-      .input('usuario_id', sql.Int, usuario_id ?? null)
-      .input('numeroCliente', sql.NVarChar, numeroCliente ?? null)
-      .input('minutosSinLuz', sql.Int, minutosSinLuz ?? null)
-      .input('periodoCorte', sql.NVarChar, periodoCorte ?? null)
-      .input('porcentaje', sql.Int, porcentaje ?? null)
-      .input('procurador_id', sql.Int, procurador_id ?? null)
-      .input('requiere_atencion', sql.Bit, !!requiere_atencion)
-      .query(`
-        INSERT INTO expedientes (
-          titulo, descripcion, numero, anio, demandado_id, juzgado_id,
-          fecha_creacion, estado, fecha_inicio, honorario,
-          juez_id, juicio, fecha_sentencia, ultimo_movimiento,
-          monto, usuario_id, numeroCliente, minutosSinLuz, periodoCorte,
-          porcentaje, procurador_id, requiere_atencion
-        )
-        OUTPUT INSERTED.id
-        VALUES (
-          @titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id,
-          GETDATE(), @estado, @fecha_inicio, @honorario,
-          @juez_id, @juicio, @fecha_sentencia, @fecha_inicio,
-          @monto, @usuario_id, @numeroCliente, @minutosSinLuz, @periodoCorte,
-          @porcentaje, @procurador_id, @requiere_atencion
-        )
-      `);
-
-    if (!result.recordset?.length) return res.status(400).json({ error: 'No se pudo generar el expediente' });
-    const expedienteId = result.recordset[0].id;
-
-    // ===== ACTORAS (usa CASE para respetar el CHECK "uno u otro") =====
-    if (Array.isArray(actoras)) {
-      for (const a of actoras) {
-        const tipoA = (a?.tipo || '').toLowerCase();
-        const idA   = Number(a?.id) || null;
-        if (!idA || (tipoA !== 'cliente' && tipoA !== 'empresa')) {
-          return res.status(400).json({ error: 'Actora inválida', detalle: a });
-        }
-
-        await pool.request()
-          .input('id_expediente', sql.Int, expedienteId)
-          .input('tipo', sql.NVarChar, tipoA)
-          .input('id', sql.Int, idA)
-          .query(`
-            INSERT INTO clientes_expedientes (id_expediente, id_cliente, id_empresa, tipo)
-            VALUES (
-              @id_expediente,
-              CASE WHEN @tipo = 'cliente' THEN @id ELSE NULL END,
-              CASE WHEN @tipo = 'empresa' THEN @id ELSE NULL END,
-              @tipo
-            )
-          `);
-      }
-    }
-
-    // ===== DEMANDADOS (misma idea) =====
-    if (Array.isArray(demandados)) {
-      for (const d of demandados) {
-        const tipoD = (d?.tipo || '').toLowerCase();
-        const idD   = Number(d?.id) || null;
-        if (!idD || (tipoD !== 'cliente' && tipoD !== 'empresa')) {
-          return res.status(400).json({ error: 'Demandado inválido', detalle: d });
-        }
-
-        await pool.request()
-          .input('id_expediente', sql.Int, expedienteId)
-          .input('tipo', sql.NVarChar, tipoD)
-          .input('id', sql.Int, idD)
-          .query(`
-            INSERT INTO expedientes_demandados (id_expediente, id_cliente, id_demandado, tipo)
-            VALUES (
-              @id_expediente,
-              CASE WHEN @tipo = 'cliente' THEN @id ELSE NULL END,
-              CASE WHEN @tipo = 'empresa' THEN @id ELSE NULL END,
-              @tipo
-            )
-          `);
-      }
-    }
-
-    await recalcularCaratula(pool, expedienteId);
-
-    res.status(201).json({ message: 'Expediente agregado correctamente', expedienteId });
-
-  } catch (err) {
-    console.error('POST /expedientes/agregar ERROR =>', err);
-    res.status(500).json({ error: 'Error al agregar expediente', message: err?.message || String(err) });
-  }
-});*/
-
-/*
 app.post('/expedientes/agregar', async (req, res) => {
   await poolConnect; // <-- asegura que el pool ya está logueado
 
@@ -740,7 +691,7 @@ app.post('/expedientes/agregar', async (req, res) => {
     usuario_id, estado, honorario, monto, ultimo_movimiento,
     fecha_inicio, juez_id, juicio, requiere_atencion, fecha_sentencia,
     numeroCliente, minutosSinLuz, periodoCorte,
-    actoras, demandados, porcentaje, procurador_id, codigo_id
+    actoras, demandados, porcentaje, procurador_id
   } = req.body;
 
   if (!numero || !anio || !juzgado_id) {
@@ -805,24 +756,21 @@ app.post('/expedientes/agregar', async (req, res) => {
       .input('porcentaje', sql.Float, porcentaje ?? null)
       .input('procurador_id', sql.Int, procurador_id ?? null)
       .input('requiere_atencion', sql.Bit, !!requiere_atencion)
-      .input('codigo_id', sql.Int, codigo_id ?? null)
-      .input('esPagoParcial', sql.Bit, false)
-
       .query(`
         INSERT INTO expedientes (
-          titulo, descripcion, numero, anio, demandado_id, juzgado_id,
+          id, titulo, descripcion, numero, anio, demandado_id, juzgado_id,
           fecha_creacion, estado, fecha_inicio, honorario,
           juez_id, juicio, fecha_sentencia, ultimo_movimiento,
           monto, usuario_id, numeroCliente, minutosSinLuz, periodoCorte,
-          porcentaje, procurador_id, requiere_atencion, codigo_id, esPagoParcial
+          porcentaje, procurador_id, requiere_atencion
         )
         OUTPUT INSERTED.id
         VALUES (
-          @titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id,
+          @id, @titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id,
           GETDATE(), @estado, @fecha_inicio, @honorario,
           @juez_id, @juicio, @fecha_sentencia, @fecha_inicio,
           @monto, @usuario_id, @numeroCliente, @minutosSinLuz, @periodoCorte,
-          @porcentaje, @procurador_id, @requiere_atencion, @codigo_id, @esPagoParcial
+          @porcentaje, @procurador_id, @requiere_atencion
         )
       `);
 
@@ -831,52 +779,58 @@ app.post('/expedientes/agregar', async (req, res) => {
     }
     const expedienteId = insertExp.recordset[0].id;
 
-
-    
-    // 4) ACTORAS (secuencial)
+    // 4) ACTORAS (secuencial) ✅ ARREGLADO
     if (Array.isArray(actoras)) {
       for (const a of actoras) {
-        const idActora = await generarNuevoId(pool, 'clientes_expedientes', 'id');
         const tipoA = (a?.tipo || '').toLowerCase();
         const idA   = Number(a?.id) || null;
+        const idRel = await generarNuevoId(pool, 'clientes_expedientes', 'id');
+
         if (!idA || (tipoA !== 'cliente' && tipoA !== 'empresa')) {
           throw new Error(`Actora inválida: ${JSON.stringify(a)}`);
         }
+
         await R()
+          .input('id_rel', sql.Int, idRel)               // id de la relación
           .input('id_expediente', sql.Int, expedienteId)
           .input('tipo', sql.NVarChar, tipoA)
-          .input('id', sql.Int, idActora)
+          .input('id_ref', sql.Int, idA)                // id real
           .query(`
-            INSERT INTO clientes_expedientes (id_expediente, id_cliente, id_empresa, tipo)
-            VALUES ( 
+            INSERT INTO clientes_expedientes (id, id_expediente, id_cliente, id_empresa, tipo)
+            VALUES (
+              @id_rel,
               @id_expediente,
-              CASE WHEN @tipo = 'cliente' THEN @id ELSE NULL END,
-              CASE WHEN @tipo = 'empresa' THEN @id ELSE NULL END,
+              CASE WHEN @tipo = 'cliente' THEN @id_ref ELSE NULL END,
+              CASE WHEN @tipo = 'empresa' THEN @id_ref ELSE NULL END,
               @tipo
             )
           `);
       }
     }
 
-    // 5) DEMANDADOS (secuencial)
+    // 5) DEMANDADOS (secuencial) ✅ ARREGLADO
     if (Array.isArray(demandados)) {
       for (const d of demandados) {
-        const idDemandado = await generarNuevoId(pool, 'expedientes_demandados', 'id');
         const tipoD = (d?.tipo || '').toLowerCase();
         const idD   = Number(d?.id) || null;
+        const idRel = await generarNuevoId(pool, 'expedientes_demandados', 'id');
+
         if (!idD || (tipoD !== 'cliente' && tipoD !== 'empresa')) {
           throw new Error(`Demandado inválido: ${JSON.stringify(d)}`);
         }
+
         await R()
+          .input('id_rel', sql.Int, idRel)               // id de la relación
           .input('id_expediente', sql.Int, expedienteId)
           .input('tipo', sql.NVarChar, tipoD)
-          .input('id', sql.Int, idDemandado)
+          .input('id_ref', sql.Int, idD)                // id real
           .query(`
-            INSERT INTO expedientes_demandados (id_expediente, id_cliente, id_demandado, tipo)
+            INSERT INTO expedientes_demandados (id, id_expediente, id_cliente, id_demandado, tipo)
             VALUES (
+              @id_rel,
               @id_expediente,
-              CASE WHEN @tipo = 'cliente' THEN @id ELSE NULL END,
-              CASE WHEN @tipo = 'empresa' THEN @id ELSE NULL END,
+              CASE WHEN @tipo = 'cliente' THEN @id_ref ELSE NULL END,
+              CASE WHEN @tipo = 'empresa' THEN @id_ref ELSE NULL END,
               @tipo
             )
           `);
@@ -886,9 +840,8 @@ app.post('/expedientes/agregar', async (req, res) => {
     // 6) Confirmo primero
     await tx.commit();
 
-    // 7) Ahora sí recalculo carátula FUERA de la transacción (evita usar la misma conexión ocupada)
+    // 7) Ahora sí recalculo carátula FUERA de la transacción
     await recalcularCaratula(pool, expedienteId);
-  
 
     res.status(201).json({ message: 'Expediente agregado correctamente', expedienteId });
   } catch (err) {
@@ -897,9 +850,8 @@ app.post('/expedientes/agregar', async (req, res) => {
     res.status(500).json({ error: 'Error al agregar expediente', message: err?.message || String(err) });
   }
 });
-*/
 
-
+/*
 app.post('/expedientes/agregar', async (req, res) => {
   await poolConnect; // <-- asegura que el pool ya está logueado
 
@@ -1060,7 +1012,7 @@ app.post('/expedientes/agregar', async (req, res) => {
     await tx.commit();
 
     // 7) Ahora sí recalculo carátula FUERA de la transacción (evita usar la misma conexión ocupada)
-    await recalcularCaratula(pool, expedienteId);
+    await recalcularCaratula(tx, expedienteId);
   
 
     res.status(201).json({ message: 'Expediente agregado correctamente', expedienteId });
@@ -1069,7 +1021,7 @@ app.post('/expedientes/agregar', async (req, res) => {
     console.error('POST /expedientes/agregar ERROR =>', err);
     res.status(500).json({ error: 'Error al agregar expediente', message: err?.message || String(err) });
   }
-});
+});*/
 
 
 /*
