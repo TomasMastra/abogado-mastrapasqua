@@ -32,7 +32,7 @@ async function iniciarServidor() {
   }
 
   // 2) Configuración de conexión a Azure SQL
-  const dbConfig = {
+  /*const dbConfig = {
     user: 'sqladmin',
     password: 'Lam@ceta2025!',
     server: 'servidormastrapasqua.database.windows.net',
@@ -41,8 +41,30 @@ async function iniciarServidor() {
       encrypt: true,
       trustServerCertificate: false
     }
-  };
+  };*/
+/*
+  const dbConfig = {
+  user: 'userMastrapasquaABOGACIA',
+  password: '1503',
+  server: 'DESKTOP-Q9JTH4D', // o DESKTOP-Q9JTH4D\\SQLEXPRESS
+  database: 'ABOGACIA',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  }
+};
+*/
 
+  const dbConfig = {
+  user: 'importuser',
+  password: 'Import@1503',
+  server: 'DESKTOP-Q9JTH4D', // o DESKTOP-Q9JTH4D\\SQLEXPRESS
+  database: 'abogaciadb',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  }
+};
   // 3) Conectar a SQL Server
 const pool = new sql.ConnectionPool(dbConfig);
 const poolConnect = pool.connect();
@@ -219,48 +241,49 @@ app.get("/expedientes", async (req, res) => {
   const rol = req.query.rol;
 
   try {
+    await poolConnect;
+
     const request = pool.request();
 
     if (rol !== 'admin') {
       request.input('usuario_id', sql.Int, usuario_id);
     }
 
-const query = `
-  SELECT 
-    e.id,
-    e.numero,
-    e.anio,
-    e.caratula,
-    e.estado,
-    e.juzgado_id,
-    e.usuario_id,
-    ISNULL((
-      SELECT STRING_AGG(LTRIM(RTRIM(p.nombre_completo)), ' | ')
-      FROM (
-        SELECT LTRIM(RTRIM(c.nombre + ' ' + c.apellido)) AS nombre_completo
-        FROM clientes_expedientes ce
-        JOIN clientes c ON c.id = ce.id_cliente
-        WHERE ce.id_expediente = e.id
+    const query = `
+      SELECT 
+        e.id,
+        e.numero,
+        e.anio,
+        e.caratula,
+        e.estado,
+        e.juzgado_id,
+        e.usuario_id,
+        ISNULL((
+          SELECT STRING_AGG(LTRIM(RTRIM(p.nombre_completo)), ' | ')
+          FROM (
+            SELECT LTRIM(RTRIM(c.nombre + ' ' + c.apellido)) AS nombre_completo
+            FROM clientes_expedientes ce
+            JOIN clientes c ON c.id = ce.id_cliente
+            WHERE ce.id_expediente = e.id
 
-        UNION ALL
-        SELECT LTRIM(RTRIM(d.nombre)) AS nombre_completo
-        FROM expedientes_demandados ed
-        JOIN demandados d ON d.id = ed.id_demandado
-        WHERE ed.id_expediente = e.id
+            UNION ALL
+            SELECT LTRIM(RTRIM(d.nombre)) AS nombre_completo
+            FROM expedientes_demandados ed
+            JOIN demandados d ON d.id = ed.id_demandado
+            WHERE ed.id_expediente = e.id
 
-        UNION ALL
-        SELECT LTRIM(RTRIM(c2.nombre + ' ' + c2.apellido)) AS nombre_completo
-        FROM expedientes_demandados ed2
-        JOIN clientes c2 ON c2.id = ed2.id_cliente
-        WHERE ed2.id_expediente = e.id
-      ) p
-    ), '') AS busqueda
-  FROM expedientes e
-  WHERE e.estado != 'eliminado'
-    ${rol !== 'admin' ? ' AND e.usuario_id = @usuario_id' : ''}
-  ORDER BY e.id DESC;
-`;
-
+            UNION ALL
+            SELECT LTRIM(RTRIM(c2.nombre + ' ' + c2.apellido)) AS nombre_completo
+            FROM expedientes_demandados ed2
+            JOIN clientes c2 ON c2.id = ed2.id_cliente
+            WHERE ed2.id_expediente = e.id
+          ) p
+        ), '') AS busqueda
+      FROM expedientes e
+      WHERE e.estado != 'eliminado'
+        ${rol !== 'admin' ? ' AND e.usuario_id = @usuario_id' : ''}
+      ORDER BY e.id DESC;
+    `;
 
     const result = await request.query(query);
     res.json(result.recordset);
@@ -269,6 +292,7 @@ const query = `
     res.status(500).send(err);
   }
 });
+
 
 
 
@@ -1724,7 +1748,7 @@ app.get('/expedientes/buscar', async (req, res) => {
     const sqlText = `
       SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
-      SELECT TOP (200) e.*
+      SELECT TOP (10) e.*
       FROM expedientes e WITH (NOLOCK)
       WHERE e.estado <> 'eliminado'
         ${filtroUsuario}
