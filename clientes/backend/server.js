@@ -22,14 +22,7 @@ async function iniciarServidor() {
   console.log("=====================================");
 
   // 1) Actualizamos IP en Azure SQL Firewall
-  try {
-    console.log("🔄 Actualizando IP en Azure SQL Firewall...");
-    const ip = await actualizarIpFirewallAzure();
-    console.log(`✔ IP actualizada correctamente: ${ip}`);
-  } catch (err) {
-    console.error("❌ Error actualizando IP:", err.message);
-    console.log("⚠ Se intentará conectar igual...");
-  }
+
 
   // 2) Configuración de conexión a Azure SQL
   /*const dbConfig = {
@@ -258,6 +251,12 @@ app.get("/expedientes", async (req, res) => {
         e.estado,
         e.juzgado_id,
         e.usuario_id,
+        e.procurador_id,
+        e.juicio,
+        e.ultimo_movimiento,
+        e.fecha_atencion,
+        e.capitalCobrado,
+        e.estadoHonorariosSeleccionado,
         ISNULL((
           SELECT STRING_AGG(LTRIM(RTRIM(p.nombre_completo)), ' | ')
           FROM (
@@ -707,30 +706,46 @@ async function recalcularCaratula(pool, expedienteId) {
 }
 
 app.post('/expedientes/agregar', async (req, res) => {
-  await poolConnect; // <-- asegura que el pool ya está logueado
+  await poolConnect;
 
   const {
     titulo, descripcion, demandado_id, juzgado_id, numero, anio,
-    usuario_id, estado, honorario, monto, ultimo_movimiento,
+    usuario_id, estado, honorario, monto,
     fecha_inicio, juez_id, juicio, requiere_atencion, fecha_sentencia,
     numeroCliente, minutosSinLuz, periodoCorte,
     actoras, demandados, porcentaje, procurador_id
   } = req.body;
 
   if (!numero || !anio || !juzgado_id) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios', camposRequeridos: ['numero','anio','juzgado'] });
+    return res.status(400).json({
+      error: 'Faltan campos obligatorios',
+      camposRequeridos: ['numero', 'anio', 'juzgado']
+    });
   }
 
   const tx = new sql.Transaction(pool);
+
   try {
     await tx.begin();
 
-    const R = () => new sql.Request(tx); // helper corto para crear requests con la transacción
+    // Helper: Request asociado a la transacción + timeout más alto
+    const R = () => {
+      const r = new sql.Request(tx);
+      r.timeout = 60000; // 60s (ajustá si querés)
+      return r;
+    };
+
+    // Helper: pedir un ID a una SEQUENCE (SIEMPRE dentro de tx)
+    const nextId = async (seqName) => {
+      const q = `SELECT NEXT VALUE FOR ${seqName} AS id;`;
+      const rs = await R().query(q);
+      return rs.recordset[0].id;
+    };
 
     // 1) Tipo de juzgado
     const tipoJuzgadoResult = await R()
       .input('juzgado_id', sql.Int, juzgado_id)
-      .query(`SELECT tipo FROM juzgados WHERE id = @juzgado_id`);
+      .query(`SELECT tipo FROM juzgados WHERE id = @juzgado_id;`);
 
     if (!tipoJuzgadoResult.recordset.length) {
       throw new Error('No se encontró el tipo del juzgado especificado.');
@@ -738,27 +753,33 @@ app.post('/expedientes/agregar', async (req, res) => {
     const tipoJ = tipoJuzgadoResult.recordset[0].tipo;
 
     // 2) Unicidad (numero + anio + tipo juzgado)
-    const resultExiste = await R()
+    const existeResult = await R()
       .input('numero', sql.Int, numero)
       .input('anio', sql.Int, anio)
       .input('tipo', sql.NVarChar, tipoJ)
       .query(`
-        SELECT COUNT(*) AS count
+        SELECT TOP 1 1 AS existe
         FROM expedientes e
         JOIN juzgados j ON e.juzgado_id = j.id
-        WHERE e.numero=@numero AND e.anio=@anio AND j.tipo=@tipo AND e.estado!='eliminado'
+        WHERE e.numero = @numero
+          AND e.anio = @anio
+          AND j.tipo = @tipo
+          AND e.estado <> 'eliminado';
       `);
 
-    if (resultExiste.recordset[0].count > 0) {
+    if (existeResult.recordset.length) {
       await tx.rollback();
-      return res.status(400).json({ error: 'Ya existe un expediente con el mismo número, año y juzgado.' });
+      return res.status(400).json({
+        error: 'Ya existe un expediente con el mismo número, año y juzgado.'
+      });
     }
 
-    const idExpediente = await generarNuevoId(pool, 'expedientes', 'id');
+    // 3) ID del expediente por SEQUENCE
+    const expedienteId = await nextId('seq_expedientes');
 
-    // 3) Insert expediente
+    // 4) Insert expediente
     const insertExp = await R()
-      .input('id', sql.Int, idExpediente)
+      .input('id', sql.Int, expedienteId)
       .input('titulo', sql.NVarChar, (titulo ?? '').toString())
       .input('descripcion', sql.NVarChar, (descripcion ?? '').toString())
       .input('numero', sql.Int, numero)
@@ -787,37 +808,32 @@ app.post('/expedientes/agregar', async (req, res) => {
           monto, usuario_id, numeroCliente, minutosSinLuz, periodoCorte,
           porcentaje, procurador_id, requiere_atencion
         )
-        OUTPUT INSERTED.id
         VALUES (
           @id, @titulo, @descripcion, @numero, @anio, @demandado_id, @juzgado_id,
           GETDATE(), @estado, @fecha_inicio, @honorario,
           @juez_id, @juicio, @fecha_sentencia, @fecha_inicio,
           @monto, @usuario_id, @numeroCliente, @minutosSinLuz, @periodoCorte,
           @porcentaje, @procurador_id, @requiere_atencion
-        )
+        );
       `);
 
-    if (!insertExp.recordset?.length) {
-      throw new Error('No se pudo generar el expediente');
-    }
-    const expedienteId = insertExp.recordset[0].id;
-
-    // 4) ACTORAS (secuencial) ✅ ARREGLADO
+    // 5) ACTORAS (secuencial, pero ya sin MAX+1 y sin pool fuera de tx)
     if (Array.isArray(actoras)) {
       for (const a of actoras) {
         const tipoA = (a?.tipo || '').toLowerCase();
-        const idA   = Number(a?.id) || null;
-        const idRel = await generarNuevoId(pool, 'clientes_expedientes', 'id');
+        const idA = Number(a?.id) || null;
 
         if (!idA || (tipoA !== 'cliente' && tipoA !== 'empresa')) {
           throw new Error(`Actora inválida: ${JSON.stringify(a)}`);
         }
 
+        const idRel = await nextId('seq_clientes_expedientes');
+
         await R()
-          .input('id_rel', sql.Int, idRel)               // id de la relación
+          .input('id_rel', sql.Int, idRel)
           .input('id_expediente', sql.Int, expedienteId)
           .input('tipo', sql.NVarChar, tipoA)
-          .input('id_ref', sql.Int, idA)                // id real
+          .input('id_ref', sql.Int, idA)
           .query(`
             INSERT INTO clientes_expedientes (id, id_expediente, id_cliente, id_empresa, tipo)
             VALUES (
@@ -826,27 +842,28 @@ app.post('/expedientes/agregar', async (req, res) => {
               CASE WHEN @tipo = 'cliente' THEN @id_ref ELSE NULL END,
               CASE WHEN @tipo = 'empresa' THEN @id_ref ELSE NULL END,
               @tipo
-            )
+            );
           `);
       }
     }
 
-    // 5) DEMANDADOS (secuencial) ✅ ARREGLADO
+    // 6) DEMANDADOS
     if (Array.isArray(demandados)) {
       for (const d of demandados) {
         const tipoD = (d?.tipo || '').toLowerCase();
-        const idD   = Number(d?.id) || null;
-        const idRel = await generarNuevoId(pool, 'expedientes_demandados', 'id');
+        const idD = Number(d?.id) || null;
 
         if (!idD || (tipoD !== 'cliente' && tipoD !== 'empresa')) {
           throw new Error(`Demandado inválido: ${JSON.stringify(d)}`);
         }
 
+        const idRel = await nextId('seq_expedientes_demandados');
+
         await R()
-          .input('id_rel', sql.Int, idRel)               // id de la relación
+          .input('id_rel', sql.Int, idRel)
           .input('id_expediente', sql.Int, expedienteId)
           .input('tipo', sql.NVarChar, tipoD)
-          .input('id_ref', sql.Int, idD)                // id real
+          .input('id_ref', sql.Int, idD)
           .query(`
             INSERT INTO expedientes_demandados (id, id_expediente, id_cliente, id_demandado, tipo)
             VALUES (
@@ -855,24 +872,32 @@ app.post('/expedientes/agregar', async (req, res) => {
               CASE WHEN @tipo = 'cliente' THEN @id_ref ELSE NULL END,
               CASE WHEN @tipo = 'empresa' THEN @id_ref ELSE NULL END,
               @tipo
-            )
+            );
           `);
       }
     }
 
-    // 6) Confirmo primero
+    // 7) Commit
     await tx.commit();
 
-    // 7) Ahora sí recalculo carátula FUERA de la transacción
+    // 8) Recalcular carátula fuera de tx
     await recalcularCaratula(pool, expedienteId);
 
-    res.status(201).json({ message: 'Expediente agregado correctamente', expedienteId });
+    res.status(201).json({
+      message: 'Expediente agregado correctamente',
+      expedienteId
+    });
+
   } catch (err) {
     try { await tx.rollback(); } catch {}
     console.error('POST /expedientes/agregar ERROR =>', err);
-    res.status(500).json({ error: 'Error al agregar expediente', message: err?.message || String(err) });
+    res.status(500).json({
+      error: 'Error al agregar expediente',
+      message: err?.message || String(err)
+    });
   }
 });
+
 
 /*
 app.post('/expedientes/agregar', async (req, res) => {

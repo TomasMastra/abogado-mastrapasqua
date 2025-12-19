@@ -267,6 +267,7 @@ esVisible(item: any): boolean {
 }
   
 
+
 filtrarPorEstado(estado: string) {
   this.expedientes = this.expedientesOriginales.filter(expediente => expediente.estado !== 'Sentencia');
 }

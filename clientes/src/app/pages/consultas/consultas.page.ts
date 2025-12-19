@@ -268,10 +268,22 @@ cambiarEstado(event: Event) {
   }
 }
 
+/*
 getNombreAbogado(usuario_id: number): string {
   const abogado = this.listaUsuarios.find(u => u.id === usuario_id);
   return abogado ? `${abogado.nombre} ` : 'Sin abogado';
+}*/
+
+getNombreAbogado(usuario_id: any): string {
+  if (usuario_id === null || usuario_id === undefined || usuario_id === '' || +usuario_id === 0) {
+    return 'Sin abogado';
+  }
+
+  const id = +usuario_id;
+  const abogado = this.listaUsuarios.find(u => +u.id === id);
+  return abogado ? `${abogado.nombre}` : 'Sin abogado';
 }
+
 
 
 get honorariosDiferidosOrdenados() {

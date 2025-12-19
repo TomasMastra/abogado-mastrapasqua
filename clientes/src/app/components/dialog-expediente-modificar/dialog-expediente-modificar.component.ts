@@ -474,7 +474,9 @@ private cargarExpediente(): void {
       Swal.fire({ icon: 'warning', title: 'Faltan datos obligatorios' });
       return;
     }
-    const expediente = {
+
+    console.log(this.data.ultimo_movimiento ?? null);
+    /*const expediente = {
       id: this.data?.id,
       numero: this.form.value.numero,
       anio: this.form.value.anio,
@@ -569,7 +571,107 @@ private cargarExpediente(): void {
       recalcular_caratula: true,
       codigo_id: this.codigoSeleccionado?.id ?? null
 
-    };
+    };*/
+
+const expediente = {
+  id: this.expediente?.id,
+
+  numero: this.form.value.numero,
+  anio: this.form.value.anio,
+  estado: this.form.value.estado,
+  porcentaje: this.form.value.porcentaje,
+  juicio: this.form.value.juicio,
+  fecha_inicio: this.form.value.fechaInicio,
+
+  juzgado_id: this.form.value.juzgado?.id ?? this.expediente.juzgado_id,
+  usuario_id: this.form.value.abogado?.id ?? this.expediente.usuario_id,
+  procurador_id: this.form.value.procurador?.id ?? this.expediente.procurador_id,
+
+  // partes mixtas
+  actoras: this.actorasAgregadas,
+  demandados: this.demandadosAgregados,
+
+  // resto se mantiene del expediente (NO data)
+  titulo: this.expediente.titulo ?? null,
+  descripcion: this.expediente.descripcion ?? '',
+  fecha_creacion: this.expediente.fecha_creacion,
+  demandado_id: this.expediente.demandado_id ?? null,
+  demandadoModel: this.expediente.demandadoModel ?? null,
+  sala_radicacion: this.expediente.sala_radicacion ?? null,
+  honorario: this.expediente.honorario ?? null,
+  fecha_sentencia: this.expediente.fecha_sentencia ?? null,
+  hora_sentencia: this.expediente.hora_sentencia ?? null,
+  juez_id: this.expediente.juez_id ?? null,
+  juezModel: this.expediente.juezModel ?? null,
+  ultimo_movimiento: this.expediente.ultimo_movimiento ?? null,
+  monto: this.expediente.monto ?? null,
+  apela: this.expediente.apela ?? null,
+  juzgadoModel: this.expediente.juzgadoModel ?? null,
+  sala: this.expediente.sala ?? null,
+  fecha_cobro: this.expediente.fecha_cobro ?? null,
+  fecha_cobro_capital: this.expediente.fecha_cobro_capital ?? null,
+  valorUMA: this.expediente.valorUMA ?? null,
+  requiere_atencion: this.expediente.requiere_atencion ?? false,
+  fecha_atencion: this.expediente.fecha_atencion ?? null,
+
+  // Capital
+  estadoCapitalSeleccionado: this.expediente.estadoCapitalSeleccionado ?? null,
+  subEstadoCapitalSeleccionado: this.expediente.subEstadoCapitalSeleccionado ?? null,
+  fechaCapitalSubestado: this.expediente.fechaCapitalSubestado ?? null,
+  estadoLiquidacionCapitalSeleccionado: this.expediente.estadoLiquidacionCapitalSeleccionado ?? null,
+  fechaLiquidacionCapital: this.expediente.fechaLiquidacionCapital ?? null,
+  montoLiquidacionCapital: this.expediente.montoLiquidacionCapital ?? null,
+  capitalCobrado: this.expediente.capitalCobrado ?? 0,
+  capitalPagoParcial: this.expediente.capitalPagoParcial ?? null,
+
+  // Honorarios principal
+  estadoHonorariosSeleccionado: this.expediente.estadoHonorariosSeleccionado ?? null,
+  subEstadoHonorariosSeleccionado: this.expediente.subEstadoHonorariosSeleccionado ?? null,
+  fechaHonorariosSubestado: this.expediente.fechaHonorariosSubestado ?? null,
+  estadoLiquidacionHonorariosSeleccionado: this.expediente.estadoLiquidacionHonorariosSeleccionado ?? null,
+  fechaLiquidacionHonorarios: this.expediente.fechaLiquidacionHonorarios ?? null,
+  montoLiquidacionHonorarios: this.expediente.montoLiquidacionHonorarios ?? null,
+  honorarioCobrado: this.expediente.honorarioCobrado ?? 0,
+  cantidadUMA: this.expediente.cantidadUMA ?? null,
+
+  // EDESUR / EDENOR
+  numeroCliente: this.expediente.numeroCliente ?? null,
+  minutosSinLuz: this.expediente.minutosSinLuz ?? null,
+  periodoCorte: this.expediente.periodoCorte ?? null,
+
+  // Alzada
+  estadoHonorariosAlzadaSeleccionado: this.expediente.estadoHonorariosAlzadaSeleccionado ?? null,
+  subEstadoHonorariosAlzadaSeleccionado: this.expediente.subEstadoHonorariosAlzadaSeleccionado ?? null,
+  fechaHonorariosAlzada: this.expediente.fechaHonorariosAlzada ?? null,
+  umaSeleccionado_alzada: this.expediente.umaSeleccionado_alzada ?? null,
+  cantidadUMA_alzada: this.expediente.cantidadUMA_alzada ?? null,
+  montoAcuerdo_alzada: this.expediente.montoAcuerdo_alzada ?? null,
+  honorarioAlzadaCobrado: this.expediente.honorarioAlzadaCobrado ?? 0,
+  fechaCobroAlzada: this.expediente.fechaCobroAlzada ?? null,
+
+  // Ejecución
+  estadoHonorariosEjecucionSeleccionado: this.expediente.estadoHonorariosEjecucionSeleccionado ?? null,
+  subEstadoHonorariosEjecucionSeleccionado: this.expediente.subEstadoHonorariosEjecucionSeleccionado ?? null,
+  fechaHonorariosEjecucion: this.expediente.fechaHonorariosEjecucion ?? null,
+  umaSeleccionado_ejecucion: this.expediente.umaSeleccionado_ejecucion ?? null,
+  cantidadUMA_ejecucion: this.expediente.cantidadUMA_ejecucion ?? null,
+  montoHonorariosEjecucion: this.expediente.montoHonorariosEjecucion ?? null,
+  honorarioEjecucionCobrado: this.expediente.honorarioEjecucionCobrado ?? 0,
+  fechaCobroEjecucion: this.expediente.fechaCobroEjecucion ?? null,
+
+  // Diferencia
+  estadoHonorariosDiferenciaSeleccionado: this.expediente.estadoHonorariosDiferenciaSeleccionado ?? null,
+  subEstadoHonorariosDiferenciaSeleccionado: this.expediente.subEstadoHonorariosDiferenciaSeleccionado ?? null,
+  fechaHonorariosDiferencia: this.expediente.fechaHonorariosDiferencia ?? null,
+  montoHonorariosDiferencia: this.expediente.montoHonorariosDiferencia ?? null,
+  honorarioDiferenciaCobrado: this.expediente.honorarioDiferenciaCobrado ?? 0,
+  fechaCobroDiferencia: this.expediente.fechaCobroDiferencia ?? null,
+
+  recalcular_caratula: true,
+  codigo_id: this.codigoSeleccionado?.id ?? this.expediente.codigo_id
+};
+
+
 
     this.dialogRef.close(expediente);
   }
