@@ -159,70 +159,59 @@ cargarJurisprudencias() {
       return jurisprudencias.includes(q);
     });
   }
+async eliminarJurisprudencia(j: JurisprudenciaModel, ev?: Event) {
+  ev?.stopPropagation?.(); // si está dentro de ion-item / sliding
 
-
-async eliminarJurisprudencia(j: JurisprudenciaModel) {
-  const { isConfirmed, dismiss } = await Swal.fire({
-    title: '¿Estás seguro?',
-    text: 'Esto elimina el codigo definitivamente.',
+  const { isConfirmed } = await Swal.fire({
+    title: '¿Eliminar definitivamente?',
+    text: 'Esto borra la jurisprudencia. No se puede deshacer.',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'No, cancelar',
-    reverseButtons: true
+    cancelButtonText: 'Cancelar'
   });
 
-  if (!isConfirmed) {
-    if (dismiss === Swal.DismissReason.cancel) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Cancelaste la eliminación.', showConfirmButton: false, timer: 2500 });
-    }
-    return;
-  }
+  if (!isConfirmed) return;
 
-  this.jurisprudenciasService.eliminarJurisprudencia(j.id).subscribe({
-    next: (r: any) => {
+  this.jurisprudenciasService.eliminarJurisprudencia(String(j.id)).subscribe({
+    next: (r) => {
       this.cargarJurisprudencias();
-      const msg = r?.detachedCount > 0
+      const msg = (r?.detachedCount && r.detachedCount > 0)
         ? `Eliminada. Se desvincularon ${r.detachedCount} expediente(s).`
-        : 'codigo eliminado correctamente.';
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: msg, showConfirmButton: false, timer: 3000 });
+        : 'Jurisprudencia eliminada.';
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: msg, showConfirmButton: false, timer: 2500 });
     },
     error: (err) => {
       console.error(err);
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'No se pudo eliminar.' });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'No se pudo eliminar', showConfirmButton: false, timer: 2500 });
     }
   });
 }
 
-  
-agregarJurisprudencias() {
-  // armamos las opciones de los selects con las listas que ya tenés cargadas
-  const optsExpedientes = (this.expedientes || [])
-    .map(e => `<option value="${e.id}">${e.numero}/${e.anio} - ${e.caratula || ''}</option>`)
-    .join('');
 
-  const optsDemandados = (this.demandados || [])
-    .map(d => `<option value="${d.id}">${d.nombre}</option>`)
-    .join('');
 
-  const optsJuzgados = (this.juzgados || [])
-    .map(j => `<option value="${j.id}">${j.nombre}</option>`)
-    .join('');
 
-  const optsJueces = (this.jueces || [])
-    .map(j => `<option value="${j.id}">${j.nombre}</option>`)
-    .join('');
+async agregarJurisprudencias() {
+  const norm = (s: any) =>
+    (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-  const optsCodigos = (this.codigos || [])
-    .map(c => `<option value="${c.id}">${c.codigo} - ${c.descripcion}</option>`)
-    .join('');
+  const renderExpedientes = (select: HTMLSelectElement, lista: any[]) => {
+    select.innerHTML =
+      `<option value="">Seleccionar expediente</option>` +
+      lista.map(e => `
+        <option value="${e.id}">
+          ${e.numero}/${e.anio} - ${e.caratula || ''}
+        </option>
+      `).join('');
+  };
 
-  Swal.fire({
+  const result = await Swal.fire({
     title: 'Agregar jurisprudencia',
     html: `
+      <input id="expSearch" class="swal2-input" placeholder="Buscar expediente...">
+
       <select id="expedienteId" class="swal2-select" style="width:90%;margin:6px 0;">
         <option value="">Seleccionar expediente</option>
-        ${optsExpedientes}
       </select>
 
       <select id="fuero" class="swal2-select" style="width:90%;margin:6px 0;">
@@ -235,30 +224,50 @@ agregarJurisprudencias() {
 
       <select id="demandadoId" class="swal2-select" style="width:90%;margin:6px 0;">
         <option value="">Seleccionar demandado</option>
-        ${optsDemandados}
+        ${(this.demandados || []).map(d => `<option value="${d.id}">${d.nombre}</option>`).join('')}
       </select>
 
       <select id="juzgadoId" class="swal2-select" style="width:90%;margin:6px 0;">
         <option value="">Seleccionar juzgado</option>
-        ${optsJuzgados}
+        ${(this.juzgados || []).map(j => `<option value="${j.id}">${j.nombre}</option>`).join('')}
       </select>
 
       <select id="juezId" class="swal2-select" style="width:90%;margin:6px 0;">
         <option value="">Seleccionar juez</option>
-        ${optsJueces}
+        ${(this.jueces || []).map(j => `<option value="${j.id}">${j.nombre}</option>`).join('')}
       </select>
 
-      <input id="sentencia" type="date" class="swal2-input" placeholder="Fecha sentencia (opcional)">
+      <input id="sentencia" type="date" class="swal2-input">
       <input id="camara" class="swal2-input" placeholder="Cámara">
 
       <select id="codigoId" class="swal2-select" style="width:90%;margin:6px 0;">
         <option value="">Seleccionar código</option>
-        ${optsCodigos}
+        ${(this.codigos || []).map(c => `<option value="${c.id}">${c.codigo} - ${c.descripcion}</option>`).join('')}
       </select>
     `,
     showCancelButton: true,
-    focusConfirm: false,
     confirmButtonText: 'Agregar',
+    focusConfirm: false,
+
+    willOpen: () => {
+      const input  = document.getElementById('expSearch') as HTMLInputElement;
+      const select = document.getElementById('expedienteId') as HTMLSelectElement;
+
+      const exps = this.expedientes || [];
+      console.log('expedientes cargados:', exps.length);
+
+      renderExpedientes(select, exps.slice(0, 30));
+
+      input.addEventListener('input', () => {
+        const q = norm(input.value);
+        if (!q || q.length < 2) {
+          renderExpedientes(select, exps.slice(0, 30));
+          return;
+        }
+        renderExpedientes(select, exps.filter(e => norm(e.busqueda).includes(q)).slice(0, 30));
+      });
+    },
+
     preConfirm: () => {
       const expedienteId = (document.getElementById('expedienteId') as HTMLSelectElement).value;
       const fuero        = (document.getElementById('fuero') as HTMLSelectElement).value;
@@ -279,108 +288,179 @@ agregarJurisprudencias() {
         fuero,
         demandado_id: Number(demandadoId),
         juzgado_id: Number(juzgadoId),
-        sentencia: sentenciaVal ? new Date(sentenciaVal) : null,
         juez_id: Number(juezId),
+        sentencia: sentenciaVal ? new Date(sentenciaVal) : null,
         camara,
         codigo_id: Number(codigoId)
       };
     }
-  }).then(result => {
-    if (result.isConfirmed && result.value) {
-      const jurisprudencia: JurisprudenciaModel = {
-        id: '',
-        ...result.value
-      };
+  });
 
-      this.jurisprudenciasService.addJurisprudencia(jurisprudencia).subscribe({
-        next: () => {
-          this.cargarJurisprudencias();
-          Swal.fire({
-            toast: true,
-            icon: 'success',
-            title: 'Jurisprudencia agregada',
-            showConfirmButton: false,
-            timer: 3000,
-            position: 'top-end'
-          });
-        },
-        error: (error) => {
-          console.error('Error al agregar jurisprudencia:', error);
-          Swal.fire({
-            toast: true,
-            icon: 'error',
-            title: 'Error',
-            text: 'Hubo un problema al agregar la jurisprudencia. Intenta nuevamente.',
-            showConfirmButton: false,
-            timer: 3000
-          });
-        }
-      });
+  console.log('Swal result:', result);
+
+  if (!result.isConfirmed || !result.value) return;
+
+  // 🔥 ACÁ SE LLAMA AL SERVICE, sin dudas
+  this.jurisprudenciasService.addJurisprudencia({ id: '', ...(result.value as any) }).subscribe({
+    next: () => {
+      this.cargarJurisprudencias();
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Jurisprudencia agregada', showConfirmButton: false, timer: 2500 });
+    },
+    error: (err) => {
+      console.error('addJurisprudencia error:', err);
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'No se pudo agregar', showConfirmButton: false, timer: 2500 });
     }
   });
 }
 
 
-        
-/*
-modificarJuez(juez: JuezModel) {
-  Swal.fire({
-    title: 'Modificar Juez',
+
+async modificarJurisprudencia(j: JurisprudenciaModel) {
+  const norm = (s: any) =>
+    (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+  const fechaSent = j.sentencia ? new Date(j.sentencia as any).toISOString().slice(0, 10) : '';
+
+  const renderExpedientes = (select: HTMLSelectElement, lista: any[], selectedId?: any) => {
+    select.innerHTML =
+      `<option value="">Seleccionar expediente</option>` +
+      lista.map(e => `
+        <option value="${e.id}" ${String(e.id) === String(selectedId) ? 'selected' : ''}>
+          ${e.numero}/${e.anio} - ${e.caratula || ''}
+        </option>
+      `).join('');
+  };
+
+  const { isConfirmed, value } = await Swal.fire({
+    title: 'Modificar jurisprudencia',
     html: `
-      <input id="nombre" class="swal2-input" placeholder="Nombre" value="${juez.nombre}">
-      <input id="apellido" class="swal2-input" placeholder="Apellido" value="${juez.apellido}">
+      <input id="expSearch" class="swal2-input" placeholder="Buscar expediente...">
+
+      <select id="expedienteId" class="swal2-select" style="width:90%;margin:6px 0;">
+        <option value="">Seleccionar expediente</option>
+      </select>
+
+      <select id="fuero" class="swal2-select" style="width:90%;margin:6px 0;">
+        <option value="">Seleccionar fuero</option>
+        <option value="CCF" ${j.fuero === 'CCF' ? 'selected' : ''}>CCF</option>
+        <option value="COM" ${j.fuero === 'COM' ? 'selected' : ''}>COM</option>
+        <option value="CIV" ${j.fuero === 'CIV' ? 'selected' : ''}>CIV</option>
+        <option value="CC"  ${j.fuero === 'CC'  ? 'selected' : ''}>CC</option>
+      </select>
+
+      <select id="demandadoId" class="swal2-select" style="width:90%;margin:6px 0;">
+        <option value="">Seleccionar demandado</option>
+        ${(this.demandados || []).map(d => `
+          <option value="${d.id}" ${String(d.id) === String(j.demandado_id) ? 'selected' : ''}>
+            ${d.nombre}
+          </option>`).join('')}
+      </select>
+
+      <select id="juzgadoId" class="swal2-select" style="width:90%;margin:6px 0;">
+        <option value="">Seleccionar juzgado</option>
+        ${(this.juzgados || []).map(x => `
+          <option value="${x.id}" ${String(x.id) === String(j.juzgado_id) ? 'selected' : ''}>
+            ${x.nombre}
+          </option>`).join('')}
+      </select>
+
+      <select id="juezId" class="swal2-select" style="width:90%;margin:6px 0;">
+        <option value="">Seleccionar juez</option>
+        ${(this.jueces || []).map(x => `
+          <option value="${x.id}" ${String(x.id) === String(j.juez_id) ? 'selected' : ''}>
+            ${x.nombre}
+          </option>`).join('')}
+      </select>
+
+      <input id="sentencia" type="date" class="swal2-input" value="${fechaSent}">
+      <input id="camara" class="swal2-input" placeholder="Cámara"
+        value="${(j.camara || '').toString().replace(/"/g, '&quot;')}">
+
+      <select id="codigoId" class="swal2-select" style="width:90%;margin:6px 0;">
+        <option value="">Seleccionar código</option>
+        ${(this.codigos || []).map(c => `
+          <option value="${c.id}" ${String(c.id) === String(j.codigo_id) ? 'selected' : ''}>
+            ${c.codigo} - ${c.descripcion}
+          </option>`).join('')}
+      </select>
     `,
     showCancelButton: true,
     confirmButtonText: 'Guardar',
-    preConfirm: () => {
-      const nombre = (document.getElementById('nombre') as HTMLInputElement).value;
-      const apellido = (document.getElementById('apellido') as HTMLInputElement).value;
+    focusConfirm: false,
 
-      if (!nombre || !apellido) {
-        Swal.showValidationMessage('Debe completar ambos campos');
+    // ✅ acá se inicializa el select de expedientes y el buscador (sin setTimeout)
+    willOpen: () => {
+      const input  = document.getElementById('expSearch') as HTMLInputElement;
+      const select = document.getElementById('expedienteId') as HTMLSelectElement;
+
+      const actual = (this.expedientes || []).find(e => String(e.id) === String(j.expediente_id));
+
+      // precarga: SOLO el actual (tu viejo no pierde tiempo)
+      if (actual) {
+        renderExpedientes(select, [actual], actual.id);
+      } else {
+        // si por algo no está en memoria, mostramos un top chico
+        renderExpedientes(select, (this.expedientes || []).slice(0, 30), j.expediente_id);
+      }
+
+      input.addEventListener('input', () => {
+        const q = norm(input.value);
+        if (!q || q.length < 2) {
+          if (actual) renderExpedientes(select, [actual], actual.id);
+          else renderExpedientes(select, (this.expedientes || []).slice(0, 30), j.expediente_id);
+          return;
+        }
+        const lista = (this.expedientes || [])
+          .filter(e => norm(e.busqueda).includes(q))
+          .slice(0, 30);
+
+        renderExpedientes(select, lista, select.value || j.expediente_id);
+      });
+    },
+
+    preConfirm: () => {
+      const expedienteId = (document.getElementById('expedienteId') as HTMLSelectElement).value;
+      const fuero        = (document.getElementById('fuero') as HTMLSelectElement).value;
+      const demandadoId  = (document.getElementById('demandadoId') as HTMLSelectElement).value;
+      const juzgadoId    = (document.getElementById('juzgadoId') as HTMLSelectElement).value;
+      const juezId       = (document.getElementById('juezId') as HTMLSelectElement).value;
+      const sentenciaVal = (document.getElementById('sentencia') as HTMLInputElement).value;
+      const camara       = (document.getElementById('camara') as HTMLInputElement).value.trim();
+      const codigoId     = (document.getElementById('codigoId') as HTMLSelectElement).value;
+
+      if (!expedienteId || !fuero || !demandadoId || !juzgadoId || !juezId || !codigoId || !camara) {
+        Swal.showValidationMessage('Debe completar todos los campos obligatorios');
         return null;
       }
 
-      return { nombre, apellido };
-    }
-  }).then((result) => {
-    if (result.isConfirmed && result.value) {
-      const juezModificado: JuezModel = {
-        ...juez, // mantiene id y estado
-        nombre: result.value.nombre,
-        apellido: result.value.apellido,
+      return {
+        expediente_id: Number(expedienteId),
+        fuero,
+        demandado_id: Number(demandadoId),
+        juzgado_id: Number(juzgadoId),
+        juez_id: Number(juezId),
+        sentencia: sentenciaVal ? new Date(sentenciaVal) : null,
+        camara,
+        codigo_id: Number(codigoId),
       };
+    }
+  });
 
-      this.juezService.actualizarJuez(juezModificado.id, juezModificado).subscribe({
-        next: () => {
-          this.cargarJueces();
-          Swal.fire({
-            toast: true,
-            icon: 'success',
-            title: 'Juez modificado',
-            text: `Se actualizó correctamente a ${juezModificado.nombre} ${juezModificado.apellido}`,
-            showConfirmButton: false,
-            timer: 3000,
-            position: 'top-end'
-          });
-        },
-        error: (error) => {
-          console.error('Error al modificar juez:', error);
-          Swal.fire({
-            toast: true,
-            icon: 'error',
-            title: 'Error',
-            text: 'Hubo un problema al modificar al juez.',
-            showConfirmButton: false,
-            timer: 3000,
-            position: 'top-end'
-          });
-        }
-      });
+  if (!isConfirmed || !value) return;
+
+  this.jurisprudenciasService.actualizarJurisprudencia(j.id, value).subscribe({
+    next: () => {
+      this.cargarJurisprudencias();
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Jurisprudencia modificada', showConfirmButton: false, timer: 2500 });
+    },
+    error: (err) => {
+      console.error('Error al modificar jurisprudencia:', err);
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'No se pudo modificar', showConfirmButton: false, timer: 2500 });
     }
   });
 }
-*/
+
+
         
         
 }

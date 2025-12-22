@@ -4771,6 +4771,98 @@ app.get('/backup', async (req, res) => {
     }
   });
 
+  app.put('/jurisprudencias/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    const {
+      expediente_id,
+      fuero,
+      demandado_id,
+      juzgado_id,
+      juez_id,
+      sentencia,
+      camara,
+      codigo_id,
+      
+    } = req.body || {};
+
+    if (
+      expediente_id === undefined &&
+      fuero === undefined &&
+      demandado_id === undefined &&
+      juzgado_id === undefined &&
+      juez_id === undefined &&
+      sentencia === undefined &&
+      camara === undefined &&
+      codigo_id === undefined 
+    ) {
+      return res.status(400).json({ error: 'No hay datos para actualizar.' });
+    }
+
+    const current = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`SELECT TOP 1 * FROM jurisprudencias WHERE id = @id;`);
+
+    if (current.recordset.length === 0) {
+      return res.status(404).json({ error: 'Jurisprudencia no encontrada' });
+    }
+
+    const sets = [];
+    const reqUpd = pool.request().input('id', sql.Int, id);
+
+    if (expediente_id !== undefined) {
+      sets.push('expediente_id = @expediente_id');
+      reqUpd.input('expediente_id', sql.Int, expediente_id);
+    }
+    if (fuero !== undefined) {
+      sets.push('fuero = @fuero');
+      reqUpd.input('fuero', sql.VarChar, String(fuero));
+    }
+    if (demandado_id !== undefined) {
+      sets.push('demandado_id = @demandado_id');
+      reqUpd.input('demandado_id', sql.Int, demandado_id);
+    }
+    if (juzgado_id !== undefined) {
+      sets.push('juzgado_id = @juzgado_id');
+      reqUpd.input('juzgado_id', sql.Int, juzgado_id);
+    }
+    if (juez_id !== undefined) {
+      sets.push('juez_id = @juez_id');
+      reqUpd.input('juez_id', sql.Int, juez_id);
+    }
+    if (sentencia !== undefined) {
+      sets.push('sentencia = @sentencia');
+      reqUpd.input('sentencia', sql.DateTime, sentencia ? new Date(sentencia) : null);
+    }
+    if (camara !== undefined) {
+      sets.push('camara = @camara');
+      reqUpd.input('camara', sql.NVarChar(sql.MAX), camara);
+    }
+    if (codigo_id !== undefined) {
+      sets.push('codigo_id = @codigo_id');
+      reqUpd.input('codigo_id', sql.Int, codigo_id);
+    }
+
+    const sqlUpdate = `
+      UPDATE jurisprudencias
+      SET ${sets.join(', ')}
+      WHERE id = @id;
+
+      SELECT * FROM jurisprudencias WHERE id = @id;
+    `;
+
+    const rs = await reqUpd.query(sqlUpdate);
+    res.json(rs.recordset[0]);
+  } catch (err) {
+    console.error('PUT /jurisprudencias/:id error:', err);
+    res.status(500).json({ error: 'Error al actualizar jurisprudencia' });
+  }
+});
+
 module.exports = router;
 
     app.listen(3003, () => {

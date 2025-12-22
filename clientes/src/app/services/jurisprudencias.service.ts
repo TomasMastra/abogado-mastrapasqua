@@ -106,21 +106,22 @@ export class JurisprudenciasService {
   }
 
   // PUT: actualizar jurisprudencia por id
-  actualizarJurisprudencia(id: number | string, cambios: Partial<JurisprudenciaModel>): Observable<JurisprudenciaModel> {
-    const url = `${this.apiUrl}/${id}`;
-    return this.http.put<JurisprudenciaModel>(url, cambios, this.httpOptions).pipe(
-      tap((updated) => {
-        const curr = this.jurisprudenciasSubject.value;
-        const idx = curr.findIndex(x => String((x as any).id) === String(id));
-        if (idx >= 0) {
-          const nuevo = [...curr];
-          nuevo[idx] = { ...curr[idx], ...updated };
-          this.jurisprudenciasSubject.next(nuevo);
-        }
-      }),
-      catchError(this.handleError)
-    );
-  }
+actualizarJurisprudencia(id: number | string, cambios: Partial<JurisprudenciaModel>): Observable<JurisprudenciaModel> {
+  const url = `${this.apiUrl}/${id}`;
+  return this.http.put<JurisprudenciaModel>(url, cambios, this.httpOptions).pipe(
+    tap(() => {
+      const curr = this.jurisprudenciasSubject.value;
+      const idx = curr.findIndex(x => String((x as any).id) === String(id));
+      if (idx >= 0) {
+        const nuevo = [...curr];
+        nuevo[idx] = { ...curr[idx], ...cambios }; // 👈 merge seguro
+        this.jurisprudenciasSubject.next(nuevo);
+      }
+    }),
+    catchError(this.handleError)
+  );
+}
+
 
   // Manejo de errores
   private handleError(err: any) {
